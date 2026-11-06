@@ -2,7 +2,7 @@
 
 An independent modernization of the MyGJU Buses System graduation project, preserving its main use cases while rebuilding the implementation with a modern web stack.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs PostgreSQL locally. Angular, application Docker images, business APIs, login and CI workflows are upcoming milestones.
+**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs PostgreSQL locally. The backend GitHub Actions workflow is configured; its first hosted run is pending publication. Angular, application Docker images, business APIs and login are upcoming milestones.
 
 ## Intended experience
 
@@ -13,7 +13,7 @@ An independent modernization of the MyGJU Buses System graduation project, prese
 
 ## Technology direction
 
-The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. Planned components are modern Angular with RxJS and NgRx Store; Leaflet; frontend/backend Docker images; and GitHub Actions testing. Angular Material and session-based authentication are proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
+The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. Planned components are modern Angular with RxJS and NgRx Store; Leaflet; frontend/backend Docker images. Backend testing is configured in GitHub Actions; frontend and container CI will follow. Angular Material and session-based authentication are proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
 
 ## Start here
 
@@ -23,6 +23,7 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 4. [Development workflow templates](docs/development-workflow-templates.md)
 5. [Leaflet decision](docs/decisions/0001-leaflet.md)
 6. [Database setup, tests and recovery](docs/database-setup.md)
+7. [Backend CI and test reports](docs/backend-ci.md)
 
 ## Run the backend
 
