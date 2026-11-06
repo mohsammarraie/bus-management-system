@@ -8,6 +8,15 @@ Rebuild Bus Management System while preserving its main use cases. Help the user
 
 Documentation foundation only. No backend/frontend build commands are executable yet. Follow docs/next-steps.md; add verified commands here with the starter milestone. Read the architecture and relevant decisions before changing design.
 
+## User-controlled Git and step handoffs
+
+- Before each implementation step, state its scope and recommend a model/reasoning effort so the user can choose for credit efficiency. Do not automatically switch models or proceed into the next major step after the handoff.
+- Create a focused local branch for the task. Check for existing user changes first; preserve them and avoid switching or resetting away work.
+- Implement the authorized task, run relevant checks and review the diff.
+- Leave all task changes uncommitted and unstaged. Do not run git add, commit, push, open a PR, merge or rewrite history unless the user explicitly requests that action in a later instruction. Earlier publication/merge authorizations were specific to those completed actions.
+- At each handoff, report branch, changes, actual validation and limitations, a suggested commit message, and the next step with recommended model/effort and a short reason.
+- The user reviews, commits and pushes. Remote CI results can only be reported after the user's push and an actual run; mark them pending beforehand.
+
 ## Engineering
 
 - Work in focused feature branches with acceptance criteria and reviewable diffs.
