@@ -275,7 +275,7 @@ Create `ci.yml` with independent backend and frontend jobs, followed by browser 
 
 ## Agent-assisted learning workflow
 
-One issue → short plan → focused branch → implementation → local checks → diff review → PR → merge → learning note. One agent is sufficient initially. No autonomous multi-agent setup is required.
+One issue → short plan and model/effort recommendation → focused branch → implementation → local checks → diff review → user handoff with commit message → user commit/push → hosted CI and PR review → user-controlled merge → learning note. The agent leaves changes unstaged, uncommitted and unpushed unless the user explicitly authorizes a Git action. Each handoff identifies the next bounded step and recommends its model/effort before work begins. One agent is sufficient initially. No autonomous multi-agent setup is required.
 
 Each task states the behavior, acceptance examples, scope, evidence, and the concept you will practice. Before a substantial implementation, explain the relevant design briefly. You implement a bounded part when you want hands-on practice; the agent assists and handles explicitly delegated work. Review outcomes by running checks and reading the diff, not by the confidence of the agent's description.
 
