@@ -138,7 +138,7 @@ Verified locally on Java 25.0.4.1 with Docker Engine 29.8.0:
 - Recreating the database container preserved a synthetic bus and Flyway history in the named volume; the packaged JAR started successfully afterwards.
 - Compose and Testcontainers image tag/digest references match. Temporary smoke-test containers, network and volume were removed; the normal development project was not started or reset.
 
-The [backend GitHub Actions workflow](backend-ci.md) is configured and locally checked; hosted execution remains pending publication and an observed run. Raw Oracle dumps have not been imported. Backup/restore commands are documented above; a backup restoration rehearsal was not part of these checks.
+The [backend GitHub Actions workflow](backend-ci.md) is merged and has verified successful hosted PR/main runs. Raw Oracle dumps have not been imported. Backup/restore commands are documented above; a backup restoration rehearsal was not part of these checks.
 
 ## Official references
 

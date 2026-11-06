@@ -82,7 +82,8 @@ Revisit when:
 - API/setup/migration documentation updated where necessary.
 - Learner can explain the change, alternatives and verification.
 - UI changes are checked at phone/tablet/desktop widths and in English, German and Arabic layouts (including Arabic RTL and German text expansion); tracking changes include permission, stale and offline cases.
-- New UI/docs use Bus Management System branding; historical MyGJU/GJU references and contributor credits remain accurate.
+- UI changes meet the feature's WCAG 2.2 AA acceptance checks: semantic labels/headings, keyboard/focus behavior, contrast and reflow. Automated accessibility results and manual/screen-reader coverage are reported separately.
+- UI, source comments and documentation use neutral Bus Management System branding and product descriptions.
 
 ## First feature reference: bus CRUD
 

@@ -1,0 +1,44 @@
+.preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+mat-card {
+  background: var(--app-color-surface);
+  border-color: var(--app-color-border);
+  padding: 28px;
+  border-radius: 18px;
+}
+h2 {
+  font-size: 20px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+p {
+  color: var(--app-color-muted);
+  line-height: 1.8;
+}
+.saved {
+  border-top: 1px solid var(--app-color-border);
+  padding-top: 20px;
+  font-size: 13px;
+}
+dl {
+  margin-bottom: 0;
+}
+dt {
+  color: var(--app-color-muted);
+  font-size: 13px;
+  margin-top: 20px;
+}
+dd {
+  margin: 6px 0 0;
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 699px) {
+  .preferences-grid {
+    grid-template-columns: 1fr;
+  }
+}

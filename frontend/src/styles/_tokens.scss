@@ -1,0 +1,15 @@
+// Semantic app colors inherit Material roles; components own layout and spacing.
+html {
+  --app-color-primary: var(--mat-sys-primary);
+  --app-color-on-primary: var(--mat-sys-on-primary);
+  --app-color-soft: var(--mat-sys-primary-container);
+  --app-color-on-soft: var(--mat-sys-on-primary-container);
+  --app-color-accent: var(--app-brand-orange);
+  --app-color-on-accent: var(--mat-sys-on-tertiary-container);
+  --app-color-surface: var(--mat-sys-surface);
+  --app-color-canvas: var(--mat-sys-surface-container-low);
+  --app-color-text: var(--mat-sys-on-surface);
+  --app-color-muted: var(--mat-sys-on-surface-variant);
+  --app-color-border: var(--mat-sys-outline-variant);
+  --app-color-focus: var(--mat-sys-primary);
+}

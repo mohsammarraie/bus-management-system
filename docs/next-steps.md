@@ -22,23 +22,35 @@ Implemented on `chore/postgres-flyway`:
 
 This foundation has no bus APIs, authentication, application Docker images, frontend or legacy data import. The minimal bus table is groundwork; add other tables and refine feature rules through new migrations as the relevant use cases are implemented. Actual verification evidence belongs in database-setup.md and the task handoff. This task was merged into main before the backend CI work.
 
-## Current task: backend GitHub Actions CI
+## Completed: backend GitHub Actions CI
 
 Implemented on `ci/backend-checks`: `.github/workflows/backend-ci.yml` checks PRs targeting main, pushes to main and manual dispatches. It sets up Temurin Java 25, validates the Gradle wrapper through setup-gradle, caches dependencies, verifies Docker access, runs `clean test bootJar`, and retains HTML/XML test reports for seven days even after test failure. Action references are pinned to verified release commits. Workflow permissions are read-only; PR caches are read-only; superseded runs are cancelled and the job has a timeout.
 
-Local actionlint validation and the exact build command passed (18 tests). Hosted execution remains pending: the user must review, commit, push and open a PR to observe the first run. See [backend-ci.md](backend-ci.md). Feature-branch pushes alone do not trigger this workflow.
+Local actionlint validation and the exact build command passed (18 tests). The workflow is merged through PR #5; hosted PR and main-branch runs were verified successful. See [backend-ci.md](backend-ci.md). Feature-branch pushes alone do not trigger this workflow.
 
-## Next implementation: Angular and Material starter
+## Current task: Angular and Material starter
 
-Suggested branch: `chore/angular-starter`, created from updated main after reviewing and merging CI. Verify compatible Angular/Node/Material/i18n versions; generate a strict standalone frontend with routing, responsive Material shell and initial tests. Establish English, German and Arabic resources, language selection/persistence, locale formatting and Arabic RTL. Select the translation approach at setup. Keep business APIs, login and global feature store state for their feature milestones.
+Implemented on `chore/angular-starter` from updated main:
 
-Suggested model/effort: **Sol, High** for the Angular shell, localization and responsive layout. No frontend implementation begins in this CI task.
+- Angular 22.2.5 with CLI/build 22.2.6, Material/CDK 22.2.6, RxJS 7.8.2, TypeScript 6.0.3, Node 24 and a committed npm lockfile.
+- Responsive Material shell, lazy overview/preferences routes and a not-found recovery route.
+- Stable Transloco 8.4.0 with bundled English/German/Arabic resources, persistent validated language preference, document language/direction updates and locale formatting previews.
+- Eight Vitest checks and 38 desktop/mobile Chromium browser cases, including axe scans, keyboard focus/menu checks and narrow-screen reflow. The frontend works without a backend; business APIs, login, Leaflet and NgRx feature state remain future slices.
+- Setup/design/verification in [frontend-starter.md](frontend-starter.md), localization rationale in [ADR 0002](decisions/0002-frontend-localization.md).
+
+The user reviews, commits and pushes; no frontend workflow or application containers are added in this task.
+
+## Next implementation: frontend GitHub Actions CI
+
+Suggested branch: `ci/frontend-checks`, from updated main after this starter is reviewed/merged. Use Node 24/npm lockfile caching, `npm ci`, format/lint/browser-test type/unit/build checks and Playwright Chromium installation/browser checks, with bounded reports and the same least-privilege policy as backend CI. Verify action compatibility and hosted results after publication. Backend CI currently does not execute frontend checks.
+
+Suggested model/effort: **Sol, Medium** for this focused workflow task. After frontend CI, add frontend/backend Dockerfiles and the full Compose demo stack with **Sol, High**.
 
 ## Following steps toward a runnable stack
 
-1. Generate a compatible modern Angular/Material starter with responsive layout, routing and testing. Establish English (en), German (de) and Arabic (ar) resources, a language selector with persisted preference, locale formatting and Arabic RTL from the first UI slice; English is the initial default. Introduce NgRx Store/Effects/Entity with the first meaningful shared-state feature.
+1. Publish and verify frontend CI for the implemented starter. Introduce NgRx Store/Effects/Entity with the first meaningful shared business-state feature.
 2. Add frontend/backend Dockerfiles, extend Compose with application services and readiness checks, and verify the full stack locally. Use Java 25 consistently in backend build/runtime stages.
-3. Extend CI to frontend tests, application image builds and container smoke checks.
+3. Extend CI to application image builds and container smoke checks.
 4. Implement authentication and bus CRUD as separate feature milestones, with API contracts, authorization, validation and end-to-end checks.
 5. Add routing/schedules, trip lifecycle, foreground phone location capture, Leaflet tracking/replay and reports incrementally.
 

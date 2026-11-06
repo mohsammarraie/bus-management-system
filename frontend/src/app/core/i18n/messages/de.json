@@ -1,0 +1,55 @@
+{
+  "app": {
+    "name": "Busverwaltung",
+    "workspace": "Mobilitätszentrale",
+    "preview": "Arbeitsbereich-Vorschau"
+  },
+  "nav": {
+    "label": "Hauptnavigation",
+    "overview": "Übersicht",
+    "preferences": "Einstellungen",
+    "buses": "Busse",
+    "routes": "Routen",
+    "trips": "Fahrten",
+    "open": "Navigation öffnen",
+    "close": "Navigation schließen",
+    "skip": "Zum Inhalt springen"
+  },
+  "language": {
+    "label": "Sprache",
+    "saved": "Deine Auswahl wird auf diesem Gerät gespeichert."
+  },
+  "overview": {
+    "eyebrow": "Mehr Überblick. Bessere Fahrten.",
+    "title": "Jede Fahrt\nim Blick.",
+    "intro": "Busse, Routen und tägliche Fahrten – übersichtlich an einem Ort.",
+    "action": "Arbeitsbereich anpassen",
+    "section": "Alles an einem Ort",
+    "sectionIntro": "Das Wichtigste, um Menschen in Bewegung zu halten.",
+    "soon": "Demnächst verfügbar",
+    "busesTitle": "Die Busse im Blick",
+    "busesBody": "Busdaten und Fahrgastkapazitäten übersichtlich verwalten.",
+    "routesTitle": "Haltestellen verbinden",
+    "routesBody": "Klare Routen und Fahrpläne für kommende Fahrten gestalten.",
+    "tripsTitle": "Die Fahrt verfolgen",
+    "tripsBody": "Den Busstandort teilen und Fahrgästen die Planung erleichtern.",
+    "footer": "Für Verwaltung, Fahrpersonal und Fahrgäste gestaltet."
+  },
+  "preferences": {
+    "eyebrow": "Ganz nach deinen Wünschen",
+    "title": "Einstellungen",
+    "intro": "Wähle deine bevorzugte Sprache. Die Sprachauswahl findest du oben auf jeder Seite.",
+    "languageTitle": "Ein Arbeitsbereich in deiner Sprache",
+    "languageBody": "Englisch, Deutsch und Arabisch stehen zur Verfügung. Bei Arabisch wird auch das Layout von rechts nach links ausgerichtet.",
+    "previewTitle": "Ein vertrautes Format",
+    "previewBody": "Datums- und Zahlenformate passen sich deiner Sprache an. Dies sind Beispielwerte.",
+    "date": "Beispieldatum",
+    "number": "Beispielzahl"
+  },
+  "notFound": {
+    "eyebrow": "404 · Seite nicht gefunden",
+    "title": "Zurück auf die richtige Route.",
+    "body": "Diese Seite ist nicht verfügbar. Kehre zur Übersicht zurück.",
+    "action": "Zur Übersicht"
+  }
+}

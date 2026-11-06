@@ -1,0 +1,55 @@
+{
+  "app": {
+    "name": "Bus Management",
+    "workspace": "Transport workspace",
+    "preview": "Workspace preview"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "overview": "Overview",
+    "preferences": "Preferences",
+    "buses": "Buses",
+    "routes": "Routes",
+    "trips": "Trips",
+    "open": "Open navigation",
+    "close": "Close navigation",
+    "skip": "Skip to content"
+  },
+  "language": {
+    "label": "Language",
+    "saved": "Your choice is saved on this device."
+  },
+  "overview": {
+    "eyebrow": "A little clarity. A better trip.",
+    "title": "Every trip,\nin view.",
+    "intro": "Bring your buses, routes and daily trips together in one calm workspace.",
+    "action": "Workspace preferences",
+    "section": "One connected workspace",
+    "sectionIntro": "The essentials for keeping people moving.",
+    "soon": "Coming soon",
+    "busesTitle": "Know your buses",
+    "busesBody": "Keep bus details and passenger capacity organized in one place.",
+    "routesTitle": "Connect the stops",
+    "routesBody": "Build clear routes and schedules for the trips ahead.",
+    "tripsTitle": "Follow the trip",
+    "tripsBody": "Share a bus’s location and help passengers plan their arrival.",
+    "footer": "Designed for administrators, drivers and passengers."
+  },
+  "preferences": {
+    "eyebrow": "Make yourself at home",
+    "title": "Workspace preferences",
+    "intro": "Choose the language that feels right for you. Use the language selector at the top of any page.",
+    "languageTitle": "A workspace in your language",
+    "languageBody": "English, German and Arabic are available. Arabic also changes the layout to read from right to left.",
+    "previewTitle": "A familiar format",
+    "previewBody": "Dates and numbers follow your selected language. These are example values.",
+    "date": "Example date",
+    "number": "Example number"
+  },
+  "notFound": {
+    "eyebrow": "404 · Page not found",
+    "title": "Let’s get you back on route.",
+    "body": "This page is not available. Return to the overview to find your way.",
+    "action": "Back to overview"
+  }
+}

@@ -1,8 +1,8 @@
 # Bus Management System
 
-An independent modernization of the MyGJU Buses System graduation project, preserving its main use cases while rebuilding the implementation with a modern web stack.
+A modern bus management application for managing buses, routes and trips, built with Angular, Spring Boot and PostgreSQL.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs PostgreSQL locally. The backend GitHub Actions workflow is configured; its first hosted run is pending publication. Angular, application Docker images, business APIs and login are upcoming milestones.
+**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs PostgreSQL locally. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Application Docker images, business APIs and login are upcoming milestones.
 
 ## Intended experience
 
@@ -13,7 +13,7 @@ An independent modernization of the MyGJU Buses System graduation project, prese
 
 ## Technology direction
 
-The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. Planned components are modern Angular with RxJS and NgRx Store; Leaflet; frontend/backend Docker images. Backend testing is configured in GitHub Actions; frontend and container CI will follow. Angular Material and session-based authentication are proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
+The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet and frontend/backend Docker images follow in later tasks. Backend testing is configured in GitHub Actions; frontend and container CI will follow. Session-based authentication is proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
 
 ## Start here
 
@@ -24,6 +24,7 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 5. [Leaflet decision](docs/decisions/0001-leaflet.md)
 6. [Database setup, tests and recovery](docs/database-setup.md)
 7. [Backend CI and test reports](docs/backend-ci.md)
+8. [Frontend setup and localization](docs/frontend-starter.md)
 
 ## Run the backend
 
@@ -65,13 +66,33 @@ Flyway applies the initial `bus_management.buses` schema on startup; Hibernate v
 
 Commands for later milestones in the architecture are proposals, not available scripts.
 
+## Run the frontend
+
+Use Node 24 (tested with 24.22.2; `frontend/.nvmrc`) and npm 11. From the repository root:
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Buses/routes/trips are marked as upcoming; there are no CRUD or login screens yet.
+
+Local checks:
+
+```bash
+npm run lint
+npm run typecheck:e2e
+npm run test:ci
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+The frontend's development proxy forwards future `/api/**` calls to the backend on port 8080. No business API exists yet. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. Frontend GitHub Actions checks are the next task.
+
 ## Project history and credits
 
-The original **MyGJU Buses System** was developed by Mohammed Al-Sammarraie and Taha Al-Khaffaf at the German Jordanian University, supervised by Dr. Firas Al-Hawari.
+Bus Management System is an independent refactoring and modernization of an earlier bus management graduation project developed by Mohammed Al-Sammarraie and Taha Al-Khaffaf. The new implementation is a learning and portfolio project for practicing Angular, Spring Boot and agent-assisted engineering. The [original project repository](https://github.com/mohsammarraie/gradproj), reference commit `b1415fdf16a7bff57025a1a9d756952dc2a21829`, remains the legacy baseline.
 
-- [Original repository](https://github.com/mohsammarraie/gradproj), reference commit `b1415fdf16a7bff57025a1a9d756952dc2a21829`.
-- Related paper: Feras Al-Hawari, Mohammed Al-Sammarraie and Taha Al-Khaffaf, *Design, Validation, and Comparative Analysis of a Private Bus Location Tracking Information System*, Journal of Advanced Transportation (2020), [DOI](https://doi.org/10.1155/2020/8895927).
-
-This successor is an independent portfolio project. Historical names and authors are preserved in credits; the new application uses generic branding. Published study results belong to the original work and are not benchmarks of this rebuild.
-
-The original repository remains the historical baseline. This successor starts with clean documentation history; raw database dumps, inherited credentials and legacy binaries are not copied into it. License selection for new work and any reused source must be resolved before public publication; this foundation does not assign a new license to the original work.
+Raw database dumps, inherited credentials and legacy binaries are not copied into this repository. License selection for new work and any reused source must be resolved before publication; this project does not assign a new license to the original implementation.

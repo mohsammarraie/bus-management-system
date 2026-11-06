@@ -1,0 +1,31 @@
+<ng-container *transloco="let t">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">{{ t('overview.eyebrow') }}</p>
+      <h1 id="page-title" tabindex="-1">{{ t('overview.title') }}</h1>
+      <p class="intro">{{ t('overview.intro') }}</p>
+      <a mat-flat-button routerLink="/preferences"
+        >{{ t('overview.action') }}<app-icon class="forward" name="arrow"
+      /></a>
+    </div>
+    <app-bus-illustration class="journey-art" />
+  </section>
+  <section class="features" aria-labelledby="features-title">
+    <div class="section-heading">
+      <h2 id="features-title">{{ t('overview.section') }}</h2>
+      <p>{{ t('overview.sectionIntro') }}</p>
+    </div>
+    <div class="feature-grid">
+      @for (feature of features; track feature.key) {
+        <mat-card appearance="outlined" class="feature-card">
+          <div class="card-top">
+            <span class="feature-icon"><app-icon [name]="feature.icon" /></span
+            ><span class="soon">{{ t('overview.soon') }}</span>
+          </div>
+          <h3>{{ t('overview.' + feature.key + 'Title') }}</h3>
+          <p>{{ t('overview.' + feature.key + 'Body') }}</p>
+        </mat-card>
+      }
+    </div>
+  </section>
+</ng-container>

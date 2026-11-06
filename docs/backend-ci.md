@@ -42,7 +42,7 @@ Local checks passed:
 - The exact workflow Gradle command passed all **18 tests**, with zero failures/errors/skips, and built the executable JAR on local Java 25 with Docker.
 - Workflow inputs were checked against the pinned action metadata. Local validation does not execute the JavaScript actions or reproduce GitHub's hosted environment.
 
-**Hosted status: pending.** No workflow was pushed or run on GitHub by this task. After reviewing, committing and pushing `ci/backend-checks`, open its PR against main. Inspect **Backend CI → Backend tests and build** and download **backend-test-reports** from the run summary. Confirm a successful hosted run before merging. Branch-protection settings have not been changed; the job can be selected as a required check after it has run.
+**Hosted status: verified successful.** The workflow was merged through PR #5. The [main-branch push run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42302018928) at `f320ce7` and the [CI pull-request run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42301152086) both completed successfully, verified through the public Actions API. Future run results must still be checked individually. Download backend-test-reports from each run summary when investigating failures. Branch-protection settings have not been changed by these tasks.
 
 Frontend, application container builds, Compose smoke checks and browser tests will extend CI as those components are implemented. Current DB integration coverage does not claim full-stack deployment verification.
 

@@ -60,7 +60,7 @@ Use `./gradlew -q javaToolchains` to inspect JDK detection. If `JAVA_HOME` is in
 
 The wrapper pins the build tool; the toolchain selects Java for compile/test/bootRun. A Boot starter brings a curated dependency set. Flyway tracks schema history; JPA maps objects to it. Hibernate validates mappings, while database tests verify constraints that schema validation alone does not cover.
 
-See [database setup and verification](database-setup.md) for commands and current evidence. The [backend CI workflow](backend-ci.md) is configured and locally checked; hosted execution is pending publication and an observed run.
+See [database setup and verification](database-setup.md) for commands and current evidence. The [backend CI workflow](backend-ci.md) is merged and has verified successful hosted PR/main runs.
 
 ## Official references
 
