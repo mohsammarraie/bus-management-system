@@ -1,73 +1,73 @@
-# Backend starter
+# Backend setup and design
 
 ## Scope and versions
 
-- Spring Boot **4.1.2**, generated from official Spring Initializr metadata.
-- Java **25**, enforced through the Gradle toolchain. The pinned Foojay resolver convention plugin **1.0.0** automatically provisions a missing JDK.
-- Gradle **9.8.2**, pinned by the wrapper, with the official distribution SHA-256 configured.
-- Java application code with a Kotlin DSL build. `io.spring.dependency-management` **1.1.7** is supplied by Initializr; Boot manages dependency versions.
-- Group `io.github.mohsammarraie`; package `io.github.mohsammarraie.busmanagement`.
-- Spring Web MVC and Actuator. No database dependencies, authentication or domain endpoints yet.
+| Component | Selection |
+|---|---|
+| Java | 25 toolchain; stable features, no preview flags |
+| Spring Boot | 4.1.2 |
+| Gradle | 9.8.2, committed wrapper and official distribution checksum |
+| Toolchain resolver | Foojay convention plugin 1.0.0 |
+| Dependency management | Plugin 1.1.7; Boot manages library versions |
+| Persistence | Spring Data JPA/Hibernate, PostgreSQL 18.6 |
+| Migrations | Flyway 12.4.0 + PostgreSQL module |
+| JDBC driver | PostgreSQL 42.7.14 |
+| Integration containers | Testcontainers 2.0.5 |
 
-Java 25 is the chosen LTS baseline for this rebuild and is supported by the selected Spring Boot and Gradle releases. Use stable Java features; preview features are not enabled. Future CI jobs and backend Docker build/runtime stages must also use Java 25. PostgreSQL 18 and Flyway remain the next implementation task.
+Application code is Java; the build uses Kotlin DSL. Group `io.github.mohsammarraie`; package `io.github.mohsammarraie.busmanagement`. The backend includes Web MVC, Actuator, JPA and Flyway. It has no business endpoints or authentication yet. The initial fleet entity is groundwork for bus CRUD.
 
-The generated wrapper JAR was checked against the official Gradle checksum. The wrapper JAR is an intentional source-control exception to the general exclusion of generated binaries. No downloaded JDK or Gradle distribution belongs in the repository.
+Java 25 is supported by the selected Boot and Gradle releases. Future CI jobs and backend Docker build/runtime stages must use it consistently. The generated wrapper JAR and pinned distribution checksum were verified against official Gradle checksums. The wrapper JAR is an intentional source-control exception for this bootstrap binary; downloaded JDKs, Gradle distributions and build outputs stay out of Git.
 
 ## Prerequisites and commands
 
-A full JDK 25 is recommended for local development; both `java -version` and `javac -version` should report 25. The wrapper can also launch with another Java version supported by Gradle 9.8.2. The application compiles, tests and runs through `bootRun` with the Java 25 toolchain regardless of the launcher version. Gradle first looks for a matching JDK and, if absent, the Foojay resolver downloads one to the Gradle user cache. This does not replace system Java or require a project-specific absolute JDK path.
+Use a full JDK 25 for local development. The wrapper can launch with another compatible Java version and use its toolchain/Foojay resolver to locate or download JDK 25. It does not change system Java or the `java` command on PATH. Initial downloads need internet access; offline builds need the JDK and previously cached build dependencies and Docker images.
+
+Docker must be running for the integration tests. Gradle enables native access only for test JVMs because Testcontainers uses JNA to access Docker on Java 25. From `backend/`:
 
 ```bash
-cd backend
 ./gradlew clean test bootJar
-./gradlew bootRun
 ```
 
-The task name is `bootRun`, with a capital R. Prefer `./gradlew` over a separately installed `gradle` so the pinned version is used. On Windows, use `gradlew.bat`.
+Tests create a temporary PostgreSQL database, apply the real migrations and start Spring Boot. They do not use the development Compose database or `.env` credentials. They fail if Docker is unavailable; no database tests are silently skipped.
 
-Initial downloads require access to the Gradle Plugin Portal, dependency repositories and, when a JDK must be provisioned, Foojay and the selected JDK provider. Offline builds require a full JDK 25 and previously cached Gradle/plugins/dependencies. Configure `JAVA_HOME` if needed; `java -version` alone is insufficient because a runtime may not include `javac`. Use `./gradlew -q javaToolchains` to inspect detected/provisioned installations. If `JAVA_HOME` names an invalid installation, correct or unset it before launching Gradle.
-
-Build/test results are under `backend/build/` and are ignored by Git.
-
-The executable artifact is `backend/build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar`. From the repository root, with Java 25 selected:
+For application startup, follow the [database setup](database-setup.md) to copy the root `.env` and start Compose, then from `backend/`:
 
 ```bash
-java -jar backend/build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar
-curl --fail http://localhost:8080/actuator/health
+./gradlew bootRun --args='--spring.profiles.active=local'
+# Alternatively, using Java 25:
+java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
 ```
 
-A JAR targeting Java 25 cannot run on a Java 21 runtime. The Gradle toolchain controls Gradle tasks, but it does not change the `java` command on your shell's PATH.
+The `local` profile imports the root `.env` automatically when starting from `backend/` or the repository root. No shell export is required; environment variables still override file settings. The task name is `bootRun`, with a capital R. Prefer `./gradlew` over global Gradle; use `gradlew.bat` on Windows. Change the HTTP port with `PORT` or `--server.port`. Production-style execution supplies external datasource environment variables without the local profile. A Java 25-targeted JAR cannot run on Java 21.
 
-Stop the process with Ctrl+C. Port defaults to 8080 and can be changed through `PORT` or `--server.port`. No database needs to be running.
+Use `./gradlew -q javaToolchains` to inspect JDK detection. If `JAVA_HOME` is invalid, correct or unset it before launching Gradle. A runtime alone may have no `javac`.
 
-## Implementation and tests
+## Responsibilities and behavior
 
-`BusManagementSystemApplication` is the application entry point. Spring's Actuator supplies `/actuator/health`; there is no custom controller duplicating it. Configuration exposes only health, disables management discovery, and hides health components/details.
+- `BusManagementSystemApplication` starts the application.
+- Actuator supplies `/actuator/health`; configuration hides components/details and other management endpoints. Health now includes database connectivity.
+- Flyway creates the `bus_management` schema and applies versioned SQL before Hibernate validates entity mappings. Hibernate never creates or updates the schema; open-in-view is disabled.
+- `fleet.domain.Bus` maps the initial bus table. Identity-generated IDs replace manual ID allocation; database constraints protect required/unique registration numbers and positive capacity. The version column prepares the entity for optimistic locking when editing is implemented.
+- Configuration stays in properties/environment; no credentials are hardcoded into Java or embedded in the JAR.
 
-`HealthEndpointTests` starts the embedded web server on a random port and makes real HTTP requests using Java's HTTP client. It verifies a 200 UP JSON response without internal details, and 404 responses for discovery, environment, info and metrics endpoints. These tests check the runtime configuration as well as startup; no empty context-only test is retained.
+## Tests and learning checkpoints
 
-The next step adds PostgreSQL, Flyway and real database integration tests. Once database dependencies exist, health and these tests must be adapted to a test database instead of hiding database failures.
+`PostgresTestConfiguration` provides a Boot-managed PostgreSQL container with `@ServiceConnection`; Boot supplies its actual connection details to the datasource and Flyway. The pinned image matches Compose. The framework starts the database before dependent beans and closes it after them.
 
-## Learning checkpoints
+`DatabaseIntegrationTests` verifies migration from an empty PostgreSQL 18 database, safe reruns, checksum drift detection, generated IDs/JPA round trips, and constraints even when callers bypass Java validation. Transactional data tests roll back their changes. A deliberately altered migration lives only in test resources.
 
-- The Gradle wrapper pins the build tool; its toolchain selects the Java compiler/runtime for compilation, tests and `bootRun`.
-- A Spring Boot starter supplies a curated dependency set; the Boot plugin produces an executable JAR with an embedded server.
-- Actuator provides operational endpoints. An UP response at this stage does not prove any future bus-management use case.
-- Source/resources/tests have separate roles. Configuration is kept outside Java business logic.
+`HealthEndpointTests` makes real HTTP requests to the embedded server: UP health without internal details, and 404 for management discovery, environment, info and metrics. Those tests use the actual migrated database rather than excluding database auto-configuration.
 
-## Verification
+The wrapper pins the build tool; the toolchain selects Java for compile/test/bootRun. A Boot starter brings a curated dependency set. Flyway tracks schema history; JPA maps objects to it. Hibernate validates mappings, while database tests verify constraints that schema validation alone does not cover.
 
-Verified locally with Ubuntu OpenJDK **25.0.4.1**: `./gradlew --no-daemon clean test bootJar` passed all **five HTTP test cases**, with zero failures, errors or skipped tests. Both `bootRun` and the packaged JAR ran on Java 25, returned HTTP 200 with UP health on temporary loopback ports, and were stopped after verification. The application class in the JAR has Java 25 bytecode (class version 69).
-
-`./gradlew --version` confirmed Gradle 9.8.2 with the Java 25 launcher. `./gradlew -q javaToolchains` confirmed the installed full JDK 25 and enabled toolchain detection/download. This run reused the installed JDK 25; downloading a missing JDK 25 was not exercised. The wrapper JAR and pinned distribution checksum matched the official Gradle checksums, and `gradlew` is executable. Hosted CI is not implemented yet.
+See [database setup and verification](database-setup.md) for commands and current evidence. Hosted CI is the next task and has not run yet.
 
 ## Official references
 
-- [Spring Initializr](https://start.spring.io/)
 - [Boot system requirements](https://docs.spring.io/spring-boot/system-requirements.html)
-- [Boot Gradle plugin](https://docs.spring.io/spring-boot/gradle-plugin/getting-started.html)
+- [Boot data initialization](https://docs.spring.io/spring-boot/how-to/data-initialization.html)
+- [Boot Testcontainers integration](https://docs.spring.io/spring-boot/reference/testing/testcontainers.html)
 - [Actuator endpoints](https://docs.spring.io/spring-boot/reference/actuator/endpoints.html)
 - [Gradle Java compatibility](https://docs.gradle.org/current/userguide/compatibility.html)
-- [Gradle distribution checksums](https://gradle.org/release-checksums/)
 - [Gradle toolchain provisioning](https://docs.gradle.org/current/userguide/toolchains.html#sub:download_repositories)
-- [Foojay resolver plugin](https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention)
+- [Official PostgreSQL image](https://hub.docker.com/_/postgres)

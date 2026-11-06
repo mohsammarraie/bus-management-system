@@ -81,7 +81,7 @@ Revisit when:
 - Diff reviewed; unrelated changes excluded.
 - API/setup/migration documentation updated where necessary.
 - Learner can explain the change, alternatives and verification.
-- UI changes are checked at phone/tablet/desktop widths and in affected English/Arabic layouts; tracking changes include permission, stale and offline cases.
+- UI changes are checked at phone/tablet/desktop widths and in English, German and Arabic layouts (including Arabic RTL and German text expansion); tracking changes include permission, stale and offline cases.
 - New UI/docs use Bus Management System branding; historical MyGJU/GJU references and contributor credits remain accurate.
 
 ## First feature reference: bus CRUD

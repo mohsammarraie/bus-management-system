@@ -1,6 +1,6 @@
 # Bus Management System: architecture and delivery plan
 
-Prepared 6 November 2026. Status: proposed implementation baseline, ready for discussion. This plan creates no application scaffold or GitHub resources. It builds on the thesis, paper, code assessment, and final database dump. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
+Prepared 6 November 2026. Status: backend and PostgreSQL/Flyway foundation implemented; the remaining architecture is planned. See database-setup.md and next-steps.md for the current runnable scope. It builds on the thesis, paper, code assessment, and final database dump. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
 
 ## Application identity and attribution
 
@@ -34,7 +34,7 @@ This is an incremental rebuild guided by the existing domain. A feature is compl
 |---|---|---|
 | Backend | Java 25, Spring Boot 4.1.2, Gradle 9.8.2 with Kotlin DSL and committed wrapper | Java 25 is the chosen LTS baseline, supported by Boot and Gradle. The Foojay resolver can provision a missing JDK. Application code remains Java; preview features are not enabled. |
 | Organization | Modular monolith, organized by business feature | One deployable application with clear boundaries; manageable for one learner. |
-| Database | PostgreSQL 18, Flyway SQL migrations | Free/open-source engine, repeatable local/CI databases, explicit schema history. Oracle conversion adds an initial task. |
+| Database | PostgreSQL 18.6 pinned by image digest, Boot-managed Flyway 12.4.0 SQL migrations | Free/open-source engine, repeatable local/CI databases, explicit schema history. Oracle conversion adds an initial task. |
 | Legacy recovery | Isolated temporary Oracle instance | Restore/export the final dump and verify legacy rules; not a second permanent production database. |
 | Frontend | Angular 22 candidate, compatible Material and NgRx releases, RxJS 7 | Standalone components, strict typing, typed reactive forms, feature routes, reactive data flow. |
 | State | NgRx Store + Effects + Entity for shared feature state; signals for local UI state | Practice explicit reactive state without putting every input field in a global store. |
@@ -45,7 +45,19 @@ This is an incremental rebuild guided by the existing domain. A feature is compl
 | Containers | Frontend and backend application images; pinned official PostgreSQL image; Docker Compose | Reproducible development, CI smoke tests, and a complete demo stack. |
 | Delivery | One repository, short-lived branches, pull requests, GitHub Actions | Reviewable learning history and reproducible checks. |
 
-The backend starter pins Java 25, Boot 4.1.2 and Gradle 9.8.2. Other version candidates are not a tested dependency lock. Before implementing each remaining component, verify Angular/Material/NgRx peer dependencies and PostgreSQL driver/Flyway support; then pin exact versions and commit wrappers/lockfiles. Keep Java 25 consistent across development, future GitHub Actions jobs and backend Docker build/runtime stages. PostgreSQL 18 remains the target; its exact image version/digest and database integration still need implementation and verification. Current Spring documentation lists Boot 4.1.2 with Java 17–27 and Gradle 8.14+ or 9.x; Angular's matrix lists Angular 22 with Node 24.15+ as one supported option. Proposed Node baseline: compatible Node 24 patch. Avoid preview releases.
+The backend starter pins Java 25, Boot 4.1.2 and Gradle 9.8.2. Other version candidates are not a tested dependency lock. Before implementing each remaining component, verify Angular/Material/NgRx peer dependencies and PostgreSQL driver/Flyway support; then pin exact versions and commit wrappers/lockfiles. Keep Java 25 consistent across development, future GitHub Actions jobs and backend Docker build/runtime stages. PostgreSQL 18.6 is pinned by tag/digest in Compose and Testcontainers; Flyway 12.4.0, JDBC driver 42.7.14 and Testcontainers 2.0.5 are managed by Boot. Database setup and integration checks are documented in [database-setup.md](database-setup.md). Current Spring documentation lists Boot 4.1.2 with Java 17–27 and Gradle 8.14+ or 9.x; Angular's matrix lists Angular 22 with Node 24.15+ as one supported option. Proposed Node baseline: compatible Node 24 patch. Avoid preview releases.
+
+## Languages and localization
+
+Required UI languages: **English (`en`), German (`de`) and Arabic (`ar`)**. English is the initial default; all three are part of the planned application scope. Localization is planned here and will be implemented with the Angular starter and subsequent feature screens.
+
+- Provide a visible language selector and remember the user's selected language locally. Switching language must preserve the current workflow and form input.
+- Keep translation resources for each language. Translate navigation, forms, validation, dialogs, Material table/paginator labels, loading/empty/error states, trip/map status text and accessibility labels. Select and verify the translation approach/library during Angular setup; no library is chosen by this requirement update.
+- Set document language and layout direction appropriately: English/German use LTR; Arabic uses RTL. Use logical layout properties and review navigation, tables, forms and map controls in both directions. Maps must retain attribution and usable controls.
+- Format dates, times and numbers for the selected locale. Display language does not change the service timezone or the meaning of stored timestamps.
+- Keep API field names, status codes and error identifiers stable across languages. Translate known application/validation errors in the UI; do not expose raw database exceptions. If backend-generated messages or documents later require localization, define their locale handling explicitly.
+- UI translations and domain content are separate. User-entered names/comments are not automatically translated. Preserve legacy English/Arabic content and define additional German route/stop text fields or translation records when implementing routing; never invent German translations as recovered legacy data.
+- Every delivered UI feature must include all three language resources. Verify language switching and preference persistence, German text expansion, Arabic RTL, locale formatting and representative phone/desktop layouts. These checks join frontend/browser tests when that stack exists.
 
 ## Architecture
 
@@ -85,13 +97,13 @@ flowchart LR
 
 Proposed acceptance command: `docker compose up --build -d` starts the demo from a clean checkout with documented local configuration. Verification includes `docker compose config`, image builds, healthy services, browser refresh on nested routes, `/api` proxying, login/CRUD when available, and persistence after recreation. Local HTTP is sufficient for a basic localhost demo; phone-based geolocation testing needs an appropriate HTTPS origin. Deployment TLS configuration will be documented separately.
 
-Image publication to a registry is a later delivery step after a registry and release policy are selected. Initial CI builds and tests images without publishing. These Dockerfiles and Compose files are planned deliverables, not generated or tested yet.
+Image publication to a registry is a later delivery step after a registry and release policy are selected. Initial CI builds and tests images without publishing. The current `compose.yaml` implements the PostgreSQL service and named volume; `compose.dev.yaml` adds a loopback database port. Frontend/backend Dockerfiles, application services and full-stack startup remain planned. The current application runs on the host against Compose PostgreSQL.
 
 Backend modules/packages:
 
 - `identity`: accounts, password hashes, roles, authenticated-user lookup.
 - `fleet`: buses, drivers, one-to-one current assignment.
-- `routing`: stops, ordered route stops, bilingual route details.
+- `routing`: stops, ordered route stops, localized route details (legacy English/Arabic; German content added explicitly).
 - `scheduling`: timetable versions, stop times, bus assignments and overlap checks.
 - `trips`: dated trip executions, lifecycle, location samples and replay.
 - `feedback`: passenger reviews and rating calculations.
@@ -119,7 +131,7 @@ Proposed behavior decisions to resolve through acceptance examples:
 1. Preserve the current prohibition on touching schedule endpoints initially, then decide whether turnaround time or half-open intervals better represents operations.
 2. Normalize start eligibility to include exactly 30 minutes before departure; punctuality is on time at exactly ±10 minutes. These are deliberate fixes to old boundary gaps.
 3. First scope: daily schedules, with inactive state and date validity; weekdays/holidays are a separate extension unless recovered data requires them.
-4. Preserve English/Arabic and RTL for delivered feature screens.
+4. Support English, German and Arabic, including Arabic RTL, for delivered feature screens.
 5. Reviews initially follow the legacy eligible-completed-trip behavior; no claim of verified ridership without a booking/check-in system.
 
 ## API and UI blueprint
@@ -211,7 +223,7 @@ Location sharing requires explicit permission and a secure browser context. Prov
 - Denied permission, timeout, poor accuracy, offline connection, reconnect, reload, background/foreground and stale data each show an honest state and recover without creating duplicate trips.
 - Two drivers cannot upload to, complete or corrupt one another's trips. Duplicate/late samples are handled deterministically.
 - Completing/canceling stops sharing, rejects later uploads and updates the student view.
-- Map, trip list, forms and controls work at the target widths and in English/Arabic; controls do not cover required attribution.
+- Map, trip list, forms and controls work at the target widths and in English, German and Arabic; controls do not cover required attribution.
 - Playwright uses mocked geolocation/synthetic routes and controlled map assets so CI is independent of paid map APIs, external tiles and physical movement. Real-phone HTTPS testing remains a distinct acceptance step.
 
 ## Repository and Spring Boot starter blueprint
@@ -249,7 +261,7 @@ Each row is a milestone, split into small PRs where necessary. Finish and demons
 | 2. Starter and CI | Generate backend/frontend, application Dockerfiles, three-service Compose, first Flyway migration, test setup, basic CI | Fresh clone builds; Compose services healthy; migrations and tests pass in Actions | Boot configuration, Gradle, Angular CLI, Docker, CI |
 | 3. Identity and shell | Login/logout/me/CSRF, roles, Material shell, guards, account state | Correct roles allowed; direct unauthorized API access denied; logout invalidates session | Spring Security, Angular routing, NgRx |
 | 4. First vertical slice | Bus CRUD from PostgreSQL through API to Material table/form | Create/edit/list/delete and validation tested end to end | JPA, DTOs, reactive forms, effects |
-| 5. Fleet and routing | Drivers, assignments, stops, ordered bilingual routes | Assignment/deletion/ordering constraints tested; RTL screen reviewed | Relationships and reusable UI patterns |
+| 5. Fleet and routing | Drivers, assignments, stops, ordered routes with localized content | Assignment/deletion/ordering constraints tested; RTL screen reviewed | Relationships and reusable UI patterns |
 | 6. Scheduling | Versioned stop times, assignment conflict logic, date/time boundaries | Touching/contained/overnight/concurrent conflict tests pass | Transactions, locking, time modeling |
 | 7. Trips and maps | Phone location sharing, responsive driver/student maps, explicit lifecycle and ownership, simulated GPS and deterministic replay | Two-device live tracking works; concurrent drivers isolated; permission/offline/stale states and mobile/RTL layouts verified | Geolocation, maps, RxJS, state machines, responsive design |
 | 8. Reviews and reports | Unique reviews, decimal ratings, paginated filtered reports, immutable history | Duplicate submissions rejected; aggregate/report fixtures match expected values | Queries, projections, correctness |

@@ -6,15 +6,16 @@ Rebuild Bus Management System while preserving its main use cases. Help the user
 
 ## Current state
 
-The backend starter is implemented. Read docs/backend-starter.md and docs/next-steps.md, plus architecture/decisions relevant to a task.
+The backend and PostgreSQL/Flyway foundation are implemented. Read docs/backend-starter.md, docs/database-setup.md and docs/next-steps.md, plus architecture/decisions relevant to a task.
 
 Command contract from `backend/`: the wrapper launches with a compatible Java installation and resolves Java 25 through the configured toolchain/Foojay resolver. An installed full JDK 25 is reused; otherwise the first build downloads one. Do not depend on a chat-specific absolute JDK path.
 
-- `./gradlew clean test bootJar`: compile, HTTP integration tests and executable JAR.
-- `./gradlew bootRun`: start backend; `GET /actuator/health` returns UP.
-- `java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar`: run packaged backend.
+- `./gradlew clean test bootJar`: compile, PostgreSQL Testcontainers/HTTP integration tests and executable JAR. Docker is required; tests must fail rather than silently skip without it. They need no external database credentials.
+- From the repository root, copy `.env.example` to `.env` only if absent, then `docker compose -f compose.yaml -f compose.dev.yaml up -d --wait db` starts the development database. See the exact Bash commands in README.
+- From `backend/`, `./gradlew bootRun --args='--spring.profiles.active=local'` or `java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=local` starts against that database. The local profile imports the root `.env` from either supported working directory (repository root or backend/), without manual exports; process environment variables override imported values. `GET /actuator/health` reflects database connectivity.
+- Production-style execution uses `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD`, without the local profile.
 
-PostgreSQL, Angular, Docker and CI scripts are not implemented yet. No business APIs or authentication exist at this stage.
+PostgreSQL 18.6 is pinned by tag/digest in compose.yaml and PostgresTestConfiguration; update both together. The named volume mounts at `/var/lib/postgresql`. Flyway owns the `bus_management` schema; Hibernate uses `validate` and open-in-view is disabled. The initial bus table/mapping is groundwork for fleet CRUD. Angular, application Dockerfiles and CI workflows are not implemented yet. No business APIs or authentication exist at this stage.
 
 ## User-controlled Git and step handoffs
 
@@ -35,6 +36,7 @@ PostgreSQL, Angular, Docker and CI scripts are not implemented yet. No business 
 - Never store active user/trip state in mutable static fields.
 - Flyway owns schema changes; do not use automatic Hibernate schema updates.
 - Leaflet is accepted; tile hosting is still undecided. Keep mapping separate from coordinate capture and trip business logic.
+- Delivered UI features must support English (en), German (de) and Arabic (ar), with translated messages, locale-aware formatting and Arabic RTL. English is the initial default. Keep API codes independent of display language and distinguish translated UI from user-entered content.
 - Mobile/RTL behavior and stale/offline tracking states are acceptance criteria.
 
 ## Data and verification

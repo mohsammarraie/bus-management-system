@@ -1,6 +1,6 @@
 # Database choice and migration plan
 
-Prepared 6 November 2026. Recommendation: PostgreSQL for the new application, Oracle only for isolated source recovery/verification. This is a feasibility assessment; no dump import or executable conversion has been completed.
+Prepared 6 November 2026. PostgreSQL 18.6 is implemented for new application development with a pinned Compose image, Flyway migrations and Testcontainers tests. See [database-setup.md](database-setup.md). Oracle remains isolated source recovery/verification only. The target schema currently contains initial fleet groundwork; no legacy dump import or executable Oracle conversion has been completed.
 
 ## Oracle versus PostgreSQL
 
