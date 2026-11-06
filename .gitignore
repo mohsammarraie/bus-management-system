@@ -1,0 +1,30 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Legacy/private data and local volumes
+*.dmp
+*.dump
+*.sql.gz
+*.backup
+*.sqlite*
+/private-data/
+/local-data/
+/exports/
+/volumes/
+# Build and dependency outputs
+**/build/
+**/.gradle/
+**/node_modules/
+**/dist/
+**/.angular/
+**/coverage/
+**/test-results/
+**/playwright-report/
+# Local tooling
+.idea/
+.vscode/
+*.log
+.DS_Store

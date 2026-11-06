@@ -1,0 +1,29 @@
+# Repository working agreements
+
+## Purpose
+
+Rebuild Bus Management System while preserving its main use cases. Help the user learn Angular, Spring Boot and agent-assisted engineering. Explain substantial design choices briefly and report verification honestly.
+
+## Current state
+
+Documentation foundation only. No backend/frontend build commands are executable yet. Follow docs/next-steps.md; add verified commands here with the starter milestone. Read the architecture and relevant decisions before changing design.
+
+## Engineering
+
+- Work in focused feature branches with acceptance criteria and reviewable diffs.
+- Keep controllers, services, domain rules and persistence responsibilities clear.
+- Preserve useful behavior, not legacy implementation defects. Record intended behavior changes.
+- Avoid unnecessary duplication and speculative generic frameworks.
+- Enforce role/ownership checks on the backend and relational invariants in the database.
+- Never store active user/trip state in mutable static fields.
+- Flyway owns schema changes; do not use automatic Hibernate schema updates.
+- Leaflet is accepted; tile hosting is still undecided. Keep mapping separate from coordinate capture and trip business logic.
+- Mobile/RTL behavior and stale/offline tracking states are acceptance criteria.
+
+## Data and verification
+
+- Keep raw dumps, exports, credentials and real personal data out of Git and Docker build contexts. Use synthetic fixtures in tests/demos.
+- Use PostgreSQL integration tests for database behavior. Add concurrency tests for scheduling/trip integrity.
+- Run checks appropriate to each change and report actual results, skipped checks and limitations.
+- Do not publish artifacts or change remote repositories without authorization for that step.
+- Respect the user's requested hands-on exercises; otherwise complete authorized routine work without repeated confirmation.
