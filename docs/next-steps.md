@@ -1,41 +1,47 @@
-# Foundation status and next milestone
+# Current milestone and next steps
 
-## Completed locally
+## Completed foundation
 
-- Independent successor directory and documentation foundation.
-- Generic product identity and original contributor/publication credits.
+- Independent successor repository, generic product identity and original contributor/publication credits.
 - Architecture, migration plan, issue/PR templates and agent instructions.
 - Leaflet acceptance recorded in ADR 0001.
 - Ignore rules for local credentials, dumps and build outputs.
+- Java 25, Spring Boot 4.1.2 and Gradle 9.8.2 starter, committed wrapper and Foojay toolchain provisioning.
 
-## Backend starter: implemented on chore/backend-starter
+## Current task: PostgreSQL and Flyway
 
-Spring Boot 4.1.2, Java 25 and Gradle 9.8.2 are pinned. The Foojay toolchain resolver reuses an installed JDK 25 or provisions one when needed. The backend has a health endpoint and real HTTP tests for health and management endpoint exposure. See [backend-starter.md](backend-starter.md) for setup and validation details. No database or application features are added in this task.
+Implemented on `chore/postgres-flyway`:
 
-## Immediate next implementation: PostgreSQL and Flyway
+- PostgreSQL 18.6, pinned by official image tag/digest in Compose and Testcontainers.
+- Boot-managed Flyway 12.4.0, PostgreSQL JDBC 42.7.14 and Testcontainers 2.0.5.
+- PostgreSQL service, named volume, health check and explicit loopback-only development override.
+- Local example configuration loaded automatically by the local profile, plus separate external datasource configuration for deployment.
+- Flyway-owned `bus_management` schema and initial `buses` table; JPA mapping validation without automatic schema updates.
+- Real PostgreSQL tests for startup/migration, no-op migration reruns, checksum drift, JPA persistence and database constraints. Health tests now require the real test database.
+- Setup, persistence, backup and troubleshooting instructions in [database-setup.md](database-setup.md).
 
-Suggested branch: `chore/postgres-flyway`. Target PostgreSQL 18, with an exact supported image version/digest selected during implementation and reused in local development and integration tests. First verify Docker daemon access and the Boot-managed PostgreSQL/Flyway dependency versions. Include Flyway's PostgreSQL-specific module; the official PostgreSQL 18 image mounts persistent storage at `/var/lib/postgresql`. Add the PostgreSQL driver and persistence dependencies, explicit Flyway SQL migrations, local example connection configuration and a PostgreSQL Compose service. Establish PostgreSQL Testcontainers integration tests proving startup/migration and schema constraints, without importing the private Oracle dump. Keep Hibernate schema auto-update disabled.
+This foundation has no bus APIs, authentication, application Docker images, frontend or legacy data import. The minimal bus table is groundwork; add other tables and refine feature rules through new migrations as the relevant use cases are implemented. Actual verification evidence belongs in database-setup.md and the task handoff. The user reviews, commits and pushes this task.
 
-Completion evidence: database becomes healthy, migrations work on an empty database and rerun safely, backend health reflects connection state, and PostgreSQL integration tests pass. Merge the reviewed backend starter branch into `main` before creating that task branch.
+## Next implementation: backend GitHub Actions CI
 
-Suggested model/effort: **Sol, High** for persistence, migration and container integration. Astra is unnecessary for routine setup; use it for unresolved schema/domain design or concurrency problems when they arise.
+Suggested branch: `ci/backend-checks`, created from updated `main` after this task is reviewed and merged. Add Java 25 setup, Gradle wrapper validation, dependency caching, `clean test bootJar` with Docker available for Testcontainers, bounded test-report retention, and least-privilege workflow permissions. Verify workflow syntax locally; hosted CI remains pending until the user pushes and a run is observed.
 
-## Subsequent milestone: complete runnable stack
+Suggested model/effort: **Sol, Medium** for this focused CI configuration task. Increase effort only if runner/Docker integration needs troubleshooting.
 
-1. Verify compatible stable releases of Boot 4, Java, Gradle, Angular, Material, NgRx Store, Node and PostgreSQL. Record the exact choices.
-2. Generate a minimal Boot/Gradle backend with health endpoint, PostgreSQL connection and Flyway schema migration.
-3. Generate the Angular starter with Material layout, routing and initial testing; introduce feature NgRx Store state with the first meaningful feature.
-4. Add frontend/backend Dockerfiles, PostgreSQL service, Compose, health checks and example configuration.
-5. Run a clean build and a Compose startup/health/proxy smoke test locally.
-6. Add GitHub Actions for backend/frontend checks, image builds and the container smoke test. Verify workflow configuration locally; report hosted CI as pending until pushed and actually run.
-7. Add the development/start/test commands to README and AGENTS.md.
+## Following steps toward a runnable stack
 
-Acceptance: a documented fresh checkout starts the frontend, backend and PostgreSQL, with passing relevant local checks. Login and bus CRUD follow as separate feature milestones.
+1. Generate a compatible modern Angular/Material starter with responsive layout, routing and testing. Establish English (en), German (de) and Arabic (ar) resources, a language selector with persisted preference, locale formatting and Arabic RTL from the first UI slice; English is the initial default. Introduce NgRx Store/Effects/Entity with the first meaningful shared-state feature.
+2. Add frontend/backend Dockerfiles, extend Compose with application services and readiness checks, and verify the full stack locally. Use Java 25 consistently in backend build/runtime stages.
+3. Extend CI to frontend tests, application image builds and container smoke checks.
+4. Implement authentication and bus CRUD as separate feature milestones, with API contracts, authorization, validation and end-to-end checks.
+5. Add routing/schedules, trip lifecycle, foreground phone location capture, Leaflet tracking/replay and reports incrementally.
+
+Acceptance for the full stack: a documented fresh checkout starts frontend, backend and PostgreSQL, with passing relevant local/hosted checks. No proposed script should be described as available before implementation.
 
 ## Database recovery track
 
-Use the user-supplied reference dump as the primary candidate and retain the repository dump for comparison. Identify compatible Oracle original-import tooling, restore in isolation and verify the schema/data before migration. Neither dump has yet been restored. Recovery can proceed alongside the starter; synthetic fixtures keep development independent of private data.
+Use the user-supplied reference dump as the primary candidate and retain the repository dump for comparison. Identify compatible Oracle original-import tooling, restore in isolation and verify schema/data before migration. Neither dump has yet been restored. Synthetic fixtures keep development independent of private data.
 
-## GitHub publication
+## Git workflow
 
-The user created the successor repository at https://github.com/mohsammarraie/bus-management-system and authorized the initial push. The local `origin` uses `git@github.com:mohsammarraie/bus-management-system.git`. The initial foundation and documentation correction were published and subsequently squashed into one foundation commit on `main`. All future task changes are left unstaged and uncommitted for the user to review, commit and push unless explicitly requested otherwise. Keep legacy dumps and inherited credentials outside the successor history.
+The successor repository is https://github.com/mohsammarraie/bus-management-system; local `origin` uses SSH. Leave future task changes unstaged and uncommitted for the user to review, commit and push unless explicitly requested otherwise. Keep legacy dumps and inherited credentials outside the successor history. Retain existing branches unless the user authorizes their deletion.
