@@ -6,7 +6,15 @@ Rebuild Bus Management System while preserving its main use cases. Help the user
 
 ## Current state
 
-Documentation foundation only. No backend/frontend build commands are executable yet. Follow docs/next-steps.md; add verified commands here with the starter milestone. Read the architecture and relevant decisions before changing design.
+The backend starter is implemented. Read docs/backend-starter.md and docs/next-steps.md, plus architecture/decisions relevant to a task.
+
+Command contract from `backend/`: the wrapper launches with a compatible Java installation and resolves Java 25 through the configured toolchain/Foojay resolver. An installed full JDK 25 is reused; otherwise the first build downloads one. Do not depend on a chat-specific absolute JDK path.
+
+- `./gradlew clean test bootJar`: compile, HTTP integration tests and executable JAR.
+- `./gradlew bootRun`: start backend; `GET /actuator/health` returns UP.
+- `java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar`: run packaged backend.
+
+PostgreSQL, Angular, Docker and CI scripts are not implemented yet. No business APIs or authentication exist at this stage.
 
 ## User-controlled Git and step handoffs
 
