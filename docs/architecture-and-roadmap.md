@@ -32,7 +32,7 @@ This is an incremental rebuild guided by the existing domain. A feature is compl
 
 | Area | Proposed choice | Reason and tradeoff |
 |---|---|---|
-| Backend | Java 21, Spring Boot 4, Gradle Kotlin DSL and committed wrapper | Meets Boot requirements; Gradle provides the requested learning opportunity. Application code remains Java. Maven would also work. |
+| Backend | Java 25, Spring Boot 4.1.2, Gradle 9.8.2 with Kotlin DSL and committed wrapper | Java 25 is the chosen LTS baseline, supported by Boot and Gradle. The Foojay resolver can provision a missing JDK. Application code remains Java; preview features are not enabled. |
 | Organization | Modular monolith, organized by business feature | One deployable application with clear boundaries; manageable for one learner. |
 | Database | PostgreSQL 18, Flyway SQL migrations | Free/open-source engine, repeatable local/CI databases, explicit schema history. Oracle conversion adds an initial task. |
 | Legacy recovery | Isolated temporary Oracle instance | Restore/export the final dump and verify legacy rules; not a second permanent production database. |
@@ -45,7 +45,7 @@ This is an incremental rebuild guided by the existing domain. A feature is compl
 | Containers | Frontend and backend application images; pinned official PostgreSQL image; Docker Compose | Reproducible development, CI smoke tests, and a complete demo stack. |
 | Delivery | One repository, short-lived branches, pull requests, GitHub Actions | Reviewable learning history and reproducible checks. |
 
-Version candidates are not a tested dependency lock. At scaffold time, verify Spring Initializr metadata, Gradle/Java compatibility, Angular/Material/NgRx peer dependencies, and PostgreSQL driver/Flyway support; then pin exact versions and commit wrappers/lockfiles. Current Spring documentation lists Boot 4.1.2 with Java 17–27 and Gradle 8.14+ or 9.x; Angular's matrix lists Angular 22 with Node 24.15+ as one supported option. Proposed Node baseline: compatible Node 24 patch. Avoid preview releases.
+The backend starter pins Java 25, Boot 4.1.2 and Gradle 9.8.2. Other version candidates are not a tested dependency lock. Before implementing each remaining component, verify Angular/Material/NgRx peer dependencies and PostgreSQL driver/Flyway support; then pin exact versions and commit wrappers/lockfiles. Keep Java 25 consistent across development, future GitHub Actions jobs and backend Docker build/runtime stages. PostgreSQL 18 remains the target; its exact image version/digest and database integration still need implementation and verification. Current Spring documentation lists Boot 4.1.2 with Java 17–27 and Gradle 8.14+ or 9.x; Angular's matrix lists Angular 22 with Node 24.15+ as one supported option. Proposed Node baseline: compatible Node 24 patch. Avoid preview releases.
 
 ## Architecture
 

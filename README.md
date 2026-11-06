@@ -2,7 +2,7 @@
 
 An independent modernization of the MyGJU Buses System graduation project, preserving its main use cases while rebuilding the implementation with a modern web stack.
 
-**Status:** repository foundation and architecture planning. The application is not runnable yet; Dockerfiles, Compose services, application starters and CI workflows are the next milestone.
+**Status:** backend starter implemented. Spring Boot runs independently with an HTTP health endpoint. PostgreSQL, Angular, Docker/Compose and CI workflows are upcoming milestones.
 
 ## Intended experience
 
@@ -13,7 +13,7 @@ An independent modernization of the MyGJU Buses System graduation project, prese
 
 ## Technology direction
 
-Spring Boot 4 with Java and Gradle; modern Angular with RxJS and NgRx Store; PostgreSQL; Leaflet; Docker images and Compose; GitHub Actions testing. Angular Material and session-based authentication are proposed. Exact versions and the map tile provider will be verified during setup.
+The backend uses Java 25, Spring Boot 4.1.2 and Gradle 9.8.2. Planned components are modern Angular with RxJS and NgRx Store; PostgreSQL 18 with Flyway; Leaflet; Docker images and Compose; and GitHub Actions testing. Angular Material and session-based authentication are proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
 
 ## Start here
 
@@ -23,7 +23,33 @@ Spring Boot 4 with Java and Gradle; modern Angular with RxJS and NgRx Store; Pos
 4. [Development workflow templates](docs/development-workflow-templates.md)
 5. [Leaflet decision](docs/decisions/0001-leaflet.md)
 
-Setup and test commands will be added with the runnable starter. Do not interpret planned commands in the architecture as currently available scripts.
+## Run the backend
+
+Use a full **JDK 25** (including `javac`) and the committed Gradle wrapper. The project targets Java 25: Gradle reuses an installed JDK 25 or downloads one automatically through the Foojay toolchain resolver when launched with a compatible Java installation. The first build needs internet access for Gradle, plugins, dependencies and, if missing, JDK 25. No global Gradle installation is required. Offline builds require an installed JDK 25 and previously cached build dependencies; configure `JAVA_HOME` if needed.
+
+```bash
+cd backend
+./gradlew clean test bootJar
+./gradlew bootRun
+```
+
+From another terminal:
+
+```bash
+curl --fail http://localhost:8080/actuator/health
+```
+
+Expected response includes `"status":"UP"`; Boot may also include health-group names. Stop the server with Ctrl+C. To run the packaged application, use Java 25:
+
+```bash
+java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar
+```
+
+Use `PORT=8081 ./gradlew bootRun` or `java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar --server.port=8081` if port 8080 is occupied. On Windows, use `gradlew.bat` and set environment variables with the shell's syntax.
+
+Only Actuator health is exposed, without internal details. There are no business APIs or login yet. No database is required by this starter; health currently verifies the application, not persistence. [Backend setup and design](docs/backend-starter.md) explains the versions, tests and next task.
+
+Commands for later milestones in the architecture are proposals, not available scripts.
 
 ## Project history and credits
 

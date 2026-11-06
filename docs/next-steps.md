@@ -8,15 +8,17 @@
 - Leaflet acceptance recorded in ADR 0001.
 - Ignore rules for local credentials, dumps and build outputs.
 
-## Immediate next implementation: backend starter
+## Backend starter: implemented on chore/backend-starter
 
-Suggested branch: `chore/backend-starter`. Scope: verify a stable Spring Boot 4 release and compatible Java/Gradle versions, generate the Java backend and wrapper, add a minimal health endpoint and focused startup/HTTP check, and document verified build/run commands. Do not add business features yet. Keep the starter database-independent until the next PostgreSQL step; do not add persistence dependencies that prevent this stage from starting.
+Spring Boot 4.1.2, Java 25 and Gradle 9.8.2 are pinned. The Foojay toolchain resolver reuses an installed JDK 25 or provisions one when needed. The backend has a health endpoint and real HTTP tests for health and management endpoint exposure. See [backend-starter.md](backend-starter.md) for setup and validation details. No database or application features are added in this task.
 
-Suggested model/effort: **Sol, Medium** for this bounded starter. Increase to High only if dependency, toolchain or environment problems require deeper diagnosis. There is no reason to start with Extra High for routine scaffolding.
+## Immediate next implementation: PostgreSQL and Flyway
 
-Completion evidence: backend compiles, relevant tests pass, executable JAR starts and health endpoint responds. The user reviews the unstaged diff and uses the supplied commit message; no automatic commit/push.
+Suggested branch: `chore/postgres-flyway`. Target PostgreSQL 18, with an exact supported image version/digest selected during implementation and reused in local development and integration tests. First verify Docker daemon access and the Boot-managed PostgreSQL/Flyway dependency versions. Include Flyway's PostgreSQL-specific module; the official PostgreSQL 18 image mounts persistent storage at `/var/lib/postgresql`. Add the PostgreSQL driver and persistence dependencies, explicit Flyway SQL migrations, local example connection configuration and a PostgreSQL Compose service. Establish PostgreSQL Testcontainers integration tests proving startup/migration and schema constraints, without importing the private Oracle dump. Keep Hibernate schema auto-update disabled.
 
-The next step after that is PostgreSQL + Flyway + integration testing, for which **Sol, High** is a reasonable starting point. These are recommendations to help the user select a model before each task, not automatic model changes.
+Completion evidence: database becomes healthy, migrations work on an empty database and rerun safely, backend health reflects connection state, and PostgreSQL integration tests pass. Merge the reviewed backend starter branch into `main` before creating that task branch.
+
+Suggested model/effort: **Sol, High** for persistence, migration and container integration. Astra is unnecessary for routine setup; use it for unresolved schema/domain design or concurrency problems when they arise.
 
 ## Subsequent milestone: complete runnable stack
 
