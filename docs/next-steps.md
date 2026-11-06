@@ -8,7 +8,7 @@
 - Ignore rules for local credentials, dumps and build outputs.
 - Java 25, Spring Boot 4.1.2 and Gradle 9.8.2 starter, committed wrapper and Foojay toolchain provisioning.
 
-## Current task: PostgreSQL and Flyway
+## Completed: PostgreSQL and Flyway
 
 Implemented on `chore/postgres-flyway`:
 
@@ -20,13 +20,19 @@ Implemented on `chore/postgres-flyway`:
 - Real PostgreSQL tests for startup/migration, no-op migration reruns, checksum drift, JPA persistence and database constraints. Health tests now require the real test database.
 - Setup, persistence, backup and troubleshooting instructions in [database-setup.md](database-setup.md).
 
-This foundation has no bus APIs, authentication, application Docker images, frontend or legacy data import. The minimal bus table is groundwork; add other tables and refine feature rules through new migrations as the relevant use cases are implemented. Actual verification evidence belongs in database-setup.md and the task handoff. The user reviews, commits and pushes this task.
+This foundation has no bus APIs, authentication, application Docker images, frontend or legacy data import. The minimal bus table is groundwork; add other tables and refine feature rules through new migrations as the relevant use cases are implemented. Actual verification evidence belongs in database-setup.md and the task handoff. This task was merged into main before the backend CI work.
 
-## Next implementation: backend GitHub Actions CI
+## Current task: backend GitHub Actions CI
 
-Suggested branch: `ci/backend-checks`, created from updated `main` after this task is reviewed and merged. Add Java 25 setup, Gradle wrapper validation, dependency caching, `clean test bootJar` with Docker available for Testcontainers, bounded test-report retention, and least-privilege workflow permissions. Verify workflow syntax locally; hosted CI remains pending until the user pushes and a run is observed.
+Implemented on `ci/backend-checks`: `.github/workflows/backend-ci.yml` checks PRs targeting main, pushes to main and manual dispatches. It sets up Temurin Java 25, validates the Gradle wrapper through setup-gradle, caches dependencies, verifies Docker access, runs `clean test bootJar`, and retains HTML/XML test reports for seven days even after test failure. Action references are pinned to verified release commits. Workflow permissions are read-only; PR caches are read-only; superseded runs are cancelled and the job has a timeout.
 
-Suggested model/effort: **Sol, Medium** for this focused CI configuration task. Increase effort only if runner/Docker integration needs troubleshooting.
+Local actionlint validation and the exact build command passed (18 tests). Hosted execution remains pending: the user must review, commit, push and open a PR to observe the first run. See [backend-ci.md](backend-ci.md). Feature-branch pushes alone do not trigger this workflow.
+
+## Next implementation: Angular and Material starter
+
+Suggested branch: `chore/angular-starter`, created from updated main after reviewing and merging CI. Verify compatible Angular/Node/Material/i18n versions; generate a strict standalone frontend with routing, responsive Material shell and initial tests. Establish English, German and Arabic resources, language selection/persistence, locale formatting and Arabic RTL. Select the translation approach at setup. Keep business APIs, login and global feature store state for their feature milestones.
+
+Suggested model/effort: **Sol, High** for the Angular shell, localization and responsive layout. No frontend implementation begins in this CI task.
 
 ## Following steps toward a runnable stack
 
