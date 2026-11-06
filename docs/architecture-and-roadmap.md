@@ -1,6 +1,6 @@
 # Bus Management System: architecture and delivery plan
 
-Prepared 6 November 2026. Status: proposed implementation baseline, ready for discussion. This plan creates no application scaffold or GitHub resources. It builds on the thesis, paper, code assessment, and final database dump. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
+Prepared 6 November 2026. Status: proposed implementation baseline, ready for discussion. This plan creates no application scaffold or GitHub resources. It builds on the thesis, paper, code assessment, and final database dump. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
 
 ## Application identity and attribution
 
@@ -62,24 +62,24 @@ flowchart LR
     O[(Temporary Oracle recovery)] -. validated export and conversion .-> DB
 ```
 
-Production-style routing serves the Angular static files through Nginx in the frontend container and proxies `/api` to the backend container under the same browser origin. Nginx preserves the API path and supplies SPA route fallback. NgRx is the separate frontend state library. Docker Compose defines the frontend, backend, and PostgreSQL services. Development can run Angular and Spring Boot on the host with the Angular API proxy and only PostgreSQL containerized. One application instance is sufficient initially; document in-memory session loss on restart. A shared session store is a later scaling decision.
+Production-style routing serves the Angular static files from the frontend container and routes `/api` to the backend under the same browser origin. Select the static-file server and routing implementation during setup; no specific web server is selected. NgRx Store manages shared frontend application state. Docker Compose defines the frontend, backend, and PostgreSQL services. Development can run Angular and Spring Boot on the host with the Angular API proxy and only PostgreSQL containerized. One application instance is sufficient initially; document in-memory session loss on restart. A shared session store is a later scaling decision.
 
 ## Docker architecture and deliverables
 
 ```mermaid
 flowchart LR
-    Browser[Browser] -->|Published HTTP port| Frontend[frontend container: Nginx + Angular static files]
+    Browser[Browser] -->|Published HTTP port| Frontend[frontend container: Angular static files]
     Frontend -->|/api proxy to backend:8080| Backend[backend container: Spring Boot JAR]
     Backend -->|JDBC to db:5432| Database[db container: PostgreSQL official image]
     Database --> Volume[(Named database volume)]
 ```
 
-- **Frontend image:** multi-stage Dockerfile; Node builds the Angular application, then Nginx serves the compiled assets. Include browser-route fallback and the API proxy. Use a relative `/api` base URL; the browser cannot resolve Compose-only hostnames such as `backend`. Do not embed environment secrets in frontend bundles.
+- **Frontend image:** multi-stage Dockerfile; Node builds the Angular application, then a lightweight static-file server serves the compiled assets; select its implementation during setup. Include browser-route fallback and the API proxy. Use a relative `/api` base URL; the browser cannot resolve Compose-only hostnames such as `backend`. Do not embed environment secrets in frontend bundles.
 - **Backend image:** multi-stage Dockerfile; a JDK and the Gradle wrapper build the executable JAR, then a Java runtime image runs it as a non-root application user. Keep build tools out of the runtime stage. Supply database credentials and settings at runtime. CI tests remain explicit prerequisites; image creation is not evidence that tests passed.
 - **Database image:** use a pinned official PostgreSQL image as the third service/image. We do not need to maintain a custom PostgreSQL Dockerfile unless a concrete extension requires it. Store database contents in a named volume, never in the image. Flyway creates/upgrades the schema; a development-only seeding command supplies synthetic demo data.
 - **Compose files:** root `compose.yaml` for the three-service demo; `compose.dev.yaml` as an explicit override for development-only settings, such as loopback database access; `infra/compose.oracle-recovery.yaml` for an isolated, temporary Oracle restoration environment after compatibility checks. The default stack uses PostgreSQL only. Document the exact command combinations, rather than relying on an implicit override.
 - **Networking and readiness:** expose the frontend port by default. Backend and database communicate by Compose service names, not fixed IPs or `localhost`. Add database and backend readiness checks; gate backend startup on a healthy database and frontend startup on a healthy backend. Add sensible connection recovery for failures after startup. Restrict Actuator exposure to the health endpoint needed by the stack.
-- **Configuration:** add `.env.example`, ignored local configuration, `.dockerignore` files, and Nginx configuration. No passwords, raw dumps, exports or database volume directories in build contexts. Pin base-image versions/digests during implementation and document updates. Include the healthcheck tools needed by the chosen runtime images.
+- **Configuration:** add `.env.example`, ignored local configuration, `.dockerignore` files, and static-file server/routing configuration. No passwords, raw dumps, exports or database volume directories in build contexts. Pin base-image versions/digests during implementation and document updates. Include the healthcheck tools needed by the chosen runtime images.
 - **Persistence:** document normal stop/restart, backup/restore, and an explicitly destructive demo reset separately. Verify data survives container replacement. Container volume persistence does not replace backups.
 - **Learning:** practice image layers, build stages, image versus container, service DNS, ports, environment configuration, volumes, health checks, logs, and Compose troubleshooting through actual feature work.
 
@@ -227,7 +227,7 @@ bus-management-system/
   frontend/                   Angular CLI project, package lock, Dockerfile, .dockerignore
   e2e/                        Playwright workflows and synthetic fixtures
   compose.yaml, compose.dev.yaml, .env.example
-  infra/                      Nginx configuration, recovery Compose, demo setup
+  infra/                      Frontend serving/routing, recovery Compose, demo setup
   migration/                  Mapping specs and conversion scripts; no raw dump
   docs/                       Architecture, decisions, learning notes, demo guide
   .github/                    Workflows, issue forms, pull request template

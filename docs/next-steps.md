@@ -10,9 +10,9 @@
 
 ## Next milestone: runnable stack
 
-1. Verify compatible stable releases of Boot 4, Java, Gradle, Angular, Material, NgRx, Node and PostgreSQL. Record the exact choices.
+1. Verify compatible stable releases of Boot 4, Java, Gradle, Angular, Material, NgRx Store, Node and PostgreSQL. Record the exact choices.
 2. Generate a minimal Boot/Gradle backend with health endpoint, PostgreSQL connection and Flyway schema migration.
-3. Generate the Angular starter with Material layout, routing and initial testing; introduce feature NgRx state with the first meaningful feature.
+3. Generate the Angular starter with Material layout, routing and initial testing; introduce feature NgRx Store state with the first meaningful feature.
 4. Add frontend/backend Dockerfiles, PostgreSQL service, Compose, health checks and example configuration.
 5. Run a clean build and a Compose startup/health/proxy smoke test locally.
 6. Add GitHub Actions for backend/frontend checks, image builds and the container smoke test. Verify workflow configuration locally; report hosted CI as pending until pushed and actually run.

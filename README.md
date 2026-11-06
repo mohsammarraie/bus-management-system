@@ -13,7 +13,7 @@ An independent modernization of the MyGJU Buses System graduation project, prese
 
 ## Technology direction
 
-Spring Boot 4 with Java and Gradle; modern Angular with RxJS and NgRx; PostgreSQL; Leaflet; Docker images and Compose; GitHub Actions testing. Angular Material and session-based authentication are proposed. Exact versions and the map tile provider will be verified during setup.
+Spring Boot 4 with Java and Gradle; modern Angular with RxJS and NgRx Store; PostgreSQL; Leaflet; Docker images and Compose; GitHub Actions testing. Angular Material and session-based authentication are proposed. Exact versions and the map tile provider will be verified during setup.
 
 ## Start here
 
