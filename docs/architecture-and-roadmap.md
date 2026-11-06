@@ -1,18 +1,12 @@
 # Bus Management System: architecture and delivery plan
 
-Prepared 6 November 2026. Status: backend and PostgreSQL/Flyway foundation implemented; the remaining architecture is planned. See database-setup.md and next-steps.md for the current runnable scope. It builds on the thesis, paper, code assessment, and final database dump. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
+Prepared 6 November 2026. Status: backend/database foundation, backend CI and Angular/Material shell implemented; business workflows and application containers remain planned. See database-setup.md and next-steps.md for the current runnable scope. It builds on the legacy implementation assessment and database analysis. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
 
-## Application identity and attribution
+## Application identity
 
-Use **Bus Management System** as the working public application name. The final display name can be revisited before release. Use `bus-management-system` as the proposed repository/project slug and neutral application identifiers. Apply the generic identity to the login screen, navigation, browser title, demo, README title, API documentation, application metadata, Docker image names and Compose project name.
+Use **Bus Management System** as the public application name and `bus-management-system` as the repository/project slug. Use neutral application identifiers throughout the login screen, navigation, browser title, demo, README, API documentation, application metadata, Docker images and Compose project.
 
-Keep **MyGJU Buses System** and **German Jordanian University (GJU)** in historical background and source citations, alongside the original repository, thesis, paper and contributor credits. Do not carry university logos or university branding into the new UI. This naming decision does not assert whether any name is a registered trademark.
-
-Suggested README background:
-
-> Bus Management System is an independent modernization of the MyGJU Buses System graduation project originally developed by Mohammed Al-Sammarraie and Taha Al-Khaffaf at the German Jordanian University, supervised by Dr. Firas Al-Hawari. The modernization introduces an Angular frontend, Spring Boot backend, PostgreSQL database and containerized development workflow. See the original repository and related research publication for the project's history.
-
-Link the original repository and paper beside this description; preserve their original titles and authors. Describe proposed technology as planned until implemented. Retain legacy names in original artifacts and migration mappings where needed for accuracy. No existing repository, source file or database object is renamed by this document update.
+The application is an independent portfolio modernization. Use generic product descriptions and preserve contributor attribution when source is reused. Describe planned technology as planned until implemented.
 
 ## Modernization principle: preserve use cases, redesign implementation
 
@@ -36,28 +30,32 @@ This is an incremental rebuild guided by the existing domain. A feature is compl
 | Organization | Modular monolith, organized by business feature | One deployable application with clear boundaries; manageable for one learner. |
 | Database | PostgreSQL 18.6 pinned by image digest, Boot-managed Flyway 12.4.0 SQL migrations | Free/open-source engine, repeatable local/CI databases, explicit schema history. Oracle conversion adds an initial task. |
 | Legacy recovery | Isolated temporary Oracle instance | Restore/export the final dump and verify legacy rules; not a second permanent production database. |
-| Frontend | Angular 22 candidate, compatible Material and NgRx releases, RxJS 7 | Standalone components, strict typing, typed reactive forms, feature routes, reactive data flow. |
+| Frontend | Angular 22.2.5, Material/CDK 22.2.6, RxJS 7.8.2; NgRx with the first shared business feature | Standalone components, strict typing, typed reactive forms, feature routes, reactive data flow. |
 | State | NgRx Store + Effects + Entity for shared feature state; signals for local UI state | Practice explicit reactive state without putting every input field in a global store. |
 | Maps | Leaflet (accepted); tile provider pending | Driver/student live maps and recorded-trip replay. |
-| UI | Angular Material/CDK | Shared form/table/dialog patterns. Add no paid component or theme dependency. |
+| UI | Angular Material/CDK | External HTML/SCSS per component; one blue/orange Material theme with shared semantic color variables and local layout styles. Add no paid component or theme dependency. |
 | Authentication | Spring Security server session, same-origin cookie, CSRF protection | Fits one browser application; avoids introducing a token refresh subsystem before it is needed. |
 | Testing | Java unit tests + PostgreSQL integration tests; Angular Vitest; Playwright browser tests | Verify rules, actual database semantics, and complete workflows. |
 | Containers | Frontend and backend application images; pinned official PostgreSQL image; Docker Compose | Reproducible development, CI smoke tests, and a complete demo stack. |
 | Delivery | One repository, short-lived branches, pull requests, GitHub Actions | Reviewable learning history and reproducible checks. |
 
-The backend starter pins Java 25, Boot 4.1.2 and Gradle 9.8.2. Other version candidates are not a tested dependency lock. Before implementing each remaining component, verify Angular/Material/NgRx peer dependencies and PostgreSQL driver/Flyway support; then pin exact versions and commit wrappers/lockfiles. Keep Java 25 consistent across development, future GitHub Actions jobs and backend Docker build/runtime stages. PostgreSQL 18.6 is pinned by tag/digest in Compose and Testcontainers; Flyway 12.4.0, JDBC driver 42.7.14 and Testcontainers 2.0.5 are managed by Boot. Database setup and integration checks are documented in [database-setup.md](database-setup.md). Current Spring documentation lists Boot 4.1.2 with Java 17–27 and Gradle 8.14+ or 9.x; Angular's matrix lists Angular 22 with Node 24.15+ as one supported option. Proposed Node baseline: compatible Node 24 patch. Avoid preview releases.
+The backend starter pins Java 25, Boot 4.1.2 and Gradle 9.8.2. The frontend pins Angular 22.2.5, CLI/build 22.2.6, Material/CDK 22.2.6, TypeScript 6.0.3 and Transloco 8.4.0, with a committed npm lockfile and Node 24 baseline. Remaining version candidates are not a tested dependency lock. Before implementing each remaining component, verify Angular/Material/NgRx peer dependencies and PostgreSQL driver/Flyway support; then pin exact versions and commit wrappers/lockfiles. Keep Java 25 consistent across development, future GitHub Actions jobs and backend Docker build/runtime stages. PostgreSQL 18.6 is pinned by tag/digest in Compose and Testcontainers; Flyway 12.4.0, JDBC driver 42.7.14 and Testcontainers 2.0.5 are managed by Boot. Database setup and integration checks are documented in [database-setup.md](database-setup.md). Current Spring documentation lists Boot 4.1.2 with Java 17–27 and Gradle 8.14+ or 9.x; Angular's matrix lists Angular 22 with Node 24.15+ as one supported option. Proposed Node baseline: compatible Node 24 patch. Avoid preview releases.
 
 ## Languages and localization
 
-Required UI languages: **English (`en`), German (`de`) and Arabic (`ar`)**. English is the initial default; all three are part of the planned application scope. Localization is planned here and will be implemented with the Angular starter and subsequent feature screens.
+Required UI languages: **English (`en`), German (`de`) and Arabic (`ar`)**. English is the initial default; all three are part of the planned application scope. The Angular starter implements localization for the shell, overview, preferences and not-found route; subsequent business screens must extend all three dictionaries.
 
 - Provide a visible language selector and remember the user's selected language locally. Switching language must preserve the current workflow and form input.
-- Keep translation resources for each language. Translate navigation, forms, validation, dialogs, Material table/paginator labels, loading/empty/error states, trip/map status text and accessibility labels. Select and verify the translation approach/library during Angular setup; no library is chosen by this requirement update.
+- Keep translation resources for each language. Translate navigation, forms, validation, dialogs, Material table/paginator labels, loading/empty/error states, trip/map status text and accessibility labels. Transloco 8.4.0 provides runtime translation with bundled dictionaries; see [ADR 0002](decisions/0002-frontend-localization.md).
 - Set document language and layout direction appropriately: English/German use LTR; Arabic uses RTL. Use logical layout properties and review navigation, tables, forms and map controls in both directions. Maps must retain attribution and usable controls.
 - Format dates, times and numbers for the selected locale. Display language does not change the service timezone or the meaning of stored timestamps.
 - Keep API field names, status codes and error identifiers stable across languages. Translate known application/validation errors in the UI; do not expose raw database exceptions. If backend-generated messages or documents later require localization, define their locale handling explicitly.
 - UI translations and domain content are separate. User-entered names/comments are not automatically translated. Preserve legacy English/Arabic content and define additional German route/stop text fields or translation records when implementing routing; never invent German translations as recovered legacy data.
-- Every delivered UI feature must include all three language resources. Verify language switching and preference persistence, German text expansion, Arabic RTL, locale formatting and representative phone/desktop layouts. These checks join frontend/browser tests when that stack exists.
+- Every delivered UI feature must include all three language resources. Verify language switching and preference persistence, German text expansion, Arabic RTL, locale formatting and representative phone/desktop layouts. The starter includes unit/browser checks for these behaviors; extend coverage with delivered features.
+
+## Accessibility
+
+Target WCAG 2.2 Level AA throughout implementation, including English, German and Arabic. Use semantic landmarks/headings, labelled controls, visible focus, keyboard navigation, managed route/dialog focus, localized page titles, readable contrast and zoom/reflow support. Material primitives help but do not guarantee conformance. The starter includes axe and keyboard regression checks; extend them with each delivered flow and review incomplete scan results. Real screen-reader, browser zoom and interaction-state checks remain manual acceptance work; see [frontend accessibility](frontend-starter.md#accessibility).
 
 ## Architecture
 

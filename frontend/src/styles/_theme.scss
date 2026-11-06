@@ -1,0 +1,39 @@
+@use '@angular/material' as mat;
+
+// Shared application palette.
+$brand-blue: #0d86c8;
+$brand-orange: #f5aa00;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$orange-palette,
+      ),
+      typography: Arial,
+      density: 0,
+    )
+  );
+  @include mat.theme-overrides(
+    (
+      // Darker blue supports readable white text; the logo blue remains an accent.
+      primary: #006799,
+      on-primary: #ffffff,
+      primary-container: #e2f2fc,
+      on-primary-container: #06354d,
+      tertiary: #805600,
+      on-tertiary: #ffffff,
+      tertiary-container: $brand-orange,
+      on-tertiary-container: #241a00,
+      surface: #ffffff,
+      surface-container-low: #f5f9fc,
+      on-surface: #111820,
+      on-surface-variant: #4c5f6d,
+      outline: #6a7b86,
+      outline-variant: #d0dfe8
+    )
+  );
+  --app-brand-blue: #{$brand-blue};
+  --app-brand-orange: #{$brand-orange};
+}

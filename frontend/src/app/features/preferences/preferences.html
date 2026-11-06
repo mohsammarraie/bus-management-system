@@ -1,0 +1,22 @@
+<ng-container *transloco="let t">
+  <p class="eyebrow">{{ t('preferences.eyebrow') }}</p>
+  <h1 id="page-title" tabindex="-1" class="page-title">{{ t('preferences.title') }}</h1>
+  <p class="page-intro">{{ t('preferences.intro') }}</p>
+  <div class="preferences-grid">
+    <mat-card appearance="outlined"
+      ><h2>{{ t('preferences.languageTitle') }}</h2>
+      <p>{{ t('preferences.languageBody') }}</p>
+      <p class="saved">{{ t('language.saved') }}</p></mat-card
+    >
+    <mat-card appearance="outlined"
+      ><h2>{{ t('preferences.previewTitle') }}</h2>
+      <p>{{ t('preferences.previewBody') }}</p>
+      <dl>
+        <dt>{{ t('preferences.date') }}</dt>
+        <dd data-testid="date-preview">{{ datePreview() }}</dd>
+        <dt>{{ t('preferences.number') }}</dt>
+        <dd data-testid="number-preview">{{ numberPreview() }}</dd>
+      </dl>
+    </mat-card>
+  </div>
+</ng-container>

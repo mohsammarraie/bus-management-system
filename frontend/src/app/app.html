@@ -1,0 +1,102 @@
+<ng-container *transloco="let t">
+  <a
+    class="skip-link"
+    href="#main-content"
+    (click)="skipToContent($event, main)"
+    [attr.inert]="handset() && drawer.opened ? '' : null"
+    >{{ t('nav.skip') }}</a
+  >
+  <div class="workspace" [dir]="language.direction()">
+    <mat-sidenav-container>
+      <mat-sidenav
+        #drawer
+        id="workspace-navigation"
+        [mode]="handset() ? 'over' : 'side'"
+        [opened]="!handset()"
+        [attr.role]="handset() ? 'dialog' : 'complementary'"
+        [attr.aria-label]="t('nav.label')"
+        [attr.aria-modal]="handset() && drawer.opened ? 'true' : null"
+      >
+        <div class="sidebar-layout">
+          <div class="brand">
+            <span class="brand-mark"><app-icon name="bus" /></span>
+            <div>
+              <strong>{{ t('app.name') }}</strong
+              ><span>{{ t('app.workspace') }}</span>
+            </div>
+            @if (handset()) {
+              <button
+                mat-icon-button
+                type="button"
+                (click)="drawer.close()"
+                [attr.aria-label]="t('nav.close')"
+              >
+                <app-icon name="close" />
+              </button>
+            }
+          </div>
+          <div class="navigation">
+            <mat-nav-list [attr.aria-label]="t('nav.label')">
+              <a
+                mat-list-item
+                routerLink="/overview"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navigateFromMenu(drawer, main)"
+                ><app-icon matListItemIcon name="overview" /><span matListItemTitle>{{
+                  t('nav.overview')
+                }}</span></a
+              >
+              <a
+                mat-list-item
+                routerLink="/preferences"
+                routerLinkActive="active"
+                ariaCurrentWhenActive="page"
+                (click)="navigateFromMenu(drawer, main)"
+                ><app-icon matListItemIcon name="settings" /><span matListItemTitle>{{
+                  t('nav.preferences')
+                }}</span></a
+              >
+            </mat-nav-list>
+            <ul class="planned-nav" [attr.aria-label]="t('overview.soon')">
+              <li>
+                <app-icon name="bus" /><span>{{ t('nav.buses') }}</span>
+              </li>
+              <li>
+                <app-icon name="route" /><span>{{ t('nav.routes') }}</span>
+              </li>
+              <li>
+                <app-icon name="pin" /><span>{{ t('nav.trips') }}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="sidebar-footer"><span class="preview-dot"></span>{{ t('app.preview') }}</div>
+        </div>
+      </mat-sidenav>
+      <mat-sidenav-content>
+        <header class="topbar">
+          <div class="topbar-start">
+            @if (handset()) {
+              <button
+                mat-icon-button
+                type="button"
+                (click)="drawer.open()"
+                aria-controls="workspace-navigation"
+                [attr.aria-label]="t('nav.open')"
+                [attr.aria-expanded]="drawer.opened"
+              >
+                <app-icon name="menu" />
+              </button>
+            }
+            <span>{{ t('app.workspace') }}</span>
+          </div>
+          <app-language-switcher />
+        </header>
+        <main id="main-content" #main tabindex="-1" aria-labelledby="page-title">
+          <router-outlet (activate)="focusNewPage(main)" />
+        </main>
+        <footer class="page-footer">{{ t('overview.footer') }}</footer>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </div>
+</ng-container>
