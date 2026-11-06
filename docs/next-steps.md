@@ -24,6 +24,6 @@ Acceptance: a documented fresh checkout starts the frontend, backend and Postgre
 
 Use the user-supplied reference dump as the primary candidate and retain the repository dump for comparison. Identify compatible Oracle original-import tooling, restore in isolation and verify the schema/data before migration. Neither dump has yet been restored. Recovery can proceed alongside the starter; synthetic fixtures keep development independent of private data.
 
-## Pending external setup
+## GitHub publication
 
-No GitHub successor repository or remote is configured by this foundation. Confirm the destination/visibility before first publication. Keep legacy dumps and inherited credentials outside the successor history.
+The user created the successor repository at https://github.com/mohsammarraie/bus-management-system and authorized the initial push. The local `origin` uses `git@github.com:mohsammarraie/bus-management-system.git`. The publication sequence is foundation on `main`, followed by a documentation-correction pull request. Keep legacy dumps and inherited credentials outside the successor history.
