@@ -34,7 +34,7 @@ Local validation passed with Node 24.22.2/npm 11.19.1: clean npm ci (zero known 
 
 A dry run of the Chromium --with-deps installer reported seven missing local packages (six font packages and xvfb) and exited nonzero. No OS packages were installed locally. The headless browser suite passed using the existing Chromium installation; the actual hosted dependency-install step remains unverified until publication. On a local machine with Chromium/system libraries installed, CI=true npm run test:e2e exercises CI mode without installing OS packages. The workflow installs Chromium system dependencies on its disposable hosted runner.
 
-**Hosted status: pending publication and an observed run.** After committing and pushing this branch, open a PR to main. Check both Frontend CI and Backend CI and inspect frontend-browser-reports on the run summary. The workflow and branch protection must not be described as verified remotely until their actual status is checked.
+**Hosted status: verified successful after merge through PR #7.** The [PR run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42315912538) at 29c64ac and the [main push run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42316124028) at 7d30dbe both completed successfully, verified through the public Actions API. Check future runs individually and inspect frontend-browser-reports on the run summary. Branch protection remains unchanged.
 
 ## References
 

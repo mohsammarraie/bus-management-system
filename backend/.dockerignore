@@ -1,0 +1,15 @@
+**
+!Dockerfile
+!gradlew
+!build.gradle.kts
+!settings.gradle.kts
+!gradle/
+!gradle/**
+!src/
+!src/main/
+!src/main/**
+**/.env*
+**/*.dmp
+**/*.dump
+**/*.pem
+**/*.key

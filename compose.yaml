@@ -19,5 +19,40 @@ services:
       start_period: 10s
     shm_size: 128mb
 
+
+  backend:
+    image: bus-management-system-backend:local
+    build:
+      context: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-bus_management}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-bus_management}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or the environment}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/actuator/health"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    image: bus-management-system-frontend:local
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8082}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
 volumes:
   postgres_data:
