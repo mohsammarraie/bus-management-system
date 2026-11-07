@@ -72,6 +72,10 @@ Suggested model/effort: **Sol, High**, because authentication crosses API, datab
 
 Acceptance for the full stack: a documented fresh checkout starts frontend, backend and PostgreSQL, with passing relevant local/hosted checks. No proposed script should be described as available before implementation.
 
+## Later: AWS deployment and monitoring practice
+
+After the runnable MVP, evaluate AWS as the preferred personal demo host, aiming for no out-of-pocket spend and access for one or two friends. Verify account eligibility and whole-stack resource requirements first; add a bounded CloudWatch logs/metrics/dashboard/alarm exercise and teardown. Keep an alternative open if AWS cannot satisfy the cost constraint. No resources are provisioned now. See [deployment learning plan](deployment-learning-plan.md).
+
 ## Database recovery track
 
 Use the user-supplied reference dump as the primary candidate and retain the repository dump for comparison. Identify compatible Oracle original-import tooling, restore in isolation and verify schema/data before migration. Neither dump has yet been restored. Synthetic fixtures keep development independent of private data.
