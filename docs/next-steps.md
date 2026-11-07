@@ -46,22 +46,26 @@ Implemented on `ci/frontend-checks` from updated main: pinned checkout/setup-nod
 
 Merged through PR #7. Hosted PR/main checks passed; run links are recorded in frontend-ci.md. Backend CI remains independent.
 
-## Current task: application Docker images and Compose
+## Completed: application Docker images and Compose
 
 Implemented on chore/docker-compose-stack from main 7d30dbe: pinned multi-stage Java 25 and Node/Caddy images, non-root application runtimes, allowlist build contexts, same-origin SPA/API routing and Compose health dependencies. Existing PostgreSQL data configuration and host-development db-only flow are preserved. Local smoke checks verify startup, routes, migration, persistence and database outage/recovery. Optional browser mode runs the existing suite against built files. See [container setup](container-stack.md).
 
-Changes remain unstaged/uncommitted for review. No image registry publication or hosted container checks have been added.
+The container stack is merged through PR #8. Image registry publication remains unconfigured.
 
-## Next implementation: container GitHub Actions checks
+## Current task: container GitHub Actions checks
 
-After review/merge, create ci/container-checks. Build both images and run the isolated Compose smoke check on PRs/main, using synthetic credentials and failure diagnostics with bounded retention. Reuse existing source CI and avoid registry publication until a release policy is chosen. Verify hosted execution after the user publishes.
+Implemented on ci/container-checks from main 9668044: separate image build/Compose smoke workflow with read-only permissions, pinned actions, timeouts, synthetic data and seven-day bounded diagnostics. Reuses the existing smoke scenario without duplicating unit/browser suites. See [container-ci.md](container-ci.md). Changes remain uncommitted; hosted execution is pending publication and an observed PR/main run.
 
-Suggested model/effort: **Sol, High**, for CI/container lifecycle, cache behavior and reliable cleanup. Authentication and bus CRUD follow as separate milestones.
+## Next implementation: authentication foundation
+
+After review/merge and hosted checks, define the authentication API contract and role/access matrix, then implement the backend session-security foundation with user/role migrations, password hashing, CSRF behavior and authorization tests. Browser login follows as its own slice, then bus CRUD with NgRx shared feature state. Use synthetic accounts; legacy credential recovery remains separate.
+
+Suggested model/effort: **Sol, High**, because authentication crosses API, database and security boundaries. Keep this milestone focused before adding business CRUD.
 
 ## Following steps toward a runnable stack
 
-1. Review/merge the locally verified container stack.
-2. Extend CI to application image builds and container smoke checks.
+1. Review/merge Container CI and verify its hosted run.
+2. Implement the authentication foundation and then browser login.
 3. Introduce NgRx Store/Effects/Entity with the first meaningful shared business-state feature.
 4. Implement authentication and bus CRUD as separate feature milestones, with API contracts, authorization, validation and end-to-end checks.
 5. Add routing/schedules, trip lifecycle, foreground phone location capture, Leaflet tracking/replay and reports incrementally.

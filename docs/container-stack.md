@@ -42,7 +42,7 @@ docker compose build
 python3 scripts/smoke-compose.py
 ```
 
-The script creates a uniquely named project and its own volume with synthetic credentials, using .env.example rather than local .env. It checks page/proxy routing, health, non-root application users and versioned Flyway history; writes one synthetic bus, recreates the stack while retaining its volume, verifies persistence, and checks database outage/recovery. Finally it removes only its disposable project, network and volume, including on normal exceptions. A forcibly killed process may require cleanup of the printed bms-smoke-* project. Default port 18082 can be changed with SMOKE_PORT; never point this check at the normal project.
+The script creates a uniquely named project and its own volume with synthetic credentials, using .env.example rather than local .env. It checks page/proxy routing, health, non-root application users and versioned Flyway history; writes one synthetic bus, recreates the stack while retaining its volume, verifies persistence, and checks database outage/recovery. Finally it removes only its disposable project, network and volume, including on normal exceptions. Optional --report-dir container-test-results saves bounded status/logs and a result before cleanup; see container-ci.md. A forcibly killed process may require cleanup of the printed bms-smoke-* project. Default port 18082 can be changed with SMOKE_PORT; never point this check at the normal project.
 
 To also test the built frontend with the existing 38 browser cases, install frontend dependencies/Chromium as documented in frontend-starter.md, then run:
 
@@ -52,10 +52,10 @@ python3 scripts/smoke-compose.py --browser-tests
 
 The optional mode requires Node 24/npm 11 and uses PLAYWRIGHT_BASE_URL to target the container without starting an Angular dev server. Ordinary Playwright commands retain their existing behavior. Report files remain ignored. Source checks and backend integration tests remain separate from this smoke check.
 
-Container CI is the next task; no hosted image build, registry upload or container smoke run is claimed yet.
+Independent [Container CI](container-ci.md) builds both images and runs the default smoke check. Hosted execution is pending publication and an observed run; registry publication is not configured.
 
 References: [Caddy handle routing](https://caddyserver.com/docs/caddyfile/directives/handle), [Compose health dependencies](https://docs.docker.com/compose/how-tos/startup-order/).
 
 ## Local verification evidence
 
-Both images build from the permitted source contexts. Base/dev Compose validation, format/lint and browser-test type checking passed. The backend clean test bootJar run passed all 18 tests. The isolated smoke scenario passed, including all 38 existing browser cases against the production Angular build (no retries/skips), migration, synthetic data persistence across stack recreation and database outage/recovery. Temporary projects/volumes were removed. Tested on Linux amd64 with Docker 29.8.0/Compose 5.5.1; other architectures and internet deployment remain unverified. Existing frontend/backend source CI passed previously; hosted container checks are still pending implementation.
+Both images build from the permitted source contexts. Base/dev Compose validation, format/lint and browser-test type checking passed. The backend clean test bootJar run passed all 18 tests. The isolated smoke scenario passed, including all 38 existing browser cases against the production Angular build (no retries/skips), migration, synthetic data persistence across stack recreation and database outage/recovery. Temporary projects/volumes were removed. Tested on Linux amd64 with Docker 29.8.0/Compose 5.5.1; other architectures and internet deployment remain unverified. Existing frontend/backend source CI passed previously; hosted container checks are configured with observed results pending publication.

@@ -28,3 +28,6 @@
 .vscode/
 *.log
 .DS_Store
+
+# Isolated Compose smoke diagnostics
+/container-test-results/
