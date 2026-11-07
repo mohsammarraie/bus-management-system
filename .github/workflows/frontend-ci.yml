@@ -16,9 +16,9 @@ concurrency:
 
 jobs:
   frontend:
-    name: Frontend checks and browser tests
+    name: Frontend checks and build
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -57,6 +57,34 @@ jobs:
 
       - name: Build production frontend
         run: npm run build
+
+  e2e:
+    name: Frontend browser and accessibility tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      CI: 'true'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node and npm cache
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Select npm version
+        run: npm install --global npm@11.19.1
+
+      - name: Install locked dependencies
+        run: npm ci
 
       - name: Install Chromium and system dependencies
         run: npx playwright install --with-deps chromium
