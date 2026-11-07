@@ -28,7 +28,7 @@ Implemented on `ci/backend-checks`: `.github/workflows/backend-ci.yml` checks PR
 
 Local actionlint validation and the exact build command passed (18 tests). The workflow is merged through PR #5; hosted PR and main-branch runs were verified successful. See [backend-ci.md](backend-ci.md). Feature-branch pushes alone do not trigger this workflow.
 
-## Current task: Angular and Material starter
+## Completed: Angular and Material starter
 
 Implemented on `chore/angular-starter` from updated main:
 
@@ -38,13 +38,19 @@ Implemented on `chore/angular-starter` from updated main:
 - Eight Vitest checks and 38 desktop/mobile Chromium browser cases, including axe scans, keyboard focus/menu checks and narrow-screen reflow. The frontend works without a backend; business APIs, login, Leaflet and NgRx feature state remain future slices.
 - Setup/design/verification in [frontend-starter.md](frontend-starter.md), localization rationale in [ADR 0002](decisions/0002-frontend-localization.md).
 
-The user reviews, commits and pushes; no frontend workflow or application containers are added in this task.
+The starter is merged into main. Business features and application containers remain future tasks.
 
-## Next implementation: frontend GitHub Actions CI
+## Current task: frontend GitHub Actions CI
 
-Suggested branch: `ci/frontend-checks`, from updated main after this starter is reviewed/merged. Use Node 24/npm lockfile caching, `npm ci`, format/lint/browser-test type/unit/build checks and Playwright Chromium installation/browser checks, with bounded reports and the same least-privilege policy as backend CI. Verify action compatibility and hosted results after publication. Backend CI currently does not execute frontend checks.
+Implemented on `ci/frontend-checks` from updated main: pinned checkout/setup-node/upload actions, Node from .nvmrc, npm 11.19.1, lockfile cache, clean install, format/lint/browser-test type/unit/build checks and Playwright Chromium with system dependencies. Reports persist for seven days. Read-only permissions, concurrency cancellation and bounded job/browser timeouts are configured. See [frontend-ci.md](frontend-ci.md).
 
-Suggested model/effort: **Sol, Medium** for this focused workflow task. After frontend CI, add frontend/backend Dockerfiles and the full Compose demo stack with **Sol, High**.
+Changes remain uncommitted for user review. Hosted results are pending publication and an observed PR/main run. Backend CI remains independent.
+
+## Next implementation: application Docker images and Compose
+
+After frontend CI review/merge, create a focused container branch. Add multi-stage frontend/backend Dockerfiles, build-context ignore rules, production SPA/API routing, full Compose services and readiness checks. Verify fresh startup, database persistence, frontend routing and backend health locally. Select the static-file server during this task.
+
+Suggested model/effort: **Sol, High**, because container networking, runtime configuration and readiness span the whole stack.
 
 ## Following steps toward a runnable stack
 

@@ -95,7 +95,7 @@ Verified locally with Node 24.22.2 and npm 11.19.1:
 
 After the accessibility update, format/lint/type checks, all eight unit tests, all 38 browser cases and the production build passed. All seven components retain external template/style references. Real screen-reader and additional browser-engine checks are still pending.
 
-Frontend hosted CI is not implemented yet; backend CI is merged and independently verified successful. No backend code or business behavior changed, so its unchanged test suite was not rerun in this frontend task. Real-device testing and other browser engines remain future coverage.
+Frontend CI is configured; hosted verification is pending publication and an observed run. See [frontend CI](frontend-ci.md). Backend CI is merged and independently verified successful. No backend code or business behavior changed, so its unchanged test suite was not rerun in this frontend task. Real-device testing and other browser engines remain future coverage.
 
 ## Official references
 
