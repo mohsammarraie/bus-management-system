@@ -44,7 +44,7 @@ Local checks passed:
 
 **Hosted status: verified successful.** The workflow was merged through PR #5. The [main-branch push run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42302018928) at `f320ce7` and the [CI pull-request run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42301152086) both completed successfully, verified through the public Actions API. Future run results must still be checked individually. Download backend-test-reports from each run summary when investigating failures. Branch-protection settings have not been changed by these tasks.
 
-The separate [frontend workflow](frontend-ci.md) adds frontend and Chromium browser checks; its hosted verification is pending. Application image builds and Compose smoke checks follow container implementation. Current DB integration coverage does not claim full-stack deployment verification.
+The separate [frontend workflow](frontend-ci.md) adds frontend and Chromium browser checks; its hosted PR/main verification passed. Application image builds and Compose smoke checks follow container implementation. Current DB integration coverage does not claim full-stack deployment verification.
 
 ## Official references
 

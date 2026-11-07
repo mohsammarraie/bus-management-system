@@ -1,0 +1,34 @@
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	handle /healthz {
+		respond "ok" 200
+	}
+	handle /api/health {
+		rewrite * /actuator/health
+		reverse_proxy backend:8080
+	}
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy backend:8080
+	}
+	@internal path /actuator /actuator/*
+	handle @internal {
+		respond 404
+	}
+	@assets path *.js *.css *.svg *.ico *.png *.woff *.woff2 *.json *.map
+	handle @assets {
+		file_server
+	}
+	handle {
+		try_files {path} /index.html
+		header Cache-Control "no-cache"
+		file_server
+	}
+}

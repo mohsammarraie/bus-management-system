@@ -40,23 +40,29 @@ Implemented on `chore/angular-starter` from updated main:
 
 The starter is merged into main. Business features and application containers remain future tasks.
 
-## Current task: frontend GitHub Actions CI
+## Completed: frontend GitHub Actions CI
 
 Implemented on `ci/frontend-checks` from updated main: pinned checkout/setup-node/upload actions, Node from .nvmrc, npm 11.19.1, lockfile cache, clean install, format/lint/browser-test type/unit/build checks and Playwright Chromium with system dependencies. Reports persist for seven days. Read-only permissions, concurrency cancellation and bounded job/browser timeouts are configured. See [frontend-ci.md](frontend-ci.md).
 
-Changes remain uncommitted for user review. Hosted results are pending publication and an observed PR/main run. Backend CI remains independent.
+Merged through PR #7. Hosted PR/main checks passed; run links are recorded in frontend-ci.md. Backend CI remains independent.
 
-## Next implementation: application Docker images and Compose
+## Current task: application Docker images and Compose
 
-After frontend CI review/merge, create a focused container branch. Add multi-stage frontend/backend Dockerfiles, build-context ignore rules, production SPA/API routing, full Compose services and readiness checks. Verify fresh startup, database persistence, frontend routing and backend health locally. Select the static-file server during this task.
+Implemented on chore/docker-compose-stack from main 7d30dbe: pinned multi-stage Java 25 and Node/Caddy images, non-root application runtimes, allowlist build contexts, same-origin SPA/API routing and Compose health dependencies. Existing PostgreSQL data configuration and host-development db-only flow are preserved. Local smoke checks verify startup, routes, migration, persistence and database outage/recovery. Optional browser mode runs the existing suite against built files. See [container setup](container-stack.md).
 
-Suggested model/effort: **Sol, High**, because container networking, runtime configuration and readiness span the whole stack.
+Changes remain unstaged/uncommitted for review. No image registry publication or hosted container checks have been added.
+
+## Next implementation: container GitHub Actions checks
+
+After review/merge, create ci/container-checks. Build both images and run the isolated Compose smoke check on PRs/main, using synthetic credentials and failure diagnostics with bounded retention. Reuse existing source CI and avoid registry publication until a release policy is chosen. Verify hosted execution after the user publishes.
+
+Suggested model/effort: **Sol, High**, for CI/container lifecycle, cache behavior and reliable cleanup. Authentication and bus CRUD follow as separate milestones.
 
 ## Following steps toward a runnable stack
 
-1. Publish and verify frontend CI for the implemented starter. Introduce NgRx Store/Effects/Entity with the first meaningful shared business-state feature.
-2. Add frontend/backend Dockerfiles, extend Compose with application services and readiness checks, and verify the full stack locally. Use Java 25 consistently in backend build/runtime stages.
-3. Extend CI to application image builds and container smoke checks.
+1. Review/merge the locally verified container stack.
+2. Extend CI to application image builds and container smoke checks.
+3. Introduce NgRx Store/Effects/Entity with the first meaningful shared business-state feature.
 4. Implement authentication and bus CRUD as separate feature milestones, with API contracts, authorization, validation and end-to-end checks.
 5. Add routing/schedules, trip lifecycle, foreground phone location capture, Leaflet tracking/replay and reports incrementally.
 

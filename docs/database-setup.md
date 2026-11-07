@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-The host-run Spring Boot backend connects to PostgreSQL in Docker. Flyway applies the schema; Hibernate validates the JPA mapping. The current Compose files contain only the database service. Application Docker images, frontend, business endpoints, login and legacy data import are later tasks.
+The host-run Spring Boot backend connects to PostgreSQL in Docker. Flyway applies the schema; Hibernate validates the JPA mapping. Compose also provides the backend/frontend images; see [container setup](container-stack.md). The db-only commands below remain for host-run development. Business endpoints, login and legacy data import are later tasks.
 
 PostgreSQL **18.6-bookworm** is pinned by the same official image digest in `compose.yaml` and `PostgresTestConfiguration`. Update both references together and rerun database tests and Compose smoke checks when updating the image. Spring Boot 4.1.2 manages Flyway **12.4.0**, PostgreSQL JDBC **42.7.14** and Testcontainers **2.0.5**. No database extension is required for this foundation.
 

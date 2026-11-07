@@ -40,7 +40,7 @@ npm run test:e2e
 
 `npm test` watches unit tests. Playwright starts the dev server on loopback port 4200 if it is not already running. It uses Chromium desktop and Pixel 7 viewport/touch emulation; it does not claim real Android/iOS or Safari verification. Browser binaries live in the normal Playwright cache, outside Git. Reports/traces and build/cache directories are ignored.
 
-Production assets are emitted to `frontend/dist/bus-management-system/browser/`. A production static server must route unknown non-asset paths to index.html for SPA routing. That server, application Dockerfiles and deployment configuration are later tasks.
+Production assets are emitted to `frontend/dist/bus-management-system/browser/`. A production static server must route unknown non-asset paths to index.html for SPA routing. The [Caddy runtime image and Compose stack](container-stack.md) implement static serving, SPA fallback and API proxying. Internet deployment/TLS configuration remains future work.
 
 The development proxy forwards `/api/**` to `http://127.0.0.1:8080`; change proxy.conf.json if the host backend uses another port. No frontend API calls or backend business endpoints are implemented yet. This proxy is a development facility, not production routing.
 
@@ -95,7 +95,7 @@ Verified locally with Node 24.22.2 and npm 11.19.1:
 
 After the accessibility update, format/lint/type checks, all eight unit tests, all 38 browser cases and the production build passed. All seven components retain external template/style references. Real screen-reader and additional browser-engine checks are still pending.
 
-Frontend CI is configured; hosted verification is pending publication and an observed run. See [frontend CI](frontend-ci.md). Backend CI is merged and independently verified successful. No backend code or business behavior changed, so its unchanged test suite was not rerun in this frontend task. Real-device testing and other browser engines remain future coverage.
+Frontend CI is configured; hosted PR/main verification passed after merge. See [frontend CI](frontend-ci.md). Backend CI is merged and independently verified successful. No backend code or business behavior changed, so its unchanged test suite was not rerun in this frontend task. Real-device testing and other browser engines remain future coverage.
 
 ## Official references
 

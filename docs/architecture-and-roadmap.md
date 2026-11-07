@@ -1,6 +1,6 @@
 # Bus Management System: architecture and delivery plan
 
-Prepared 6 November 2026. Status: backend/database foundation, backend CI and Angular/Material shell implemented; business workflows and application containers remain planned. See database-setup.md and next-steps.md for the current runnable scope. It builds on the legacy implementation assessment and database analysis. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
+Prepared 6 November 2026. Status: backend/database foundation, backend CI and Angular/Material shell implemented; business workflows and the local container stack is implemented; business workflows remain planned. See database-setup.md and next-steps.md for the current runnable scope. It builds on the legacy implementation assessment and database analysis. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
 
 ## Application identity
 
@@ -72,7 +72,7 @@ flowchart LR
     O[(Temporary Oracle recovery)] -. validated export and conversion .-> DB
 ```
 
-Production-style routing serves the Angular static files from the frontend container and routes `/api` to the backend under the same browser origin. Select the static-file server and routing implementation during setup; no specific web server is selected. NgRx Store manages shared frontend application state. Docker Compose defines the frontend, backend, and PostgreSQL services. Development can run Angular and Spring Boot on the host with the Angular API proxy and only PostgreSQL containerized. One application instance is sufficient initially; document in-memory session loss on restart. A shared session store is a later scaling decision.
+Production-style routing serves the Angular static files from the frontend container and routes `/api` to the backend under the same browser origin. Caddy serves static files and proxies /api to the backend; see container-stack.md. NgRx Store manages shared frontend application state. Docker Compose defines the frontend, backend, and PostgreSQL services. Development can run Angular and Spring Boot on the host with the Angular API proxy and only PostgreSQL containerized. One application instance is sufficient initially; document in-memory session loss on restart. A shared session store is a later scaling decision.
 
 ## Docker architecture and deliverables
 
@@ -84,7 +84,7 @@ flowchart LR
     Database --> Volume[(Named database volume)]
 ```
 
-- **Frontend image:** multi-stage Dockerfile; Node builds the Angular application, then a lightweight static-file server serves the compiled assets; select its implementation during setup. Include browser-route fallback and the API proxy. Use a relative `/api` base URL; the browser cannot resolve Compose-only hostnames such as `backend`. Do not embed environment secrets in frontend bundles.
+- **Frontend image:** multi-stage Dockerfile; Node builds the Angular application, then a lightweight static-file server serves the compiled assets; Caddy is selected for static serving and same-origin API routing. Include browser-route fallback and the API proxy. Use a relative `/api` base URL; the browser cannot resolve Compose-only hostnames such as `backend`. Do not embed environment secrets in frontend bundles.
 - **Backend image:** multi-stage Dockerfile; a JDK and the Gradle wrapper build the executable JAR, then a Java runtime image runs it as a non-root application user. Keep build tools out of the runtime stage. Supply database credentials and settings at runtime. CI tests remain explicit prerequisites; image creation is not evidence that tests passed.
 - **Database image:** use a pinned official PostgreSQL image as the third service/image. We do not need to maintain a custom PostgreSQL Dockerfile unless a concrete extension requires it. Store database contents in a named volume, never in the image. Flyway creates/upgrades the schema; a development-only seeding command supplies synthetic demo data.
 - **Compose files:** root `compose.yaml` for the three-service demo; `compose.dev.yaml` as an explicit override for development-only settings, such as loopback database access; `infra/compose.oracle-recovery.yaml` for an isolated, temporary Oracle restoration environment after compatibility checks. The default stack uses PostgreSQL only. Document the exact command combinations, rather than relying on an implicit override.
@@ -95,7 +95,7 @@ flowchart LR
 
 Proposed acceptance command: `docker compose up --build -d` starts the demo from a clean checkout with documented local configuration. Verification includes `docker compose config`, image builds, healthy services, browser refresh on nested routes, `/api` proxying, login/CRUD when available, and persistence after recreation. Local HTTP is sufficient for a basic localhost demo; phone-based geolocation testing needs an appropriate HTTPS origin. Deployment TLS configuration will be documented separately.
 
-Image publication to a registry is a later delivery step after a registry and release policy are selected. Initial CI builds and tests images without publishing. The current `compose.yaml` implements the PostgreSQL service and named volume; `compose.dev.yaml` adds a loopback database port. Frontend/backend Dockerfiles, application services and full-stack startup remain planned. The current application runs on the host against Compose PostgreSQL.
+Image publication to a registry is a later delivery step after a registry and release policy are selected. Initial CI builds and tests images without publishing. The current compose.yaml implements frontend/backend/PostgreSQL services with health dependencies and the existing database volume. Caddy serves the Angular build and proxies the backend. compose.dev.yaml retains the optional loopback database port for host-run development. Full-stack startup, persistence and database recovery were verified locally; container CI follows next. See [container setup](container-stack.md).
 
 Backend modules/packages:
 
@@ -272,7 +272,7 @@ Repository publication detail: the legacy history already includes database dump
 
 ## GitHub Actions and validation
 
-The backend workflow `.github/workflows/backend-ci.yml` is merged and has passed on GitHub. It validates the wrapper, runs Java 25 tests/build with PostgreSQL Testcontainers and retains test reports. The frontend workflow `.github/workflows/frontend-ci.yml` adds format/lint/type/unit/build and Chromium browser/accessibility checks; hosted execution is pending publication and an observed run. See [frontend CI](frontend-ci.md). Application image/Compose checks follow container implementation. Trigger on pull requests and pushes to `main`. Use least-privilege `contents: read`, timeouts, cancellation of superseded runs, and pinned reviewed action revisions. Do not execute untrusted PR code with privileged secrets. CI uses synthetic data only.
+The backend workflow `.github/workflows/backend-ci.yml` is merged and has passed on GitHub. It validates the wrapper, runs Java 25 tests/build with PostgreSQL Testcontainers and retains test reports. The frontend workflow `.github/workflows/frontend-ci.yml` adds format/lint/type/unit/build and Chromium browser/accessibility checks; hosted PR/main checks passed after merge. See [frontend CI](frontend-ci.md). Hosted application image/Compose checks are the next CI task; local smoke checks are implemented. Trigger on pull requests and pushes to `main`. Use least-privilege `contents: read`, timeouts, cancellation of superseded runs, and pinned reviewed action revisions. Do not execute untrusted PR code with privileged secrets. CI uses synthetic data only.
 
 - Backend: setup Java; validate/use Gradle wrapper; cache through setup-gradle; run formatting, unit and integration tasks, migration checks, and package JAR. Proposed command contract: `./gradlew check integrationTest bootJar`; define the custom task before enabling that workflow command.
 - Database: PostgreSQL Testcontainers for backend tests. Apply Flyway to an empty database and test upgrade from the preceding schema snapshot when migrations evolve. Do not use H2 as evidence of PostgreSQL compatibility.
