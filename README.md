@@ -2,7 +2,7 @@
 
 A modern bus management application for managing buses, routes and trips, built with Angular, Spring Boot and PostgreSQL.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Business APIs and login are upcoming milestones; container CI follows next.
+**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Business APIs and login are upcoming milestones; container CI is configured with hosted verification pending publication.
 
 ## Intended experience
 
@@ -13,7 +13,7 @@ A modern bus management application for managing buses, routes and trips, built 
 
 ## Technology direction
 
-The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet follows in later tasks; frontend/backend Docker images are available. Backend and frontend checks are configured in GitHub Actions; frontend hosted checks have passed, and container CI will follow. Session-based authentication is proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
+The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet follows in later tasks; frontend/backend Docker images are available. Backend and frontend checks are configured in GitHub Actions; frontend hosted checks have passed, and independent container CI is configured with hosted verification pending publication. Session-based authentication is proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
 
 ## Start here
 
@@ -27,6 +27,7 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 8. [Frontend setup and localization](docs/frontend-starter.md)
 9. [Frontend CI and browser reports](docs/frontend-ci.md)
 10. [Docker stack and smoke checks](docs/container-stack.md)
+11. [Container CI and diagnostics](docs/container-ci.md)
 
 ## Run the full stack with Docker
 

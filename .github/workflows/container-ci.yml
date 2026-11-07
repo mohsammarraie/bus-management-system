@@ -1,0 +1,53 @@
+name: Container CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  containers:
+    name: Container builds and Compose smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      POSTGRES_PASSWORD: synthetic-smoke-only
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check container tools
+        run: |
+          docker version
+          docker compose version
+          python3 --version
+
+      - name: Validate Compose configuration
+        run: docker compose --env-file .env.example config --quiet
+
+      - name: Build application images
+        timeout-minutes: 15
+        run: docker compose --env-file .env.example --progress plain build
+
+      - name: Smoke test the isolated stack
+        run: timeout --signal=INT --kill-after=60s 8m python3 scripts/smoke-compose.py --report-dir container-test-results
+
+      - name: Upload container diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: container-smoke-reports
+          path: container-test-results/
+          if-no-files-found: warn
+          retention-days: 7

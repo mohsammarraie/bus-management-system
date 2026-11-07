@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -12,6 +13,7 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--browser-tests', action='store_true', help='Also run installed Playwright tests against the built frontend')
+parser.add_argument('--report-dir', type=Path, help='Save bounded diagnostics before cleanup')
 args = parser.parse_args()
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +55,31 @@ def sql(query):
                    '-v', 'ON_ERROR_STOP=1', '-Atc', query, capture=True).strip()
 
 
+def save_diagnostics():
+    if args.report_dir is None:
+        return
+    try:
+        args.report_dir.mkdir(parents=True, exist_ok=True)
+        commands = {
+            'compose-status.json': ['ps', '--all', '--format', 'json'],
+            'compose-logs.txt': ['logs', '--no-color', '--timestamps', '--tail', '200'],
+        }
+        for filename, arguments in commands.items():
+            result = subprocess.run(COMMAND + arguments, cwd=ROOT, env=ENV,
+                                    capture_output=True, text=True, timeout=15)
+            (args.report_dir / filename).write_text(result.stdout + result.stderr)
+        (args.report_dir / 'result.json').write_text(json.dumps({
+            'project': PROJECT, 'passed': passed, 'error': failure,
+        }, indent=2) + '\n')
+    except (OSError, subprocess.TimeoutExpired) as error:
+        # Diagnostics must not prevent cleanup or hide the original test failure.
+        print('Could not save all diagnostics:', error, file=sys.stderr)
+
+
+passed = False
+failure = None
+
+
 try:
     compose('up', '-d', '--wait', '--wait-timeout', '180')
     assert health(200)['status'] == 'UP'
@@ -77,6 +104,11 @@ try:
     assert health(503)['status'] == 'DOWN'
     compose('start', 'db')
     assert health(200)['status'] == 'UP'
+    passed = True
     print('PASS: routing, proxy health, non-root users, migration, persistence and database recovery')
+except BaseException as error:
+    failure = f'{type(error).__name__}: {error}'
+    raise
 finally:
+    save_diagnostics()
     compose('down', '--volumes', '--remove-orphans')
