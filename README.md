@@ -13,7 +13,7 @@ A modern bus management application for managing buses, routes and trips, built 
 
 ## Technology direction
 
-The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet and frontend/backend Docker images follow in later tasks. Backend testing is configured in GitHub Actions; frontend and container CI will follow. Session-based authentication is proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
+The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet and frontend/backend Docker images follow in later tasks. Backend and frontend checks are configured in GitHub Actions; frontend hosted verification is pending publication, and container CI will follow. Session-based authentication is proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
 
 ## Start here
 
@@ -25,6 +25,7 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 6. [Database setup, tests and recovery](docs/database-setup.md)
 7. [Backend CI and test reports](docs/backend-ci.md)
 8. [Frontend setup and localization](docs/frontend-starter.md)
+9. [Frontend CI and browser reports](docs/frontend-ci.md)
 
 ## Run the backend
 
@@ -89,7 +90,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The frontend's development proxy forwards future `/api/**` calls to the backend on port 8080. No business API exists yet. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. Frontend GitHub Actions checks are the next task.
+The frontend's development proxy forwards future `/api/**` calls to the backend on port 8080. No business API exists yet. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. The [frontend CI workflow](docs/frontend-ci.md) runs these checks on PRs to main and main pushes once published.
 
 ## Project history and credits
 
