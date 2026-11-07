@@ -283,6 +283,10 @@ The backend workflow `.github/workflows/backend-ci.yml` is merged and has passed
 - Measure meaningful coverage around business rules; do not use a coverage percentage as a substitute for concurrency, permissions and migration tests.
 - Dependency updates through a bot can be a later small PR. Deployment/publishing is separate from the initial testing workflow and awaits a chosen hosting environment.
 
+## Deployment learning target
+
+AWS is the preferred future demo environment for practicing cloud deployment and monitoring, building on the developer's Cloud Practitioner certification. Target personal testing and one or two friends with no out-of-pocket spend, subject to verified account eligibility and resource costs. No hosting topology is selected or cloud resources created. Plan CloudWatch logs, a small metrics dashboard and a tested alarm, with bounded retention and complete teardown. If the full stack cannot fit the constraint, evaluate an alternative later. See [deployment and monitoring learning plan](deployment-learning-plan.md).
+
 ## Agent-assisted learning workflow
 
 One issue → short plan and model/effort recommendation → focused branch → implementation → local checks → diff review → user handoff with commit message → user commit/push → hosted CI and PR review → user-controlled merge → learning note. The agent leaves changes unstaged, uncommitted and unpushed unless the user explicitly authorizes a Git action. Each handoff identifies the next bounded step and recommends its model/effort before work begins. One agent is sufficient initially. No autonomous multi-agent setup is required.
