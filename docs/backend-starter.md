@@ -71,3 +71,7 @@ See [database setup and verification](database-setup.md) for commands and curren
 - [Gradle Java compatibility](https://docs.gradle.org/current/userguide/compatibility.html)
 - [Gradle toolchain provisioning](https://docs.gradle.org/current/userguide/toolchains.html#sub:download_repositories)
 - [Official PostgreSQL image](https://hub.docker.com/_/postgres)
+
+## Authentication follow-up
+
+The backend now includes Keycloak OIDC/session/CSRF security; see [authentication setup](authentication-setup.md). Production-style launches require OIDC_CLIENT_SECRET and matching public/internal issuer settings in addition to datasource values. The local profile supplies the synthetic example client secret and does not require identity discovery to boot. Real login needs the identity service. The original persistence foundation remains unchanged; Keycloak owns identity credentials and tables separately.

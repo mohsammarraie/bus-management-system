@@ -2,7 +2,7 @@
 
 A modern bus management application for managing buses, routes and trips, built with Angular, Spring Boot and PostgreSQL.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Business APIs and login are upcoming milestones; container CI is configured with hosted verification pending publication.
+**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Keycloak/backend session login and passenger signup are implemented; Angular account integration and business APIs are upcoming milestones; container CI is configured with hosted verification pending publication.
 
 ## Intended experience
 
@@ -13,7 +13,7 @@ A modern bus management application for managing buses, routes and trips, built 
 
 ## Technology direction
 
-The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet follows in later tasks; frontend/backend Docker images are available. Backend and frontend checks are configured in GitHub Actions; frontend hosted checks have passed, and independent container CI is configured with hosted verification pending publication. Session-based authentication is proposed. Remaining dependency versions and the map tile provider will be verified during their setup.
+The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet follows in later tasks; frontend/backend Docker images are available. Backend and frontend checks are configured in GitHub Actions; frontend hosted checks have passed, and independent container CI is configured with hosted verification pending publication. Keycloak with backend-managed OIDC/session authentication is implemented; see [ADR 0003](docs/decisions/0003-backend-managed-keycloak-login.md). Remaining dependency versions and the map tile provider will be verified during their setup.
 
 ## Start here
 
@@ -28,15 +28,59 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 9. [Frontend CI and browser reports](docs/frontend-ci.md)
 10. [Docker stack and smoke checks](docs/container-stack.md)
 11. [Container CI and diagnostics](docs/container-ci.md)
+12. [Authentication setup and API](docs/authentication-setup.md)
+13. [Authentication architecture decision](docs/decisions/0003-backend-managed-keycloak-login.md)
 
-## Run the full stack with Docker
+## Run locally
+
+Choose between two modes. **DBeaver access is available in both** at localhost:5432 using POSTGRES_DB, POSTGRES_USER and POSTGRES_PASSWORD from the root .env. POSTGRES_PORT changes that host port if needed.
+
+| Mode | Runs in Docker | Runs on the host | Browser address |
+|---|---|---|---|
+| Full stack (compose.yaml) | Frontend, backend, Keycloak and PostgreSQL | No applications | http://localhost:8082 |
+| Host development (compose.yaml + compose.host.yaml) | Keycloak and PostgreSQL | Angular and Spring Boot | http://localhost:4200 |
+
+Docker Engine and the Compose plugin are required. Run the Docker commands from the repository root. Prepare the environment file once:
 
 ```bash
 cp -n .env.example .env
-docker compose up --build -d --wait --wait-timeout 180
 ```
 
-Open http://localhost:8082. Keep an existing .env and its database credentials. `docker compose down` stops the stack and retains its database volume. See [container setup](docs/container-stack.md) for routing, ports, image details and isolated smoke checks. Host-run development remains available below.
+Keep an existing .env and its database credentials; add the four Keycloak/client/demo keys from .env.example if missing. Both modes use the same development database volume. PostgreSQL's host port binds only to 127.0.0.1; this Compose setup is for local development.
+
+### Full stack in Docker
+
+No host Java or Node installation is needed:
+
+```bash
+docker compose up --build -d --wait --wait-timeout 240
+```
+
+Open http://localhost:8082. DBeaver can connect to localhost:5432 without an override. `up --build` builds the application images and starts the services; `docker compose build` only builds images.
+
+### Angular and Spring Boot on the host
+
+Start the infrastructure only; Keycloak also starts PostgreSQL and its one-shot identity database initializer:
+
+```bash
+docker compose -f compose.yaml -f compose.host.yaml up -d --wait --wait-timeout 240 keycloak
+```
+
+Run the backend and frontend in separate terminals using the commands below. Open http://localhost:4200. Keycloak stays at http://localhost:8082/identity, and DBeaver uses localhost:5432. The host override only adds Keycloak's direct port mapping. Selecting keycloak at the end of the command starts its dependencies without the frontend/backend containers.
+
+Existing realms need the exact host callback/logout URLs added once; see [host login setup](docs/authentication-setup.md#angular-and-spring-boot-on-the-host).
+
+### Switching modes and database-only work
+
+Before switching modes, stop any host-run applications with Ctrl+C and stop the previous Docker stack with `docker compose down`. This retains the database volume; do not add --volumes when preserving data. Then use the desired startup command above. Host mode's Keycloak and the full stack's frontend both use port 8082, so they cannot run there together.
+
+For database-only work, select just db from the base file:
+
+```bash
+docker compose up -d --wait db
+```
+
+No separate dev override is needed. To stop the stack, use `docker compose down`. See [container setup](docs/container-stack.md) for images and smoke checks, and [authentication setup](docs/authentication-setup.md) for identity configuration.
 
 ## Run the backend
 
@@ -49,16 +93,14 @@ cd backend
 ./gradlew clean test bootJar
 ```
 
-To run the application locally, first prepare the database from the repository root. These are Bash commands; copy `.env.example` only if you do not already have a `.env`:
+For host-run development, first start the host infrastructure or database-only option above. Then, from the repository root:
 
 ```bash
-cp -n .env.example .env
-docker compose -f compose.yaml -f compose.dev.yaml up -d --wait db
 cd backend
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
-Compose and the Spring Boot `local` profile both read the root `.env`. No manual environment export is required. Start the application from the repository root or `backend/`; environment variables can override file values. Use plain `KEY=value` entries as shown in `.env.example`. The development database binds only to `127.0.0.1`, on port 5433 by default. The base Compose file publishes no database port.
+Compose and the Spring Boot `local` profile both read the root `.env`. No manual environment export is required. The local profile supports starting from the repository root or backend/; process environment variables can override file values. Use plain `KEY=value` entries as shown in .env.example. The development database port binds only to 127.0.0.1 and defaults to 5432.
 
 From another terminal:
 
@@ -72,9 +114,9 @@ Expected response includes `"status":"UP"`; Boot may also include health-group n
 java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
 ```
 
-Use `PORT=8081 ./gradlew bootRun --args='--spring.profiles.active=local'` if port 8080 is occupied. On Windows, use `gradlew.bat` and set environment variables with the shell's syntax. [Database setup](docs/database-setup.md) covers configuration, persistence, backups and troubleshooting.
+Use `PORT=8081 ./gradlew bootRun --args='--spring.profiles.active=local'` if port 8080 is occupied; also update frontend/proxy.conf.json when using Angular against that port. On Windows, use `gradlew.bat` and set environment variables with the shell's syntax. [Database setup](docs/database-setup.md) covers configuration, persistence, backups and troubleshooting.
 
-Flyway applies the initial `bus_management.buses` schema on startup; Hibernate validates the mapping. No business APIs or login exist yet. [Backend setup and design](docs/backend-starter.md) explains the selected versions and tests.
+Flyway applies the initial `bus_management.buses` schema on startup; Hibernate validates the mapping. No business CRUD APIs exist yet; the [authentication foundation](docs/authentication-setup.md) is available. [Backend setup and design](docs/backend-starter.md) explains the selected versions and tests.
 
 Commands for later milestones in the architecture are proposals, not available scripts.
 
@@ -88,7 +130,7 @@ npm ci
 npm start
 ```
 
-Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Buses/routes/trips are marked as upcoming; there are no CRUD or login screens yet.
+Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Buses/routes/trips are marked as upcoming; there are no Angular CRUD/account controls yet. Hosted Keycloak login/signup is available through /api/auth/login and /api/auth/signup; see authentication setup.
 
 Local checks:
 
@@ -101,7 +143,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The frontend's development proxy forwards future `/api/**` calls to the backend on port 8080. No business API exists yet. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. The [frontend CI workflow](docs/frontend-ci.md) runs these checks on PRs to main and main pushes once published.
+The frontend's development proxy forwards `/api/**` calls to the backend on port 8080. No business API exists yet. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. The [frontend CI workflow](docs/frontend-ci.md) runs these checks on PRs to main and main pushes once published.
 
 ## Project history and credits
 

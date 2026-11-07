@@ -10,6 +10,7 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from auth_smoke import verify_auth
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--browser-tests', action='store_true', help='Also run installed Playwright tests against the built frontend')
@@ -19,7 +20,12 @@ args = parser.parse_args()
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = 'bms-smoke-' + uuid.uuid4().hex[:10]
 ENV = dict(os.environ, POSTGRES_DB='bus_management', POSTGRES_USER='bus_management',
-           POSTGRES_PASSWORD='synthetic-smoke-only', FRONTEND_PORT=os.environ.get('SMOKE_PORT', '18082'))
+           POSTGRES_PASSWORD='synthetic-smoke-only',
+           POSTGRES_PORT='0',  # Docker assigns a free loopback port, independent of local development.
+           KEYCLOAK_DB_PASSWORD='synthetic-identity-db-only',
+           KEYCLOAK_ADMIN_PASSWORD='synthetic-identity-admin-only',
+           OIDC_CLIENT_SECRET='synthetic-client-secret-only',
+           DEMO_USER_PASSWORD='synthetic-demo-password-only', FRONTEND_PORT=os.environ.get('SMOKE_PORT', '18082'))
 COMMAND = ['docker', 'compose', '--project-name', PROJECT, '--env-file', str(ROOT / '.env.example'),
            '-f', str(ROOT / 'compose.yaml')]
 BASE = 'http://127.0.0.1:' + ENV['FRONTEND_PORT']
@@ -81,14 +87,17 @@ failure = None
 
 
 try:
-    compose('up', '-d', '--wait', '--wait-timeout', '180')
+    compose('up', '-d', '--wait', '--wait-timeout', '240')
     assert health(200)['status'] == 'UP'
     for route in ['/', '/overview', '/preferences', '/unknown-page']:
         status, body = get(route)
         assert status == 200 and '<app-root' in body, route
-    for route in ['/missing.js', '/api/v1/missing', '/api', '/actuator/health']:
+    for route in ['/missing.js', '/actuator/health']:
         status, body = get(route)
         assert status == 404 and '<app-root' not in body, route
+    for route in ['/api/v1/missing', '/api', '/api/auth/me']:
+        assert get(route)[0] == 401, route
+    registered = verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'])
     for service in ['frontend', 'backend']:
         assert compose('exec', '-T', service, 'id', '-u', capture=True).strip() == '10001'
     if args.browser_tests:
@@ -97,13 +106,16 @@ try:
     assert sql('SELECT count(*) FROM bus_management.flyway_schema_history WHERE success AND version IS NOT NULL') == '1'
     sql("INSERT INTO bus_management.buses (registration_number, capacity) VALUES ('SMOKE-ONLY', 40)")
     compose('down')  # Keep this disposable project's volume to verify recreation.
-    compose('up', '-d', '--wait', '--wait-timeout', '180')
+    compose('up', '-d', '--wait', '--wait-timeout', '240')
     assert sql("SELECT count(*) FROM bus_management.buses WHERE registration_number='SMOKE-ONLY'") == '1'
     assert sql('SELECT count(*) FROM bus_management.flyway_schema_history WHERE success AND version IS NOT NULL') == '1'
+    verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     compose('stop', 'db')
     assert health(503)['status'] == 'DOWN'
     compose('start', 'db')
     assert health(200)['status'] == 'UP'
+    compose('up', '-d', '--wait', '--wait-timeout', '240')
+    verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     passed = True
     print('PASS: routing, proxy health, non-root users, migration, persistence and database recovery')
 except BaseException as error:

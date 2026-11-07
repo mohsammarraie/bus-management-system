@@ -14,7 +14,7 @@ Implemented on `chore/postgres-flyway`:
 
 - PostgreSQL 18.6, pinned by official image tag/digest in Compose and Testcontainers.
 - Boot-managed Flyway 12.4.0, PostgreSQL JDBC 42.7.14 and Testcontainers 2.0.5.
-- PostgreSQL service, named volume, health check and explicit loopback-only development override.
+- PostgreSQL service, named volume, health check and loopback-only database access in both local modes.
 - Local example configuration loaded automatically by the local profile, plus separate external datasource configuration for deployment.
 - Flyway-owned `bus_management` schema and initial `buses` table; JPA mapping validation without automatic schema updates.
 - Real PostgreSQL tests for startup/migration, no-op migration reruns, checksum drift, JPA persistence and database constraints. Health tests now require the real test database.
@@ -52,20 +52,24 @@ Implemented on chore/docker-compose-stack from main 7d30dbe: pinned multi-stage 
 
 The container stack is merged through PR #8. Image registry publication remains unconfigured.
 
-## Current task: container GitHub Actions checks
+## Completed: container GitHub Actions checks
 
-Implemented on ci/container-checks from main 9668044: separate image build/Compose smoke workflow with read-only permissions, pinned actions, timeouts, synthetic data and seven-day bounded diagnostics. Reuses the existing smoke scenario without duplicating unit/browser suites. See [container-ci.md](container-ci.md). Changes remain uncommitted; hosted execution is pending publication and an observed PR/main run.
+Implemented on ci/container-checks from main 9668044: separate image build/Compose smoke workflow with read-only permissions, pinned actions, timeouts, synthetic data and seven-day bounded diagnostics. Reuses the existing smoke scenario without duplicating unit/browser suites. See [container-ci.md](container-ci.md). Merged through PR #9; the container workflow passed its PR run. Authentication changes on the current branch still await publication and a new hosted run.
 
-## Next implementation: authentication foundation
+## Current task: Keycloak authentication foundation
 
-After review/merge and hosted checks, define the authentication API contract and role/access matrix, then implement the backend session-security foundation with user/role migrations, password hashing, CSRF behavior and authorization tests. Browser login follows as its own slice, then bus CRUD with NgRx shared feature state. Use synthetic accounts; legacy credential recovery remains separate.
+Implemented on feat/keycloak-auth-foundation: Keycloak 26.8.2, separate identity database/user, reproducible synthetic local realm, passenger signup and backend-managed OIDC/PKCE with session/CSRF endpoints and role filters. Keycloak owns credentials; no app password table or email service is added. See [ADR 0003](decisions/0003-backend-managed-keycloak-login.md) and [setup](authentication-setup.md). This branch remains uncommitted; hosted checks are pending publication.
 
-Suggested model/effort: **Sol, High**, because authentication crosses API, database and security boundaries. Keep this milestone focused before adding business CRUD.
+## Next implementation: Angular account integration
+
+After review/merge, add Login/Register/Logout controls, account state, role-specific navigation and guards, localized authentication errors and expired-session handling. Use backend sessions and Angular XSRF support, without keycloak-js or browser access/refresh-token management. Verify en/de/ar including RTL and keyboard/accessibility behavior. Business CRUD and ownership rules follow independently.
+
+Suggested model/effort: **Sol, High**, because browser redirects, CSRF and account-state transitions need integrated verification. No SMTP or email verification in the MVP.
 
 ## Following steps toward a runnable stack
 
 1. Review/merge Container CI and verify its hosted run.
-2. Implement the authentication foundation and then browser login.
+2. Review the Keycloak foundation and integrate Angular account navigation/state.
 3. Introduce NgRx Store/Effects/Entity with the first meaningful shared business-state feature.
 4. Implement authentication and bus CRUD as separate feature milestones, with API contracts, authorization, validation and end-to-end checks.
 5. Add routing/schedules, trip lifecycle, foreground phone location capture, Leaflet tracking/replay and reports incrementally.

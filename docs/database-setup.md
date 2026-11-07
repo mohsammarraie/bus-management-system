@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-The host-run Spring Boot backend connects to PostgreSQL in Docker. Flyway applies the schema; Hibernate validates the JPA mapping. Compose also provides the backend/frontend images; see [container setup](container-stack.md). The db-only commands below remain for host-run development. Business endpoints, login and legacy data import are later tasks.
+The host-run Spring Boot backend connects to PostgreSQL in Docker. Flyway applies the schema; Hibernate validates the JPA mapping. Compose also provides the backend/frontend images; see [container setup](container-stack.md). The db-only commands below remain for host-run development. Business endpoints and legacy data import are later tasks. The [authentication foundation](authentication-setup.md) uses a separate Keycloak database on this PostgreSQL server; db-only commands below do not start identity services.
 
 PostgreSQL **18.6-bookworm** is pinned by the same official image digest in `compose.yaml` and `PostgresTestConfiguration`. Update both references together and rerun database tests and Compose smoke checks when updating the image. Spring Boot 4.1.2 manages Flyway **12.4.0**, PostgreSQL JDBC **42.7.14** and Testcontainers **2.0.5**. No database extension is required for this foundation.
 
@@ -12,8 +12,8 @@ Prerequisites: Java 25, Docker Engine and Docker Compose v2. The following comma
 
 ```bash
 cp -n .env.example .env
-docker compose -f compose.yaml -f compose.dev.yaml config --quiet
-docker compose -f compose.yaml -f compose.dev.yaml up -d --wait db
+docker compose config --quiet
+docker compose up -d --wait db
 cd backend
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
@@ -22,7 +22,7 @@ Compose reads the root `.env` for interpolation. The Spring Boot `local` profile
 
 The shared file uses the plain `KEY=value` format from `.env.example`, compatible with Compose and Java properties. Avoid shell `export` statements, quoted values, backslash escapes and variable expansion in this file because the parsers differ. For credentials requiring those characters, provide environment variables or the deployment configuration instead. The file import is enabled only by the `local` profile; external-datasource execution remains separate.
 
-The example credentials are for local development only. They are not copied into the application JAR. The base Compose file requires a password and publishes no database port; the explicit development override binds PostgreSQL to `127.0.0.1:5433` by default. The application HTTP port defaults to 8080; set `PORT=8081` if needed. Future application containers will connect to `db:5432`, rather than the host's loopback address.
+The example credentials are for local development only. They are not copied into the application JAR. The base Compose file requires a password and binds PostgreSQL to `127.0.0.1:5432` by default, so DBeaver and host applications can connect in either local mode without an extra override. The application HTTP port defaults to 8080; set `PORT=8081` if needed. Application containers connect to `db:5432`, rather than the host's loopback address.
 
 From another terminal, `curl --fail http://localhost:8080/actuator/health` should return HTTP 200 with `"status":"UP"`. Database connectivity contributes to overall health. When the connection fails after startup, overall health returns HTTP 503/DOWN without connection details, and recovers when the database is reachable again. Failed migrations or invalid entity mappings prevent successful startup.
 
@@ -81,9 +81,9 @@ The 18 test cases cover migration from an empty database, safe reruns, checksum 
 Stop Spring Boot with Ctrl+C. From the repository root:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml down
+docker compose down
 # Later:
-docker compose -f compose.yaml -f compose.dev.yaml up -d --wait db
+docker compose up -d --wait db
 ```
 
 The named `postgres_data` volume survives normal `down` and container replacement. PostgreSQL 18 stores data under `/var/lib/postgresql/18/docker`; mount the named volume at `/var/lib/postgresql`, as the official image requires.
@@ -98,7 +98,7 @@ With the database running, from the repository root. These commands expand datab
 
 ```bash
 mkdir -p local-data/backups
-docker compose -f compose.yaml -f compose.dev.yaml exec -T db \
+docker compose exec -T db \
   sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' \
   > local-data/backups/bus-management.dump
 ```
@@ -106,9 +106,9 @@ docker compose -f compose.yaml -f compose.dev.yaml exec -T db \
 Restore into a new, empty database, keeping the current application database intact:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml exec -T db \
+docker compose exec -T db \
   sh -c 'createdb -U "$POSTGRES_USER" bus_management_restore'
-docker compose -f compose.yaml -f compose.dev.yaml exec -T db \
+docker compose exec -T db \
   sh -c 'pg_restore -U "$POSTGRES_USER" -d bus_management_restore --exit-on-error' \
   < local-data/backups/bus-management.dump
 ```
@@ -118,9 +118,9 @@ Check restored table counts and Flyway history before selecting the restored dat
 ## Troubleshooting
 
 - Docker unavailable: start the daemon and ensure your user can access it. On this machine the Docker snap requires host runtime-directory access, so sandboxed agent checks may need the approved command boundary; normal terminal commands use the host environment.
-- Port 5433 occupied: change `POSTGRES_PORT` in the root `.env` and recreate the development container. Testcontainers uses separate dynamic ports.
+- Port 5432 occupied: change `POSTGRES_PORT` in the root `.env` and recreate the development container. Testcontainers uses separate dynamic ports.
 - Missing `POSTGRES_PASSWORD` or authentication failure despite a successful DBeaver connection: verify the root `.env` exists, the `local` profile is active, and the working directory is the repository root or `backend/`. Check for stale process/IDE environment variables overriding the file. Rebuild the JAR after configuration changes; an older JAR will still require manual exports. Do not run the local profile with production credentials.
-- Connection refused: check `docker compose -f compose.yaml -f compose.dev.yaml ps` and `logs db`, then confirm the selected profile and host port.
+- Connection refused: check `docker compose ps` and `logs db`, then confirm the selected profile and host port.
 - Authentication fails after editing `.env`: an existing volume retains its database users and password.
 - Checksum/schema validation fails: inspect the migration history and changes; do not enable Hibernate update or automatically repair the history.
 

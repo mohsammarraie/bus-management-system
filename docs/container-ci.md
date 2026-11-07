@@ -10,7 +10,7 @@ The Ubuntu 24.04 runner supplies Docker, Compose, Python 3 and GNU timeout. Java
 timeout --signal=INT --kill-after=60s 8m python3 scripts/smoke-compose.py --report-dir container-test-results
 ```
 
-This is one existing integration smoke scenario, not another full frontend/backend test suite. It checks startup/health, page and API routing, non-root application users, versioned Flyway history, synthetic bus persistence across stack recreation and database outage/recovery. Source unit/integration tests remain in Backend CI; frontend unit and all 38 browser cases remain in Frontend CI. Optional local --browser-tests coverage is unchanged and is not enabled here.
+This is one existing integration smoke scenario, not another full frontend/backend test suite. It checks startup/health, page and API routing, non-root application users, versioned Flyway history, synthetic bus persistence across stack recreation and database outage/recovery. The authentication foundation extends that same scenario with real OIDC login, signup, role mapping, CSRF logout and registered identity persistence; no password grant or browser dependency is added. Source unit/integration tests remain in Backend CI; frontend unit and all 38 browser cases remain in Frontend CI. Optional local --browser-tests coverage is unchanged and is not enabled here.
 
 Images are built locally on the runner and never pushed to a registry. No login, deployment or repository secret is needed. The smoke check creates its own unique project and synthetic credentials; it does not operate on the normal development stack. .env.example config validation/build also avoid loading a private local .env.
 
