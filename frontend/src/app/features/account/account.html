@@ -1,0 +1,25 @@
+<ng-container *transloco="let t">
+  <h1 id="page-title" tabindex="-1">{{ t('auth.pages.' + area + '.title') }}</h1>
+  <p>{{ t('auth.pages.' + area + '.body') }}</p>
+  @if (auth.account(); as account) {
+    <mat-card appearance="outlined">
+      <h2>{{ t('auth.signedIn') }}</h2>
+      <dl>
+        <dt>{{ t('auth.username') }}</dt>
+        <dd>
+          <bdi>{{ account.username }}</bdi>
+        </dd>
+        <dt>{{ t('auth.rolesLabel') }}</dt>
+        <dd>
+          @for (role of account.roles; track role) {
+            {{ t('auth.roles.' + role) }}
+            @if (!$last) {
+              ·
+            }
+          }
+        </dd>
+      </dl>
+    </mat-card>
+  }
+  <a mat-button routerLink="/overview">{{ t('notFound.action') }}</a>
+</ng-container>

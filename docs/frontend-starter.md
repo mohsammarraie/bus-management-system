@@ -26,7 +26,7 @@ npm ci
 npm start
 ```
 
-Open http://localhost:4200. The overview and preferences pages require no backend/database. Unknown paths display a localized recovery page; refreshing a nested route works through the dev server's SPA fallback.
+Open http://localhost:4200. The overview and preferences remain usable without a backend/database; account checks then show a retryable connection message. Real login/signup/logout needs the backend and Keycloak; see [authentication setup](authentication-setup.md). Unknown paths display a localized recovery page; refreshing a nested route works through the dev server's SPA fallback.
 
 ```bash
 npm run format:check
@@ -42,7 +42,7 @@ npm run test:e2e
 
 Production assets are emitted to `frontend/dist/bus-management-system/browser/`. A production static server must route unknown non-asset paths to index.html for SPA routing. The [Caddy runtime image and Compose stack](container-stack.md) implement static serving, SPA fallback and API proxying. Internet deployment/TLS configuration remains future work.
 
-The development proxy forwards `/api/**` to `http://127.0.0.1:8080`; change proxy.conf.json if the host backend uses another port. No frontend API calls or backend business endpoints are implemented yet. This proxy is a development facility, not production routing.
+The development proxy forwards `/api/**` to `http://127.0.0.1:8080`; change proxy.conf.json if the host backend uses another port. Account state uses /api/auth/me and /api/auth/csrf; login/signup links and a logout POST form navigate through the backend. No business endpoints are implemented yet. This proxy is a development facility, not production routing.
 
 ## Responsibilities
 
@@ -64,6 +64,12 @@ Every component uses external HTML and SCSS, including preferences, language swi
 
 This organization change adds extracted files and two shared styling partials. It introduces no new dependencies or feature logic. The standalone favicon and browser theme-color metadata use matching fixed colors because they cannot inherit document CSS variables.
 
+## Account state and access
+
+[Authentication setup](authentication-setup.md#angular-account-integration) explains the session/CSRF lifecycle, native logout form and reading order. AuthService combines in-memory signals with RxJS HTTP operations; identity/token persistence is not added. /account is authenticated, /administration requires ADMIN, and /driver requires ADMIN or DRIVER. The latter two pages identify forthcoming tools rather than inventing CRUD functionality. Public pages stay available, with localized retry/expiry/failure messages.
+
+Ordinary browser specs use test-only anonymous/account API fixtures, so frontend CI remains independent of live infrastructure. The optional Compose --browser-tests mode additionally executes real hosted login/signup/logout via the UI with disposable identities. See authentication setup for limits, including expiry detection on the next check and future assignment/ownership enforcement.
+
 ## Accessibility
 
 Target WCAG 2.2 Level AA as features are delivered. The current starter provides named navigation/main landmarks, a single route heading, localized route-specific browser titles, labelled controls and decorative icons hidden from assistive technology. Upcoming features are readable static list items rather than misleading links.
@@ -80,7 +86,7 @@ Before claiming conformance, test the delivered flows with a real screen reader 
 
 The generated lint dependency graph included minimatch 10 affected by [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). A targeted npm override selects patched minimatch 11.0.5 for affected versions, compatible with Node 24. This crosses the upstream lint tools' requested major range; lint/build/tests must remain part of verification, and the override should be reviewed/removed when upstream adopts a patched version. No force-based dependency upgrade was used. The clean npm ci audit reported zero known vulnerabilities at verification time.
 
-The measured initial production bundle is about 641 kB raw / 138 kB estimated transfer, including Material and the bundled language infrastructure. Budgets are 700 kB warning and 850 kB error for the initial bundle; page routes remain lazy. These replace the minimal CLI welcome-page budget with a measured starter baseline. They are size guards, not a performance benchmark.
+The initial production bundle after account integration is about 672 kB raw / 149 kB estimated transfer, including Material and the bundled language infrastructure. Budgets are 700 kB warning and 850 kB error for the initial bundle; page routes remain lazy. These replace the minimal CLI welcome-page budget with a measured starter baseline. They are size guards, not a performance benchmark.
 
 ## Verification
 
@@ -96,6 +102,12 @@ Verified locally with Node 24.22.2 and npm 11.19.1:
 After the accessibility update, format/lint/type checks, all eight unit tests, all 38 browser cases and the production build passed. All seven components retain external template/style references. Real screen-reader and additional browser-engine checks are still pending.
 
 Frontend CI is configured; hosted PR/main verification passed after merge. See [frontend CI](frontend-ci.md). Backend CI is merged and independently verified successful. No backend code or business behavior changed, so its unchanged test suite was not rerun in this frontend task. Real-device testing and other browser engines remain future coverage.
+
+## Account integration follow-up
+
+The account slice adds no dependencies and keeps external HTML/SCSS for every component. Current local checks pass: format/lint/browser-test type checking, 24 frontend unit tests and 32 backend tests (including the masked CSRF form contract). The production image build is within the existing budgets at 672.34 kB initial raw / 149.27 kB estimated transfer. The dev-server browser run passed all 62 desktop/mobile cases, including role navigation/direct-route denial, reload, expiry, backend retry, keyboard logout, simulated cached-page restoration and en/de/ar account scans/reflow at 320 CSS pixels. Axe attachments retain incomplete results for manual review.
+
+These counts supersede the starter baseline above. Hosted results for this account branch await the user's push/PR. Full screen-reader/identity-page accessibility, real-device behavior and other browser engines remain unverified. Real Keycloak UI checks and disposable-stack results are recorded in authentication-setup.md.
 
 ## Official references
 

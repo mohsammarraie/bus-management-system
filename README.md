@@ -2,7 +2,7 @@
 
 A modern bus management application for managing buses, routes and trips, built with Angular, Spring Boot and PostgreSQL.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Keycloak/backend session login and passenger signup are implemented; Angular account integration and business APIs are upcoming milestones; container CI is configured with hosted verification pending publication.
+**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/Keycloak/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Keycloak/backend session login and passenger signup are implemented; Angular login/signup/logout controls, account state and role-guarded pages are implemented; business APIs are upcoming milestones; container CI is configured with hosted verification pending publication.
 
 ## Intended experience
 
@@ -130,7 +130,7 @@ npm ci
 npm start
 ```
 
-Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Buses/routes/trips are marked as upcoming; there are no Angular CRUD/account controls yet. Hosted Keycloak login/signup is available through /api/auth/login and /api/auth/signup; see authentication setup.
+Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Use the header to log in, sign up or log out. Signed-in users can open My account; administrators and drivers also receive their role-specific navigation. Buses/routes/trips remain upcoming. Start the backend and Keycloak for real account flows; if unavailable, public pages remain usable with a connection message and retry. See [authentication setup](docs/authentication-setup.md).
 
 Local checks:
 

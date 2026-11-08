@@ -54,27 +54,42 @@ The container stack is merged through PR #8. Image registry publication remains 
 
 ## Completed: container GitHub Actions checks
 
-Implemented on ci/container-checks from main 9668044: separate image build/Compose smoke workflow with read-only permissions, pinned actions, timeouts, synthetic data and seven-day bounded diagnostics. Reuses the existing smoke scenario without duplicating unit/browser suites. See [container-ci.md](container-ci.md). Merged through PR #9; the container workflow passed its PR run. Authentication changes on the current branch still await publication and a new hosted run.
+Implemented on ci/container-checks from main 9668044: separate image build/Compose smoke workflow with read-only permissions, pinned actions, timeouts, synthetic data and seven-day bounded diagnostics. Reuses the existing smoke scenario without duplicating unit/browser suites. See [container-ci.md](container-ci.md). Merged through PR #9; the container workflow passed its PR run. The Keycloak foundation is merged through PR #12; verify hosted runs individually. Angular account changes require their own hosted run after publication.
 
-## Current task: Keycloak authentication foundation
+## Completed: Keycloak authentication foundation
 
-Implemented on feat/keycloak-auth-foundation: Keycloak 26.8.2, separate identity database/user, reproducible synthetic local realm, passenger signup and backend-managed OIDC/PKCE with session/CSRF endpoints and role filters. Keycloak owns credentials; no app password table or email service is added. See [ADR 0003](decisions/0003-backend-managed-keycloak-login.md) and [setup](authentication-setup.md). This branch remains uncommitted; hosted checks are pending publication.
+Merged through PR #12 (main 118df5d): Keycloak 26.8.2, separate identity database/user, reproducible local realm, passenger signup and backend-managed OIDC/PKCE with session/CSRF endpoints and role filters. Keycloak owns credentials; no app password table or email service is added. See [ADR 0003](decisions/0003-backend-managed-keycloak-login.md) and [setup](authentication-setup.md).
 
-## Next implementation: Angular account integration
+## Current task: Angular account integration
 
-After review/merge, add Login/Register/Logout controls, account state, role-specific navigation and guards, localized authentication errors and expired-session handling. Use backend sessions and Angular XSRF support, without keycloak-js or browser access/refresh-token management. Verify en/de/ar including RTL and keyboard/accessibility behavior. Business CRUD and ownership rules follow independently.
+Implemented on feat/angular-account-integration: localized Login/Sign up/Log out and account controls; in-memory signal/RxJS state; session/CSRF initialization; native form logout through Keycloak; role-specific navigation and guards; retryable connection errors, denied access and expired-session handling. Account, administration and driver pages display real identity/access information and explicitly upcoming business tools. No business API or profile administration is added. See [authentication setup](authentication-setup.md#angular-account-integration) for design, reading order, tests and limits. All changes remain uncommitted; hosted verification awaits the user's publication.
 
-Suggested model/effort: **Sol, High**, because browser redirects, CSRF and account-state transitions need integrated verification. No SMTP or email verification in the MVP.
+## Next implementation: Keycloak login theme
 
-## Following steps toward a runnable stack
+Start only after the user has reviewed/published the current account branch and explicitly asks to begin the next task.
 
-1. Review/merge Container CI and verify its hosted run.
-2. Review the Keycloak foundation and integrate Angular account navigation/state.
-3. Introduce NgRx Store/Effects/Entity with the first meaningful shared business-state feature.
-4. Implement authentication and bus CRUD as separate feature milestones, with API contracts, authorization, validation and end-to-end checks.
-5. Add routing/schedules, trip lifecycle, foreground phone location capture, Leaflet tracking/replay and reports incrementally.
+- [ ] Customize the hosted Keycloak login and registration pages to match the current frontend: blue/orange palette, neutral Bus Management System branding, typography, buttons, form fields and error styling.
 
-Acceptance for the full stack: a documented fresh checkout starts frontend, backend and PostgreSQL, with passing relevant local/hosted checks. No proposed script should be described as available before implementation.
+Keep authentication forms hosted by Keycloak. Support English, German and Arabic/RTL, responsive desktop/mobile layouts, keyboard navigation, visible focus, labelled fields and accessible error messages/contrast. Package the theme reproducibly with the Keycloak container and verify login, signup and logout in both local execution modes. No theme package or library is selected yet.
+
+Suggested model/effort: **Sol, High**, for Keycloak theme integration, localized/RTL accessibility and real browser verification. This is the next focused branch, before business CRUD.
+
+## After theming: backend bus CRUD
+
+Implement the first business API: an ADMIN-managed bus resource using the existing buses table. Agree the API contract, validation, pagination/filtering, optimistic-lock handling and error codes; enforce backend roles and test with real PostgreSQL. Keep legacy data import and trip ownership work separate.
+
+Then implement the Angular buses table/forms with NgRx Store/Effects/Entity in a separate branch, including en/de/ar, RTL and accessibility. No SMTP or email verification in the MVP.
+
+## Following steps
+
+1. Review/merge Angular account integration and inspect its hosted CI results.
+2. Customize and verify the Keycloak login/registration theme.
+3. Implement backend bus CRUD with ADMIN permissions and PostgreSQL integration tests.
+4. Implement the Angular buses feature with Material tables/forms and NgRx Store/Effects/Entity.
+5. Add routes/stops, schedules, assignments and the schedule overview, then trip lifecycle with ownership enforcement.
+6. Add foreground phone location capture, Leaflet tracking/replay and reports incrementally.
+
+Acceptance for each slice: documented behavior, relevant local/hosted checks and a focused user-reviewed branch. Do not describe proposed scripts as implemented.
 
 ## Later: AWS deployment and monitoring practice
 
