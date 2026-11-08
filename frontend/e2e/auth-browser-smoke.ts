@@ -1,7 +1,46 @@
 // Optional real identity flow, invoked only by smoke-compose.py --browser-tests.
 // Node 24 runs this TypeScript file directly; ordinary Playwright specs use isolated API fixtures.
-import { chromium, devices, expect } from '@playwright/test';
+import { chromium, devices, expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
+
+async function checkIdentityTheme(page: Page, state: string, language: string) {
+  await expect(page.locator('html')).toHaveAttribute('lang', language);
+  await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
+  await expect(page.locator('html')).not.toHaveClass(/pf-v5-theme-dark/);
+  await expect(page.locator('link[href*="css/bus-management.css"]')).toHaveCount(1);
+  expect(
+    await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--bms-primary').trim(),
+    ),
+  ).toBe('#006799');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
+    false,
+  );
+  const result = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
+    .analyze();
+  await mkdir('test-results', { recursive: true });
+  await writeFile(
+    `test-results/keycloak-${state}-${language}-axe.json`,
+    JSON.stringify(
+      {
+        violations: result.violations,
+        manualReview: result.incomplete,
+      },
+      null,
+      2,
+    ),
+  );
+  await page.screenshot({ path: `test-results/keycloak-${state}-${language}.png`, fullPage: true });
+  expect(
+    result.violations.map((issue) => ({
+      id: issue.id,
+      nodes: issue.nodes.map((node) => node.target),
+    })),
+  ).toEqual([]);
+}
 
 const base = process.env['PLAYWRIGHT_BASE_URL'];
 const password = process.env['DEMO_USER_PASSWORD'];
@@ -26,7 +65,9 @@ try {
       signup: 'إنشاء حساب',
     },
   ]) {
-    const context = await browser.newContext(entry.role === 'admin' ? {} : devices['Pixel 7']);
+    const context = await browser.newContext(
+      entry.role === 'admin' ? { colorScheme: 'dark' } : devices['Pixel 7'],
+    );
     await context.addInitScript(
       (lang) => localStorage.setItem('bus-management.language', lang),
       entry.language,
@@ -36,6 +77,25 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(base + '/overview');
     await page.getByRole('link', { name: entry.login, exact: true }).click();
+    await expect(page.locator('#username')).toBeVisible();
+    await checkIdentityTheme(page, 'login', entry.language);
+    await page.locator('#username').fill('demo-' + entry.role);
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#password')).toBeFocused();
+    await page.locator('#password').fill('incorrect-theme-test-only');
+    await page.keyboard.press('Tab');
+    const toggle = page.locator('[data-password-toggle]');
+    await expect(toggle).toBeFocused();
+    await page.keyboard.press('Space');
+    await expect(page.locator('#password')).toHaveAttribute('type', 'text');
+    await page.keyboard.press('Space');
+    await expect(page.locator('#password')).toHaveAttribute('type', 'password');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#kc-login')).toBeFocused();
+    await expect(page.locator('#kc-login')).toHaveCSS('outline-style', 'solid');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#input-error-username')).toBeVisible();
+    await checkIdentityTheme(page, 'login-error', entry.language);
     await page.locator('#username').fill('demo-' + entry.role);
     await page.locator('#password').fill(password);
     await Promise.all([page.waitForURL(base + '/overview'), page.locator('#kc-login').click()]);
@@ -59,6 +119,13 @@ try {
     expect((await context.request.get(base + '/api/auth/me')).status()).toBe(401);
     await page.getByRole('link', { name: entry.login, exact: true }).click();
     await expect(page.locator('#kc-form-login')).toBeVisible();
+    await page.goto(base + '/overview');
+    await page.getByRole('link', { name: entry.signup, exact: true }).click();
+    await expect(page.locator('#kc-register-form')).toBeVisible();
+    await checkIdentityTheme(page, 'registration', entry.language);
+    await page.locator('#kc-register-form [type="submit"]').click();
+    await expect(page.locator('#username')).toHaveAttribute('aria-invalid', 'true');
+    await checkIdentityTheme(page, 'registration-error', entry.language);
     expect(errors).toEqual([]);
     console.log(
       `PASS: real ${entry.role}/${entry.language} UI login, route guards, session and browser/SSO logout`,

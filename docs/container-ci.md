@@ -4,7 +4,7 @@
 
 .github/workflows/container-ci.yml defines **Container CI**, job **Container builds and Compose smoke**. It runs independently on PRs targeting main, pushes to main and manual dispatch, without path filters. A feature-branch push alone does not trigger it; open a PR to main. Manual dispatch is available from the Actions UI once merged into the default branch.
 
-The Ubuntu 24.04 runner supplies Docker, Compose, Python 3 and GNU timeout. Java/Node build tools run inside the images. The job validates Compose with .env.example, builds both images, then runs:
+The Ubuntu 24.04 runner supplies Docker, Compose, Python 3 and GNU timeout. Java/Node build tools run inside the images. The job validates Compose with .env.example, builds frontend, backend and themed Keycloak images, then runs:
 
 ```bash
 timeout --signal=INT --kill-after=60s 8m python3 scripts/smoke-compose.py --report-dir container-test-results

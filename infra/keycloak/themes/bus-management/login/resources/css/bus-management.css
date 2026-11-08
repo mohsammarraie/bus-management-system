@@ -1,0 +1,206 @@
+/* Match frontend/src/styles/_theme.scss. Keycloak keeps ownership of form markup. */
+:root {
+  color-scheme: light;
+  --bms-primary: #006799;
+  --bms-on-primary: #ffffff;
+  --bms-soft: #e2f2fc;
+  --bms-on-soft: #06354d;
+  --bms-accent: #f5aa00;
+  --bms-surface: #ffffff;
+  --bms-canvas: #f5f9fc;
+  --bms-text: #111820;
+  --bms-muted: #4c5f6d;
+  --bms-border: #d0dfe8;
+  --bms-outline: #6a7b86;
+  --bms-error: #ba1a1a;
+  --pf-v5-global--FontFamily--text: Arial, sans-serif;
+  --pf-v5-global--FontFamily--heading: Arial, sans-serif;
+  --pf-v5-global--primary-color--100: var(--bms-primary);
+  --pf-v5-global--primary-color--200: #004c73;
+  --pf-v5-global--link--Color: var(--bms-primary);
+  --pf-v5-global--Color--100: var(--bms-text);
+  --pf-v5-global--Color--200: var(--bms-muted);
+  --pf-v5-global--danger-color--100: var(--bms-error);
+}
+
+body#keycloak-bg {
+  margin: 0;
+  height: auto;
+  min-block-size: 100dvh;
+  background: var(--bms-canvas);
+  color: var(--bms-text);
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.pf-v5-c-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 100dvh;
+  padding: clamp(16px, 4vw, 48px);
+  background: transparent;
+}
+
+.pf-v5-c-login__container {
+  inline-size: 100%;
+  max-inline-size: 34rem;
+  margin-inline: auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  padding: 0;
+  gap: 24px;
+}
+
+#kc-header {
+  margin: 0;
+}
+
+#kc-header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  /* The inherited Keycloak brand color is also marked important. */
+  color: var(--bms-on-soft) !important;
+}
+
+#kc-header-wrapper::before {
+  content: "";
+  flex: 0 0 40px;
+  block-size: 40px;
+  background: url("../img/bus.svg") center / contain no-repeat;
+}
+
+.pf-v5-c-login__main {
+  background: var(--bms-surface);
+  border: 1px solid var(--bms-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgb(6 53 77 / 8%);
+}
+
+.pf-v5-c-login__main-header,
+div.pf-v5-c-login__main-header:has(.pf-v5-c-login__main-header-utilities) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(20px, 4vw, 32px);
+  border-block-start: 4px solid var(--bms-accent);
+}
+
+#kc-page-title {
+  flex: 1 1 14rem;
+  color: var(--bms-text);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.pf-v5-c-login__main-header-utilities {
+  max-inline-size: 100%;
+}
+
+.pf-v5-c-login__main-body {
+  padding: 0 clamp(20px, 4vw, 32px) 28px;
+}
+
+.pf-v5-c-form__label {
+  color: var(--bms-text);
+  font-weight: 600;
+}
+
+.pf-v5-c-form-control {
+  background: var(--bms-surface);
+  border: 1px solid var(--bms-outline);
+  border-radius: 8px;
+}
+
+/* Use one rounded border and the focus-within ring instead of stacked framework borders. */
+.pf-v5-c-form-control::before,
+.pf-v5-c-form-control::after {
+  border: 0;
+}
+
+.pf-v5-c-form-control > input:focus-visible {
+  outline: 0;
+}
+
+.pf-v5-c-form-control.pf-m-error {
+  border-color: var(--bms-error);
+}
+
+.pf-v5-c-form-control > :is(input, select) {
+  min-block-size: 44px;
+  color: var(--bms-text);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.pf-v5-c-button {
+  min-block-size: 44px;
+  border-radius: 24px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.pf-v5-c-button::after {
+  border-radius: inherit;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--bms-primary);
+  --pf-v5-c-button--m-primary--Color: var(--bms-on-primary);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: #004c73;
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: #004c73;
+}
+
+.pf-v5-c-button.pf-m-control {
+  color: var(--bms-primary);
+  background: var(--bms-surface);
+  border-radius: 8px;
+}
+
+a {
+  color: var(--bms-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: #004c73;
+}
+
+:where(a, button, input[type="submit"], select):focus-visible,
+.pf-v5-c-form-control:focus-within {
+  outline: 3px solid var(--bms-primary);
+  outline-offset: 3px;
+}
+
+.pf-v5-c-login__main-footer-band {
+  padding: 14px;
+  background: var(--bms-soft);
+  color: var(--bms-on-soft);
+  border-radius: 10px;
+}
+
+.pf-v5-c-alert.pf-m-danger .kc-feedback-text,
+.pf-v5-c-helper-text__item.pf-m-error {
+  color: var(--bms-error);
+}
+
+@media (forced-colors: active) {
+  .pf-v5-c-login__main,
+  .pf-v5-c-form-control {
+    border-color: CanvasText;
+  }
+}

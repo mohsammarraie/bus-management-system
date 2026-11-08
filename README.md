@@ -30,6 +30,7 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 11. [Container CI and diagnostics](docs/container-ci.md)
 12. [Authentication setup and API](docs/authentication-setup.md)
 13. [Authentication architecture decision](docs/decisions/0003-backend-managed-keycloak-login.md)
+14. [Keycloak login theme](docs/keycloak-theme.md)
 
 ## Run locally
 
@@ -63,7 +64,7 @@ Open http://localhost:8082. DBeaver can connect to localhost:5432 without an ove
 Start the infrastructure only; Keycloak also starts PostgreSQL and its one-shot identity database initializer:
 
 ```bash
-docker compose -f compose.yaml -f compose.host.yaml up -d --wait --wait-timeout 240 keycloak
+docker compose -f compose.yaml -f compose.host.yaml up --build -d --wait --wait-timeout 240 keycloak
 ```
 
 Run the backend and frontend in separate terminals using the commands below. Open http://localhost:4200. Keycloak stays at http://localhost:8082/identity, and DBeaver uses localhost:5432. The host override only adds Keycloak's direct port mapping. Selecting keycloak at the end of the command starts its dependencies without the frontend/backend containers.

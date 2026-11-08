@@ -12,10 +12,13 @@ class Forms(HTMLParser):
     def __init__(self):
         super().__init__()
         self.forms = []
+        self.stylesheets = []
         self.current = None
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
+        if tag == 'link' and attrs.get('rel') == 'stylesheet':
+            self.stylesheets.append(attrs.get('href', ''))
         if tag == 'form':
             self.current = {'action': attrs.get('action'), 'fields': {}, 'id': attrs.get('id')}
             self.forms.append(self.current)
@@ -71,6 +74,12 @@ def verify_auth(base, password, registered=None):
         client, cookies = new_client()
         status, body, _ = send(client, '/api/auth/login')
         assert status == 200
+        parser = Forms()
+        parser.feed(body)
+        stylesheet = next((path for path in parser.stylesheets if path.endswith('/css/bus-management.css')), None)
+        assert stylesheet, 'The configured Keycloak login theme must load'
+        status, css, _ = send(client, stylesheet)
+        assert status == 200 and '--bms-primary:' in css, 'The theme stylesheet must be served'
         initial_session = next(cookie.value for cookie in cookies if cookie.name == 'JSESSIONID')
         page = form(body, 'kc-form-login')
         fields = dict(page['fields'], username=username, password=password)

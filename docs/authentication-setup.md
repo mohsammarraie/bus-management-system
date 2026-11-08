@@ -1,6 +1,6 @@
 # Authentication foundation: setup and API
 
-See [ADR 0003](decisions/0003-backend-managed-keycloak-login.md) for the decision, browser-managed token comparison and limitations. The identity/backend foundation and Angular account integration are implemented. Keycloak login/registration styling is the next task; business screens and ownership rules follow afterward.
+See [ADR 0003](decisions/0003-backend-managed-keycloak-login.md) for the decision, browser-managed token comparison and limitations. The identity/backend foundation and Angular account integration are implemented. Keycloak login/registration styling is implemented; business screens and ownership rules follow next.
 
 ## Local startup
 
@@ -75,9 +75,9 @@ References: [Angular route guards](https://angular.dev/guide/routing/route-guard
 
 Automated axe/keyboard/reflow checks cover delivered app states; real screen-reader, other browser-engine and full hosted identity-page accessibility review remain manual work. They do not establish full WCAG conformance.
 
-## Next task: Keycloak visual theme
+## Keycloak visual theme
 
-The hosted identity pages currently use Keycloak's supplied theme. A custom login/registration theme matching the frontend's blue/orange palette and neutral branding is next, before bus CRUD, including en/de/ar, RTL, responsive layouts and accessibility checks. Track the scope in [next steps](next-steps.md#next-implementation-keycloak-login-theme). This does not move credential handling into Angular.
+The hosted login and registration pages use the inherited bus-management theme: the frontend's blue/orange palette and neutral branding, en/de/ar, RTL, responsive layouts and visible focus. Credentials remain hosted by Keycloak. [Theme setup and maintenance](keycloak-theme.md) explains the CSS/assets, image build, one-time existing-realm selection and verification.
 
 ## Configuration and host development
 
@@ -94,7 +94,7 @@ First stop the full stack so its frontend releases port 8082 (do not add --volum
 ```bash
 # Repository root
 docker compose down
-docker compose -f compose.yaml -f compose.host.yaml up -d --wait --wait-timeout 240 keycloak
+docker compose -f compose.yaml -f compose.host.yaml up --build -d --wait --wait-timeout 240 keycloak
 ```
 
 Then run these in separate terminals, starting in the repository root:

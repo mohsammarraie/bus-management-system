@@ -1,0 +1,9 @@
+**
+!Dockerfile
+!themes/
+!themes/**
+**/.env*
+**/*.dmp
+**/*.dump
+**/*.pem
+**/*.key
