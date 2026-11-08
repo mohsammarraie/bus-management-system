@@ -14,6 +14,9 @@
 		rewrite * /actuator/health
 		reverse_proxy backend:8080
 	}
+	handle /identity/* {
+		reverse_proxy keycloak:8080
+	}
 	@api path /api /api/*
 	handle @api {
 		reverse_proxy backend:8080

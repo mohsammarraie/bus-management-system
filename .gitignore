@@ -31,3 +31,6 @@
 
 # Isolated Compose smoke diagnostics
 /container-test-results/
+
+# Python smoke-check imports
+**/__pycache__/

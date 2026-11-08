@@ -34,7 +34,7 @@ This is an incremental rebuild guided by the existing domain. A feature is compl
 | State | NgRx Store + Effects + Entity for shared feature state; signals for local UI state | Practice explicit reactive state without putting every input field in a global store. |
 | Maps | Leaflet (accepted); tile provider pending | Driver/student live maps and recorded-trip replay. |
 | UI | Angular Material/CDK | External HTML/SCSS per component; one blue/orange Material theme with shared semantic color variables and local layout styles. Add no paid component or theme dependency. |
-| Authentication | Spring Security server session, same-origin cookie, CSRF protection | Fits one browser application; avoids introducing a token refresh subsystem before it is needed. |
+| Authentication | Keycloak identity + Spring Security backend-managed OIDC, session cookie and CSRF | Keycloak owns credentials; Angular does not manage access/refresh tokens. See ADR 0003. |
 | Testing | Java unit tests + PostgreSQL integration tests; Angular Vitest; Playwright browser tests | Verify rules, actual database semantics, and complete workflows. |
 | Containers | Frontend and backend application images; pinned official PostgreSQL image; Docker Compose | Reproducible development, CI smoke tests, and a complete demo stack. |
 | Delivery | One repository, short-lived branches, pull requests, GitHub Actions | Reviewable learning history and reproducible checks. |
@@ -87,15 +87,15 @@ flowchart LR
 - **Frontend image:** multi-stage Dockerfile; Node builds the Angular application, then a lightweight static-file server serves the compiled assets; Caddy is selected for static serving and same-origin API routing. Include browser-route fallback and the API proxy. Use a relative `/api` base URL; the browser cannot resolve Compose-only hostnames such as `backend`. Do not embed environment secrets in frontend bundles.
 - **Backend image:** multi-stage Dockerfile; a JDK and the Gradle wrapper build the executable JAR, then a Java runtime image runs it as a non-root application user. Keep build tools out of the runtime stage. Supply database credentials and settings at runtime. CI tests remain explicit prerequisites; image creation is not evidence that tests passed.
 - **Database image:** use a pinned official PostgreSQL image as the third service/image. We do not need to maintain a custom PostgreSQL Dockerfile unless a concrete extension requires it. Store database contents in a named volume, never in the image. Flyway creates/upgrades the schema; a development-only seeding command supplies synthetic demo data.
-- **Compose files:** root `compose.yaml` for the three-service demo; `compose.dev.yaml` as an explicit override for development-only settings, such as loopback database access; `infra/compose.oracle-recovery.yaml` for an isolated, temporary Oracle restoration environment after compatibility checks. The default stack uses PostgreSQL only. Document the exact command combinations, rather than relying on an implicit override.
-- **Networking and readiness:** expose the frontend port by default. Backend and database communicate by Compose service names, not fixed IPs or `localhost`. Add database and backend readiness checks; gate backend startup on a healthy database and frontend startup on a healthy backend. Add sensible connection recovery for failures after startup. Restrict Actuator exposure to the health endpoint needed by the stack.
+- **Compose files:** root `compose.yaml` for the full local demo with loopback PostgreSQL access for DBeaver; `compose.host.yaml` adds direct Keycloak access when Angular/Spring Boot run on the host; `infra/compose.oracle-recovery.yaml` for an isolated, temporary Oracle restoration environment after compatibility checks. The default stack uses PostgreSQL only. Document the exact command combinations, rather than relying on an implicit override.
+- **Networking and readiness:** expose the frontend and loopback PostgreSQL ports for local development. Backend and database communicate by Compose service names, not fixed IPs or `localhost`. Add database and backend readiness checks; gate backend startup on a healthy database and frontend startup on a healthy backend. Add sensible connection recovery for failures after startup. Restrict Actuator exposure to the health endpoint needed by the stack.
 - **Configuration:** add `.env.example`, ignored local configuration, `.dockerignore` files, and static-file server/routing configuration. No passwords, raw dumps, exports or database volume directories in build contexts. Pin base-image versions/digests during implementation and document updates. Include the healthcheck tools needed by the chosen runtime images.
 - **Persistence:** document normal stop/restart, backup/restore, and an explicitly destructive demo reset separately. Verify data survives container replacement. Container volume persistence does not replace backups.
 - **Learning:** practice image layers, build stages, image versus container, service DNS, ports, environment configuration, volumes, health checks, logs, and Compose troubleshooting through actual feature work.
 
 Proposed acceptance command: `docker compose up --build -d` starts the demo from a clean checkout with documented local configuration. Verification includes `docker compose config`, image builds, healthy services, browser refresh on nested routes, `/api` proxying, login/CRUD when available, and persistence after recreation. Local HTTP is sufficient for a basic localhost demo; phone-based geolocation testing needs an appropriate HTTPS origin. Deployment TLS configuration will be documented separately.
 
-Image publication to a registry is a later delivery step after a registry and release policy are selected. Initial CI builds and tests images without publishing. The current compose.yaml implements frontend/backend/PostgreSQL services with health dependencies and the existing database volume. Caddy serves the Angular build and proxies the backend. compose.dev.yaml retains the optional loopback database port for host-run development. Full-stack startup, persistence and database recovery were verified locally; container CI follows next. See [container setup](container-stack.md).
+Image publication to a registry is a later delivery step after a registry and release policy are selected. Initial CI builds and tests images without publishing. The current compose.yaml implements frontend/backend/PostgreSQL services with health dependencies and the existing database volume. Caddy serves the Angular build and proxies the backend. The base file publishes the loopback database port in both modes; compose.host.yaml only adds the direct Keycloak port for host-run applications. Full-stack startup, persistence and database recovery were verified locally; container CI follows next. See [container setup](container-stack.md).
 
 Backend modules/packages:
 
@@ -138,7 +138,7 @@ Base path `/api/v1`; JSON request/response DTOs, server-side validation, consist
 
 | Capability | Example contract |
 |---|---|
-| Session | `GET /auth/csrf`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` |
+| Session (implemented outside business v1 prefix) | `GET /api/auth/csrf`, `GET /api/auth/login`, `GET /api/auth/signup`, `GET /api/auth/me`, `POST /api/auth/logout` |
 | Master data | `GET/POST /buses`, `GET/PUT/DELETE /buses/{id}`; corresponding driver, stop, route resources |
 | Assignment | `PUT /buses/{id}/driver-assignment`; `POST /schedule-assignments` |
 | Schedule | `POST /routes/{id}/schedules`; version-aware update and stop-time validation |
@@ -147,7 +147,7 @@ Base path `/api/v1`; JSON request/response DTOs, server-side validation, consist
 | Feedback | `POST /trips/{id}/reviews` and role-appropriate read endpoints |
 | Reports | `GET /reports/trips` with date, route, bus, driver, status, rating filters |
 
-Authentication uses an HttpOnly session cookie (Secure in HTTPS deployments), session rotation at login and invalidation at logout. Expose a separate CSRF token using Spring's SPA integration and Angular's XSRF conventions; refresh it after login/logout. NgRx stores the account summary, not passwords or session secrets. Guards improve navigation; backend permissions provide security. Account creation is admin-only initially, with no public signup.
+Authentication uses Keycloak and Spring Security backend-managed OIDC with Authorization Code + PKCE, an HttpOnly session cookie (Secure in HTTPS deployments), session rotation at login and invalidation at logout. The separate XSRF-TOKEN cookie follows Angular header conventions; refresh it after login/logout. Keycloak owns passwords and grants only PASSENGER on public signup. Driver/admin roles require controlled administration; no SMTP or email verification is configured. NgRx will store the account summary, not credentials or tokens. Guards improve navigation; backend role and assignment/ownership checks enforce permissions. See [ADR 0003](decisions/0003-backend-managed-keycloak-login.md) and [authentication setup](authentication-setup.md) for the implemented foundation and limits.
 
 Frontend features: login, role-specific shell/navigation, bus/driver management, route/stop editor, schedule editor, driver trip screen, passenger trip list/map, review form, admin reports. Reusable patterns include loading/empty/error states, confirmation dialogs, paginated tables, accessible forms, and field-validation feedback. Use Material rather than mixing component libraries.
 
@@ -236,7 +236,7 @@ bus-management-system/
     src/test/ and src/integrationTest/
   frontend/                   Angular CLI project, package lock, Dockerfile, .dockerignore
   e2e/                        Playwright workflows and synthetic fixtures
-  compose.yaml, compose.dev.yaml, .env.example
+  compose.yaml, compose.host.yaml, .env.example
   infra/                      Frontend serving/routing, recovery Compose, demo setup
   migration/                  Mapping specs and conversion scripts; no raw dump
   docs/                       Architecture, decisions, learning notes, demo guide

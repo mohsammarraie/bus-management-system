@@ -1,0 +1,155 @@
+{
+  "realm": "bus-management",
+  "enabled": true,
+  "displayName": "Bus Management System",
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "verifyEmail": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "loginWithEmailAllowed": false,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "passwordPolicy": "length(12)",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en",
+    "de",
+    "ar"
+  ],
+  "defaultLocale": "en",
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "defaultRole": {
+    "name": "default-roles-bus-management"
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "default-roles-bus-management",
+        "composite": true,
+        "composites": {
+          "client": {
+            "bus-management": [
+              "PASSENGER"
+            ]
+          }
+        }
+      }
+    ],
+    "client": {
+      "bus-management": [
+        {
+          "name": "ADMIN"
+        },
+        {
+          "name": "DRIVER"
+        },
+        {
+          "name": "PASSENGER"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "bus-management",
+      "name": "Bus Management System backend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "${APP_PUBLIC_URL}/api/login/oauth2/code/keycloak",
+        "http://localhost:4200/api/login/oauth2/code/keycloak"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "${APP_PUBLIC_URL}/overview##http://localhost:4200/overview",
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "Application roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "bus-management",
+            "claim.name": "app_roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "demo-admin",
+      "enabled": true,
+      "emailVerified": false,
+      "firstName": "Demo",
+      "lastName": "Admin",
+      "email": "admin@example.test",
+      "clientRoles": {
+        "bus-management": [
+          "ADMIN"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "demo-driver",
+      "enabled": true,
+      "emailVerified": false,
+      "firstName": "Demo",
+      "lastName": "Driver",
+      "email": "driver@example.test",
+      "clientRoles": {
+        "bus-management": [
+          "DRIVER"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "demo-passenger",
+      "enabled": true,
+      "emailVerified": false,
+      "firstName": "Demo",
+      "lastName": "Passenger",
+      "email": "passenger@example.test",
+      "clientRoles": {
+        "bus-management": [
+          "PASSENGER"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

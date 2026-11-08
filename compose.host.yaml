@@ -1,0 +1,7 @@
+# Host applications: npm start + Gradle bootRun; Docker runs infrastructure only.
+# Start with: docker compose -f compose.yaml -f compose.host.yaml up -d --wait keycloak
+# The frontend container must be stopped: Keycloak uses its gateway port in this mode.
+services:
+  keycloak:
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8082}:8080"
