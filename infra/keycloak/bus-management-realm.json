@@ -2,6 +2,7 @@
   "realm": "bus-management",
   "enabled": true,
   "displayName": "Bus Management System",
+  "loginTheme": "bus-management",
   "sslRequired": "external",
   "registrationAllowed": true,
   "registrationEmailAsUsername": false,
