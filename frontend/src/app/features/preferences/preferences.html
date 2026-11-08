@@ -3,6 +3,21 @@
   <h1 id="page-title" tabindex="-1" class="page-title">{{ t('preferences.title') }}</h1>
   <p class="page-intro">{{ t('preferences.intro') }}</p>
   <div class="preferences-grid">
+    <mat-card appearance="outlined">
+      <h2 id="appearance-title">{{ t('appearance.title') }}</h2>
+      <p id="appearance-description">{{ t('appearance.description') }}</p>
+      <mat-radio-group
+        aria-labelledby="appearance-title"
+        aria-describedby="appearance-description"
+        [value]="theme.preference()"
+        (change)="theme.select($event.value)"
+      >
+        <mat-radio-button value="light">{{ t('appearance.light') }}</mat-radio-button>
+        <mat-radio-button value="dark">{{ t('appearance.dark') }}</mat-radio-button>
+        <mat-radio-button value="system">{{ t('appearance.system') }}</mat-radio-button>
+      </mat-radio-group>
+      <p class="saved">{{ t('appearance.saved') }}</p>
+    </mat-card>
     <mat-card appearance="outlined"
       ><h2>{{ t('preferences.languageTitle') }}</h2>
       <p>{{ t('preferences.languageBody') }}</p>

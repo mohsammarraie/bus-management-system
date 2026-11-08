@@ -5,6 +5,7 @@ $brand-blue: #0d86c8;
 $brand-orange: #f5aa00;
 
 html {
+  color-scheme: light dark;
   @include mat.theme(
     (
       color: (
@@ -18,22 +19,33 @@ html {
   @include mat.theme-overrides(
     (
       // Darker blue supports readable white text; the logo blue remains an accent.
-      primary: #006799,
-      on-primary: #ffffff,
-      primary-container: #e2f2fc,
-      on-primary-container: #06354d,
-      tertiary: #805600,
-      on-tertiary: #ffffff,
+      primary: light-dark(#006799, #8dcdff),
+      on-primary: light-dark(#ffffff, #00344f),
+      primary-container: light-dark(#e2f2fc, #173d54),
+      on-primary-container: light-dark(#06354d, #cce7fb),
+      tertiary: light-dark(#805600, #ffbd46),
+      on-tertiary: light-dark(#ffffff, #432c00),
       tertiary-container: $brand-orange,
       on-tertiary-container: #241a00,
-      surface: #ffffff,
-      surface-container-low: #f5f9fc,
-      on-surface: #111820,
-      on-surface-variant: #4c5f6d,
-      outline: #6a7b86,
-      outline-variant: #d0dfe8
+      surface: light-dark(#ffffff, #17212b),
+      surface-container-low: light-dark(#f5f9fc, #101820),
+      on-surface: light-dark(#111820, #e6edf3),
+      on-surface-variant: light-dark(#4c5f6d, #b9c7d3),
+      outline: light-dark(#6a7b86, #8b9eac),
+      error: light-dark(#ba1a1a, #ffb4ab),
+      on-error: light-dark(#ffffff, #690005),
+      error-container: light-dark(#ffdad6, #93000a),
+      on-error-container: light-dark(#93000a, #ffdad6),
+      outline-variant: light-dark(#d0dfe8, #3d505f)
     )
   );
   --app-brand-blue: #{$brand-blue};
   --app-brand-orange: #{$brand-orange};
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+html[data-theme='dark'] {
+  color-scheme: dark;
 }

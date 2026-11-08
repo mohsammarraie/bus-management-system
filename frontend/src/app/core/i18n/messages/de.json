@@ -38,7 +38,7 @@
   "preferences": {
     "eyebrow": "Ganz nach deinen Wünschen",
     "title": "Einstellungen",
-    "intro": "Wähle deine bevorzugte Sprache. Die Sprachauswahl findest du oben auf jeder Seite.",
+    "intro": "Wähle Darstellung und Sprache. Die Sprachauswahl findest du oben auf jeder Seite.",
     "languageTitle": "Ein Arbeitsbereich in deiner Sprache",
     "languageBody": "Englisch, Deutsch und Arabisch stehen zur Verfügung. Bei Arabisch wird auch das Layout von rechts nach links ausgerichtet.",
     "previewTitle": "Ein vertrautes Format",
@@ -92,5 +92,13 @@
         "body": "Der Zugang für Administration und Fahrpersonal ist eingerichtet. Die Fahrtfunktionen folgen in Kürze."
       }
     }
+  },
+  "appearance": {
+    "title": "Darstellung",
+    "description": "Wähle eine helle oder dunkle Darstellung oder verwende die Systemeinstellung.",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
+    "saved": "Deine Auswahl wird in diesem Browser gespeichert und gilt auch für Anmeldung und Registrierung."
   }
 }

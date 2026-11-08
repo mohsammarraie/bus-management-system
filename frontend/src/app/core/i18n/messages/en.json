@@ -38,7 +38,7 @@
   "preferences": {
     "eyebrow": "Make yourself at home",
     "title": "Workspace preferences",
-    "intro": "Choose the language that feels right for you. Use the language selector at the top of any page.",
+    "intro": "Choose your appearance and language. The language selector is available at the top of any page.",
     "languageTitle": "A workspace in your language",
     "languageBody": "English, German and Arabic are available. Arabic also changes the layout to read from right to left.",
     "previewTitle": "A familiar format",
@@ -92,5 +92,13 @@
         "body": "Administrator and driver access is ready. Trip tools are coming soon."
       }
     }
+  },
+  "appearance": {
+    "title": "Appearance",
+    "description": "Choose a light or dark appearance, or follow your device setting.",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "saved": "Your choice is saved on this browser and also applies to login and registration."
   }
 }

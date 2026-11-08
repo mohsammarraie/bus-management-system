@@ -131,7 +131,7 @@ npm ci
 npm start
 ```
 
-Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Use the header to log in, sign up or log out. Signed-in users can open My account; administrators and drivers also receive their role-specific navigation. Buses/routes/trips remain upcoming. Start the backend and Keycloak for real account flows; if unavailable, public pages remain usable with a connection message and retry. See [authentication setup](docs/authentication-setup.md).
+Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Preferences also offers Light / Dark / System appearance, saved in this browser and shared with Keycloak login/registration; System follows live device changes. See [appearance and identity theme](docs/keycloak-theme.md#appearance-preference). Use the header to log in, sign up or log out. Signed-in users can open My account; administrators and drivers also receive their role-specific navigation. Buses/routes/trips remain upcoming. Start the backend and Keycloak for real account flows; if unavailable, public pages remain usable with a connection message and retry. See [authentication setup](docs/authentication-setup.md).
 
 Local checks:
 

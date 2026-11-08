@@ -154,12 +154,32 @@ test('login failures display a translated message and logout preparation failure
   await expect(page.getByRole('status')).toHaveText('Login was not completed. Please try again.');
   await account(page, ['DRIVER']);
   await page.goto('/account');
+  const logout = page.getByRole('button', { name: 'Log out', exact: true });
+  // Initial session loading also fetches CSRF. Inject the outage only after sign-in is ready.
+  await expect(logout).toBeEnabled();
+  let logoutPosts = 0;
+  await page.route('**/api/auth/logout', async (route) => {
+    logoutPosts++;
+    expect(route.request().method()).toBe('POST');
+    expect(new URLSearchParams(route.request().postData() ?? '').get('_csrf')).toBe(
+      'fresh-retry-token',
+    );
+    await page.route('**/api/auth/me', (request) => request.fulfill({ status: 401, json: {} }));
+    await route.fulfill({ status: 302, headers: { location: '/overview' } });
+  });
   await page.route('**/api/auth/csrf', (route) => route.fulfill({ status: 503, json: {} }));
-  await page.getByRole('button', { name: 'Log out', exact: true }).click();
+  await logout.click();
   await expect(page.getByRole('status')).toHaveText(
     'We could not start logout. Check your connection and try again.',
   );
-  await expect(page.getByRole('button', { name: 'Log out', exact: true })).toBeEnabled();
+  await expect(logout).toBeEnabled();
+  expect(logoutPosts).toBe(0);
+  await page.route('**/api/auth/csrf', (route) =>
+    route.fulfill({ json: { headerName: 'X-XSRF-TOKEN', token: 'fresh-retry-token' } }),
+  );
+  await logout.click();
+  await expect(page.getByRole('link', { name: 'Log in', exact: true })).toBeVisible();
+  expect(logoutPosts).toBe(1);
 });
 
 test('restoring a cached document rechecks the server session', async ({ page }) => {
