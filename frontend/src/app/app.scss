@@ -180,3 +180,35 @@ main {
 main:focus-visible {
   outline-offset: -3px;
 }
+
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+.topbar-actions app-account-controls {
+  max-width: 100%;
+}
+.session-notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--app-color-soft);
+  color: var(--app-color-on-soft);
+}
+.session-notice span {
+  flex: 1 1 240px;
+}
+@media (max-width: 699px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+  .topbar-actions {
+    flex: 1 1 220px;
+  }
+}

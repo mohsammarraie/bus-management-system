@@ -6,14 +6,17 @@ import {
   Component,
   inject,
   Injector,
+  HostListener,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { map } from 'rxjs';
+import { filter, map } from 'rxjs';
+import { AuthService } from './core/auth/auth.service';
+import { AccountControls } from './shared/account-controls';
 import { LanguageService } from './core/i18n/language.service';
 import { Icon } from './shared/icon';
 import { LanguageSwitcher } from './shared/language-switcher';
@@ -31,6 +34,7 @@ import { LanguageSwitcher } from './shared/language-switcher';
     TranslocoDirective,
     Icon,
     LanguageSwitcher,
+    AccountControls,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -38,6 +42,7 @@ import { LanguageSwitcher } from './shared/language-switcher';
 })
 export class App {
   protected readonly language = inject(LanguageService);
+  protected readonly auth = inject(AuthService);
   protected readonly handset = toSignal(
     inject(BreakpointObserver)
       .observe('(max-width: 959px)')
@@ -47,6 +52,29 @@ export class App {
   private readonly injector = inject(Injector);
   private hasActivatedPage = false;
   private menuClosed: Promise<unknown> = Promise.resolve();
+
+  constructor() {
+    this.auth.refresh().subscribe();
+    const router = inject(Router);
+    router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        if (router.parseUrl(router.url).queryParams['auth'] === 'failed')
+          this.auth.showNotice('loginFailed');
+      });
+  }
+
+  @HostListener('window:pageshow', ['$event'])
+  protected restorePage(event: PageTransitionEvent): void {
+    if (event.persisted) this.auth.resume().subscribe();
+  }
+
+  protected retrySession(): void {
+    this.auth.refresh().subscribe();
+  }
 
   protected skipToContent(event: Event, main: HTMLElement): void {
     event.preventDefault();

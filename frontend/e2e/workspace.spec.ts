@@ -1,4 +1,5 @@
-import { expect, Page, test } from '@playwright/test';
+import { test } from './fixtures';
+import { expect, Page } from '@playwright/test';
 
 async function navigateToPreferences(page: Page) {
   const menu = page.getByRole('button', { name: 'Open navigation', exact: true });

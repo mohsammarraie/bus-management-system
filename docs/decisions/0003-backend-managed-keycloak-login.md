@@ -8,7 +8,7 @@ The application needs passenger signup, driver/admin privileges and backend-enfo
 
 ## Decision and responsibilities
 
-Use Keycloak 26.8.2 and Spring Security's standard OAuth2/OIDC client support. Keycloak owns credentials, registration and identity roles. Spring completes Authorization Code + PKCE login, validates the OIDC response and creates an application session. Angular will use the session through same-origin API calls, not keycloak-js, browser bearer tokens or token refresh logic. This branch implements the backend/identity foundation; Angular account state and navigation follow separately.
+Use Keycloak 26.8.2 and Spring Security's standard OAuth2/OIDC client support. Keycloak owns credentials, registration and identity roles. Spring completes Authorization Code + PKCE login, validates the OIDC response and creates an application session. Angular uses the session through same-origin API calls, not keycloak-js, browser bearer tokens or token refresh logic. The backend/identity foundation and Angular account state/navigation are implemented; see authentication-setup.md for the native logout form and UI guard boundaries.
 
 Caddy proxies /api and /identity. The browser sees one origin. The client secret, access/refresh tokens and token exchange remain server-side. The HttpOnly JSESSIONID identifies the backend session; it is not a Keycloak JWT. CSRF uses a separate readable XSRF-TOKEN cookie and X-XSRF-TOKEN request header. The backend token endpoint uses confidential-client authentication; CLIENT_SECRET_BASIC here authenticates the server client, not application users with HTTP Basic Auth.
 

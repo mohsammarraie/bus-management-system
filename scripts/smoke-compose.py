@@ -103,6 +103,8 @@ try:
     if args.browser_tests:
         subprocess.run(['npm', 'run', 'test:e2e'], cwd=ROOT / 'frontend',
                        env=dict(ENV, CI='true', PLAYWRIGHT_BASE_URL=BASE), check=True)
+        subprocess.run(['node', 'e2e/auth-browser-smoke.ts'], cwd=ROOT / 'frontend',
+                       env=dict(ENV, PLAYWRIGHT_BASE_URL='http://localhost:' + ENV['FRONTEND_PORT']), check=True)
     assert sql('SELECT count(*) FROM bus_management.flyway_schema_history WHERE success AND version IS NOT NULL') == '1'
     sql("INSERT INTO bus_management.buses (registration_number, capacity) VALUES ('SMOKE-ONLY', 40)")
     compose('down')  # Keep this disposable project's volume to verify recreation.

@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({PostgresTestConfiguration.class, AuthenticationTests.Probes.class})
 class AuthenticationTests {
     @Autowired MockMvc mvc;
+    @Autowired org.springframework.security.oauth2.client.registration.ClientRegistrationRepository clients;
     @Autowired org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper mapper;
 
     @Test
@@ -91,6 +92,17 @@ class AuthenticationTests {
     @Test
     void logoutRequiresCsrf() throws Exception {
         mvc.perform(post("/api/auth/logout").with(oidcLogin())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void browserLogoutAcceptsTheMaskedCsrfTokenFromTheEndpoint() throws Exception {
+        var response = mvc.perform(get("/api/auth/csrf")).andReturn().getResponse();
+        var token = com.jayway.jsonpath.JsonPath.<String>read(response.getContentAsString(), "$.token");
+        mvc.perform(post("/api/auth/logout").with(oidcLogin()
+                        .clientRegistration(clients.findByRegistrationId("keycloak")))
+                        .cookie(response.getCookie("XSRF-TOKEN")).param("_csrf", token))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", containsString("/protocol/openid-connect/logout")));
     }
 
     @Test

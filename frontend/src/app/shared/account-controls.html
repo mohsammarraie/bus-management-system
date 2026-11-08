@@ -1,0 +1,35 @@
+<div
+  class="account-controls"
+  *transloco="let t"
+  [attr.aria-label]="t('auth.controls')"
+  role="group"
+>
+  @if (auth.account(); as account) {
+    <a
+      mat-button
+      routerLink="/account"
+      [attr.aria-label]="t('auth.account') + ': ' + account.username"
+    >
+      <bdi>{{ account.username }}</bdi>
+    </a>
+    <form
+      #logoutForm
+      ngNoForm
+      method="post"
+      action="/api/auth/logout"
+      (submit)="logout($event, logoutForm, csrfInput)"
+    >
+      <input #csrfInput type="hidden" name="_csrf" />
+      <button mat-button type="submit" [disabled]="auth.busy()">
+        {{ t('auth.logout') }}
+      </button>
+    </form>
+  } @else if (auth.state().status === 'loading') {
+    <span role="status">{{ t('auth.checking') }}</span>
+  } @else {
+    <a mat-button [href]="'/api/auth/login?lang=' + language.language()">{{ t('auth.login') }}</a>
+    <a mat-flat-button [href]="'/api/auth/signup?lang=' + language.language()">{{
+      t('auth.signup')
+    }}</a>
+  }
+</div>

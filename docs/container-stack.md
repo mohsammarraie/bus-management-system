@@ -44,13 +44,13 @@ python3 scripts/smoke-compose.py
 
 The script also verifies real OIDC login for all three roles, passenger-only signup, session rotation, CSRF-protected logout/SSO and registered identity persistence/recovery. It does not use a password grant. See authentication-setup.md. The script creates a uniquely named project and its own volume with synthetic credentials, using .env.example rather than local .env. It sets POSTGRES_PORT=0 so Docker assigns an available loopback database port instead of competing with development port 5432. It checks page/proxy routing, health, non-root application users and versioned Flyway history; writes one synthetic bus, recreates the stack while retaining its volume, verifies persistence, and checks database outage/recovery. Finally it removes only its disposable project, network and volume, including on normal exceptions. Optional --report-dir container-test-results saves bounded status/logs and a result before cleanup; see container-ci.md. A forcibly killed process may require cleanup of the printed bms-smoke-* project. Default port 18082 can be changed with SMOKE_PORT; never point this check at the normal project.
 
-To also test the built frontend with the existing 38 browser cases, install frontend dependencies/Chromium as documented in frontend-starter.md, then run:
+To also test the built frontend with the current browser suite, install frontend dependencies/Chromium as documented in frontend-starter.md, then run:
 
 ```bash
 python3 scripts/smoke-compose.py --browser-tests
 ```
 
-The optional mode requires Node 24/npm 11 and uses PLAYWRIGHT_BASE_URL to target the container without starting an Angular dev server. Ordinary Playwright commands retain their existing behavior. Report files remain ignored. Source checks and backend integration tests remain separate from this smoke check.
+The optional mode requires Node 24/npm 11 and uses PLAYWRIGHT_BASE_URL to target the container without starting an Angular dev server. It also runs e2e/auth-browser-smoke.ts through Node 24 against real Keycloak: all three role logins, role routes, native form/SSO logout and passenger signup. Ordinary Playwright commands use test-only API fixtures and remain independent of infrastructure. Report files remain ignored. Source checks and backend integration tests remain separate from this smoke check.
 
 Independent [Container CI](container-ci.md) builds both images and runs the default smoke check. Hosted execution is pending publication and an observed run; registry publication is not configured.
 
@@ -59,3 +59,5 @@ References: [Caddy handle routing](https://caddyserver.com/docs/caddyfile/direct
 ## Local verification evidence
 
 Both images build from the permitted source contexts. Base/dev Compose validation, format/lint and browser-test type checking passed. The backend clean test bootJar run passed all 18 tests. The isolated smoke scenario passed, including all 38 existing browser cases against the production Angular build (no retries/skips), migration, synthetic data persistence across stack recreation and database outage/recovery. Temporary projects/volumes were removed. Tested on Linux amd64 with Docker 29.8.0/Compose 5.5.1; other architectures and internet deployment remain unverified. Existing frontend/backend source CI passed previously; hosted container checks are configured with observed results pending publication.
+
+Account-integration follow-up: the rebuilt frontend image passed all 62 deterministic desktop/mobile browser cases and the optional real Keycloak UI checks (three role/language logins, browser/SSO logout and passenger signup). The isolated smoke also passed persistence and database recovery and removed its temporary resources. Backend tests passed 32 cases; production backend code/image was unchanged. See authentication-setup.md for current evidence and limits. Hosted verification for this branch awaits publication.

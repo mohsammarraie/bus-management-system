@@ -51,5 +51,46 @@
     "title": "Let’s get you back on route.",
     "body": "This page is not available. Return to the overview to find your way.",
     "action": "Back to overview"
+  },
+  "auth": {
+    "controls": "Account controls",
+    "account": "My account",
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out",
+    "checking": "Checking your session…",
+    "signedIn": "Signed-in account",
+    "username": "Username",
+    "rolesLabel": "Roles",
+    "retry": "Try again",
+    "dismiss": "Dismiss message",
+    "roles": {
+      "ADMIN": "Administrator",
+      "DRIVER": "Driver",
+      "PASSENGER": "Passenger"
+    },
+    "notices": {
+      "expired": "Your session has ended. Log in again to continue.",
+      "unavailable": "We could not check your session. Check your connection and try again.",
+      "loginRequired": "Log in to open that page.",
+      "forbidden": "Your account does not have access to that page.",
+      "loginFailed": "Login was not completed. Please try again.",
+      "logoutFailed": "We could not start logout. Check your connection and try again.",
+      "denied": "The request was not authorized. Refresh the page and try again."
+    },
+    "pages": {
+      "account": {
+        "title": "My account",
+        "body": "View your username and assigned roles."
+      },
+      "admin": {
+        "title": "Administration",
+        "body": "Administrator access is ready. Bus and route management tools are coming soon."
+      },
+      "driver": {
+        "title": "Driver workspace",
+        "body": "Administrator and driver access is ready. Trip tools are coming soon."
+      }
+    }
   }
 }

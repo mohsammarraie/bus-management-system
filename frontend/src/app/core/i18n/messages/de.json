@@ -51,5 +51,46 @@
     "title": "Zurück auf die richtige Route.",
     "body": "Diese Seite ist nicht verfügbar. Kehre zur Übersicht zurück.",
     "action": "Zur Übersicht"
+  },
+  "auth": {
+    "controls": "Kontofunktionen",
+    "account": "Mein Konto",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "logout": "Abmelden",
+    "checking": "Sitzung wird geprüft…",
+    "signedIn": "Angemeldetes Konto",
+    "username": "Benutzername",
+    "rolesLabel": "Rollen",
+    "retry": "Erneut versuchen",
+    "dismiss": "Meldung schließen",
+    "roles": {
+      "ADMIN": "Administration",
+      "DRIVER": "Fahrpersonal",
+      "PASSENGER": "Fahrgast"
+    },
+    "notices": {
+      "expired": "Deine Sitzung ist beendet. Melde dich erneut an, um fortzufahren.",
+      "unavailable": "Deine Sitzung konnte nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.",
+      "loginRequired": "Melde dich an, um diese Seite zu öffnen.",
+      "forbidden": "Dein Konto hat keinen Zugriff auf diese Seite.",
+      "loginFailed": "Die Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.",
+      "logoutFailed": "Die Abmeldung konnte nicht gestartet werden. Prüfe deine Verbindung und versuche es erneut.",
+      "denied": "Die Anfrage wurde nicht autorisiert. Lade die Seite neu und versuche es erneut."
+    },
+    "pages": {
+      "account": {
+        "title": "Mein Konto",
+        "body": "Hier siehst du deinen Benutzernamen und deine zugewiesenen Rollen."
+      },
+      "admin": {
+        "title": "Verwaltung",
+        "body": "Der Zugang für die Administration ist eingerichtet. Die Bus- und Routenverwaltung folgt in Kürze."
+      },
+      "driver": {
+        "title": "Fahrbereich",
+        "body": "Der Zugang für Administration und Fahrpersonal ist eingerichtet. Die Fahrtfunktionen folgen in Kürze."
+      }
+    }
   }
 }

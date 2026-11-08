@@ -57,6 +57,36 @@
                   t('nav.preferences')
                 }}</span></a
               >
+              @if (auth.account()) {
+                <a
+                  mat-list-item
+                  routerLink="/account"
+                  routerLinkActive="active"
+                  ariaCurrentWhenActive="page"
+                  (click)="navigateFromMenu(drawer, main)"
+                  >{{ t('auth.account') }}</a
+                >
+              }
+              @if (auth.hasAnyRole('ADMIN')) {
+                <a
+                  mat-list-item
+                  routerLink="/administration"
+                  routerLinkActive="active"
+                  ariaCurrentWhenActive="page"
+                  (click)="navigateFromMenu(drawer, main)"
+                  >{{ t('auth.pages.admin.title') }}</a
+                >
+              }
+              @if (auth.hasAnyRole('ADMIN', 'DRIVER')) {
+                <a
+                  mat-list-item
+                  routerLink="/driver"
+                  routerLinkActive="active"
+                  ariaCurrentWhenActive="page"
+                  (click)="navigateFromMenu(drawer, main)"
+                  >{{ t('auth.pages.driver.title') }}</a
+                >
+              }
             </mat-nav-list>
             <ul class="planned-nav" [attr.aria-label]="t('overview.soon')">
               <li>
@@ -90,8 +120,24 @@
             }
             <span>{{ t('app.workspace') }}</span>
           </div>
-          <app-language-switcher />
+          <div class="topbar-actions">
+            <app-account-controls />
+            <app-language-switcher />
+          </div>
         </header>
+        @if (auth.notice(); as notice) {
+          <div class="session-notice">
+            <span role="status">{{ t('auth.notices.' + notice) }}</span>
+            @if (auth.state().status === 'unavailable') {
+              <button mat-button type="button" (click)="retrySession()" [disabled]="auth.busy()">
+                {{ t('auth.retry') }}
+              </button>
+            }
+            <button mat-button type="button" (click)="auth.showNotice(null)">
+              {{ t('auth.dismiss') }}
+            </button>
+          </div>
+        }
         <main id="main-content" #main tabindex="-1" aria-labelledby="page-title">
           <router-outlet (activate)="focusNewPage(main)" />
         </main>

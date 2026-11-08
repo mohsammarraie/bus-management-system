@@ -1,5 +1,6 @@
+import { test } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, Locator, Page, test, TestInfo } from '@playwright/test';
+import { expect, Locator, Page, TestInfo } from '@playwright/test';
 
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];
 
