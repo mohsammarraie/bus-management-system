@@ -64,11 +64,17 @@ Merged through PR #12 (main 118df5d): Keycloak 26.8.2, separate identity databas
 
 Implemented on feat/angular-account-integration: localized Login/Sign up/Log out and account controls; in-memory signal/RxJS state; session/CSRF initialization; native form logout through Keycloak; role-specific navigation and guards; retryable connection errors, denied access and expired-session handling. Account, administration and driver pages display real identity/access information and explicitly upcoming business tools. No business API or profile administration is added. See [authentication setup](authentication-setup.md#angular-account-integration) for design, reading order, tests and limits. Merged through PR #13 (main d780982).
 
-## Current task: Keycloak login theme
+## Completed: Keycloak login theme
 
 Implemented on feat/keycloak-login-theme: a native bus-management theme inheriting keycloak.v2, CSS matching the frontend palette/forms, localized branding, existing bus icon and a thin digest-pinned identity image. No authentication templates or new frontend framework are introduced. See [theme setup and maintenance](keycloak-theme.md) for existing-realm activation and upgrade guidance.
 
-Real identity checks cover login/registration and error states in en/de/ar, keyboard/password controls, RTL, overflow and axe scans; host-run Angular/backend flows are also checked. The existing HTTP container smoke verifies the theme CSS is served without adding Chromium to Container CI. All changes remain uncommitted; hosted verification awaits publication.
+Real identity checks cover login/registration and error states in en/de/ar, keyboard/password controls, RTL, overflow and axe scans; host-run Angular/backend flows are also checked. The existing HTTP container smoke verifies the theme CSS is served without adding Chromium to Container CI. The user has merged the theme branch and updated main. Hosted results must still be checked from an observed run.
+
+## Current task: saved application and identity appearance
+
+Implemented on `feat/theme-preferences`: Preferences has localized, keyboard-operable Light/Dark/System radio controls. A validated cosmetic cookie saves the browser choice and shares it between Angular and Keycloak across localhost ports. Material and identity palettes use paired light/dark roles; System responds to live device changes. No backend, authentication protocol, database schema, new dependency or profile API change is needed.
+
+See [appearance preference and reading order](keycloak-theme.md#appearance-preference). Relevant verification includes preference restore/invalid/blocked storage behavior, desktop/mobile light/dark accessibility, and real identity forms in all three languages. Task changes remain unstaged/uncommitted for user review; hosted CI is pending publication.
 
 ## Next implementation: backend bus CRUD
 
@@ -80,7 +86,7 @@ Then implement the Angular buses table/forms with NgRx Store/Effects/Entity in a
 
 ## Following steps
 
-1. Review/merge the Keycloak theme branch and inspect its hosted CI results.
+1. Review/merge the saved appearance branch and inspect its hosted CI results.
 2. Review the first bus API contract before implementing CRUD.
 3. Implement backend bus CRUD with ADMIN permissions and PostgreSQL integration tests.
 4. Implement the Angular buses feature with Material tables/forms and NgRx Store/Effects/Entity.

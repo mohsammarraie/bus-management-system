@@ -31,17 +31,27 @@ async function tabTo(page: Page, target: Locator) {
 }
 
 for (const language of ['en', 'de', 'ar']) {
-  for (const route of ['overview', 'preferences', 'missing-page']) {
-    test(`accessibility scan: ${language} / ${route}`, async ({ page }, info) => {
-      await page.addInitScript(
-        (lang) => localStorage.setItem('bus-management.language', lang),
-        language,
-      );
-      await page.goto(`/${route}`);
-      await expect(page.locator('h1')).toBeVisible();
-      await expect(page.locator('html')).toHaveAttribute('lang', language);
-      await checkAccessibility(page, info);
-    });
+  for (const theme of ['light', 'dark']) {
+    for (const route of ['overview', 'preferences', 'missing-page']) {
+      test(`accessibility scan: ${language} / ${route} / ${theme}`, async ({
+        page,
+        context,
+        baseURL,
+      }, info) => {
+        await context.addCookies([
+          { name: 'bus-management.appearance', value: theme, url: baseURL! },
+        ]);
+        await page.addInitScript(
+          (lang) => localStorage.setItem('bus-management.language', lang),
+          language,
+        );
+        await page.goto(`/${route}`);
+        await expect(page.locator('h1')).toBeVisible();
+        await expect(page.locator('html')).toHaveAttribute('lang', language);
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+        await checkAccessibility(page, info);
+      });
+    }
   }
 }
 

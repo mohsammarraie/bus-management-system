@@ -48,7 +48,7 @@ The development proxy forwards `/api/**` to `http://127.0.0.1:8080`; change prox
 
 - App owns the responsive shell: desktop sidenav, mobile overlay navigation, accessible menu/skip controls, route outlet and persistent header language selector.
 - Overview describes future buses/routes/trips with clearly marked coming-soon cards. It contains no fabricated operational counts or fake API responses.
-- Preferences demonstrates selected-language formatting with explicitly labeled example values. The example date uses UTC and does not define future trip timezone behavior.
+- Preferences offers a saved Light/Dark/System appearance selector and demonstrates selected-language formatting with explicitly labeled example values. The example date uses UTC and does not define future trip timezone behavior. [Appearance persistence and Keycloak matching](keycloak-theme.md#appearance-preference) use a cosmetic cookie; no profile API or NgRx store is needed.
 - Feature pages are standalone, OnPush and lazy-loaded. The shell uses supported Material theme overrides, logical layout properties and bundled vector icons/system fonts; no external font request is required.
 - core/i18n contains bundled en/de/ar JSON resources, the Transloco provider/loader and LanguageService. The validated saved preference defaults to English; document lang/dir, Material direction and displayed messages change together. Storage is best-effort and contains only the language code. PageTitleStrategy combines the translated route title and app name, updating on navigation and language changes.
 
@@ -58,7 +58,7 @@ The development proxy forwards `/api/**` to `http://127.0.0.1:8080`; change prox
 
 Every component uses external HTML and SCSS, including preferences, language switcher, icon, bus illustration and not-found. Component TypeScript contains behavior and metadata; local SCSS contains its layout/responsive rules. The overview delegates its decorative artwork to a feature-local BusIllustration component; the shared Icon component handles small symbols. The illustration retains inherited theme colors and stays hidden from assistive technology.
 
-- `src/styles/_theme.scss`: one global Material theme using the built-in azure/orange palettes and a small set of role overrides. The application palette uses blue `#0D86C8` and orange-gold `#F5AA00`. A darker primary blue supports readable white text; surfaces use light blue, white and dark ink. The application keeps its generic identity and its own icon.
+- `src/styles/_theme.scss`: one global Material theme using the built-in azure/orange palettes and role overrides through `light-dark()`. The application palette uses blue `#0D86C8` and orange-gold `#F5AA00`. Light mode uses a darker primary blue with light surfaces; dark mode uses pale blue controls with dark surfaces and light text. `color-scheme` applies the selected mode to Material components, overlays and native controls. The application keeps its generic identity and its own icon.
 - `src/styles/_tokens.scss`: semantic CSS variables mapped to Material roles, shared by component styles and the decorative SVG. Colors are not repeated inside component markup/styles.
 - `src/styles.scss`: imports the theme/tokens once, then holds resets, focus styles and shared typography. Layout spacing remains local; this is not an additional design-system framework.
 

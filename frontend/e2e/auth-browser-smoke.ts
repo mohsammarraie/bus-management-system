@@ -5,16 +5,26 @@ import AxeBuilder from '@axe-core/playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 
-async function checkIdentityTheme(page: Page, state: string, language: string) {
+async function checkIdentityTheme(
+  page: Page,
+  state: string,
+  language: string,
+  preference: string,
+  dark: boolean,
+) {
   await expect(page.locator('html')).toHaveAttribute('lang', language);
   await expect(page.locator('html')).toHaveAttribute('dir', language === 'ar' ? 'rtl' : 'ltr');
-  await expect(page.locator('html')).not.toHaveClass(/pf-v5-theme-dark/);
-  await expect(page.locator('link[href*="css/bus-management.css"]')).toHaveCount(1);
-  expect(
-    await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue('--bms-primary').trim(),
-    ),
-  ).toBe('#006799');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', preference);
+  if (dark) await expect(page.locator('html')).toHaveClass(/pf-v5-theme-dark/);
+  else await expect(page.locator('html')).not.toHaveClass(/pf-v5-theme-dark/);
+  await expect(page.locator('link[href*="/css/bus-management."]')).toHaveAttribute(
+    'href',
+    /\/css\/bus-management\.[0-9a-f]{12}\.css$/,
+  );
+  await expect(page.locator('body')).toHaveCSS(
+    'background-color',
+    dark ? 'rgb(16, 24, 32)' : 'rgb(245, 249, 252)',
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(
     false,
   );
@@ -23,7 +33,7 @@ async function checkIdentityTheme(page: Page, state: string, language: string) {
     .analyze();
   await mkdir('test-results', { recursive: true });
   await writeFile(
-    `test-results/keycloak-${state}-${language}-axe.json`,
+    `test-results/keycloak-${state}-${language}-${preference}-axe.json`,
     JSON.stringify(
       {
         violations: result.violations,
@@ -33,7 +43,10 @@ async function checkIdentityTheme(page: Page, state: string, language: string) {
       2,
     ),
   );
-  await page.screenshot({ path: `test-results/keycloak-${state}-${language}.png`, fullPage: true });
+  await page.screenshot({
+    path: `test-results/keycloak-${state}-${language}-${preference}.png`,
+    fullPage: true,
+  });
   expect(
     result.violations.map((issue) => ({
       id: issue.id,
@@ -65,72 +78,93 @@ try {
       signup: 'إنشاء حساب',
     },
   ]) {
-    const context = await browser.newContext(
-      entry.role === 'admin' ? { colorScheme: 'dark' } : devices['Pixel 7'],
-    );
-    await context.addInitScript(
-      (lang) => localStorage.setItem('bus-management.language', lang),
-      entry.language,
-    );
-    const page = await context.newPage();
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(base + '/overview');
-    await page.getByRole('link', { name: entry.login, exact: true }).click();
-    await expect(page.locator('#username')).toBeVisible();
-    await checkIdentityTheme(page, 'login', entry.language);
-    await page.locator('#username').fill('demo-' + entry.role);
-    await page.keyboard.press('Tab');
-    await expect(page.locator('#password')).toBeFocused();
-    await page.locator('#password').fill('incorrect-theme-test-only');
-    await page.keyboard.press('Tab');
-    const toggle = page.locator('[data-password-toggle]');
-    await expect(toggle).toBeFocused();
-    await page.keyboard.press('Space');
-    await expect(page.locator('#password')).toHaveAttribute('type', 'text');
-    await page.keyboard.press('Space');
-    await expect(page.locator('#password')).toHaveAttribute('type', 'password');
-    await page.keyboard.press('Tab');
-    await expect(page.locator('#kc-login')).toBeFocused();
-    await expect(page.locator('#kc-login')).toHaveCSS('outline-style', 'solid');
-    await page.keyboard.press('Enter');
-    await expect(page.locator('#input-error-username')).toBeVisible();
-    await checkIdentityTheme(page, 'login-error', entry.language);
-    await page.locator('#username').fill('demo-' + entry.role);
-    await page.locator('#password').fill(password);
-    await Promise.all([page.waitForURL(base + '/overview'), page.locator('#kc-login').click()]);
-    await expect(page.getByRole('button', { name: entry.logout, exact: true })).toBeEnabled();
-    const response = await context.request.get(base + '/api/auth/me');
-    expect(response.status()).toBe(200);
-    expect((await response.json()).roles).toEqual([entry.role.toUpperCase()]);
-    expect(
-      (await context.cookies(base)).find((cookie) => cookie.name === 'JSESSIONID')?.httpOnly,
-    ).toBe(true);
-    await page.goto(base + '/administration');
-    await expect(page).toHaveURL(base + (entry.role === 'admin' ? '/administration' : '/overview'));
-    await page.goto(base + '/driver');
-    await expect(page).toHaveURL(base + (entry.role === 'passenger' ? '/overview' : '/driver'));
-    await page.goto(base + '/account');
-    await expect(page.locator('main')).toContainText('demo-' + entry.role);
-    await page.screenshot({ path: `test-results/real-account-${entry.role}.png`, fullPage: true });
-    await page.getByRole('button', { name: entry.logout, exact: true }).click();
-    await page.waitForURL(base + '/overview');
-    await expect(page.getByRole('link', { name: entry.login, exact: true })).toBeVisible();
-    expect((await context.request.get(base + '/api/auth/me')).status()).toBe(401);
-    await page.getByRole('link', { name: entry.login, exact: true }).click();
-    await expect(page.locator('#kc-form-login')).toBeVisible();
-    await page.goto(base + '/overview');
-    await page.getByRole('link', { name: entry.signup, exact: true }).click();
-    await expect(page.locator('#kc-register-form')).toBeVisible();
-    await checkIdentityTheme(page, 'registration', entry.language);
-    await page.locator('#kc-register-form [type="submit"]').click();
-    await expect(page.locator('#username')).toHaveAttribute('aria-invalid', 'true');
-    await checkIdentityTheme(page, 'registration-error', entry.language);
-    expect(errors).toEqual([]);
-    console.log(
-      `PASS: real ${entry.role}/${entry.language} UI login, route guards, session and browser/SSO logout`,
-    );
-    await context.close();
+    for (const preference of ['light', 'dark', 'system']) {
+      const systemDark = entry.role !== 'driver';
+      const dark = preference === 'dark' || (preference === 'system' && systemDark);
+      const context = await browser.newContext({
+        ...(entry.role === 'admin' ? {} : devices['Pixel 7']),
+        colorScheme: systemDark ? 'dark' : 'light',
+      });
+      await context.addInitScript(
+        (lang) => localStorage.setItem('bus-management.language', lang),
+        entry.language,
+      );
+      const page = await context.newPage();
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(base + '/preferences');
+      await page.locator(`mat-radio-button input[value="${preference}"]`).check();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', preference);
+      await page.getByRole('link', { name: entry.login, exact: true }).click();
+      await expect(page.locator('#username')).toBeVisible();
+      await checkIdentityTheme(page, 'login', entry.language, preference, dark);
+      // A live OS change affects System only and leaves partially entered form values intact.
+      await page.locator('#username').fill('theme-preserves-input');
+      await page.emulateMedia({ colorScheme: systemDark ? 'light' : 'dark' });
+      await expect(page.locator('body')).toHaveCSS(
+        'background-color',
+        (preference === 'system' ? !systemDark : dark) ? 'rgb(16, 24, 32)' : 'rgb(245, 249, 252)',
+      );
+      await expect(page.locator('#username')).toHaveValue('theme-preserves-input');
+      await page.emulateMedia({ colorScheme: systemDark ? 'dark' : 'light' });
+      await page.locator('#username').fill('demo-' + entry.role);
+      await page.keyboard.press('Tab');
+      await expect(page.locator('#password')).toBeFocused();
+      await page.locator('#password').fill('incorrect-theme-test-only');
+      await page.keyboard.press('Tab');
+      const toggle = page.locator('[data-password-toggle]');
+      await expect(toggle).toBeFocused();
+      await page.keyboard.press('Space');
+      await expect(page.locator('#password')).toHaveAttribute('type', 'text');
+      await page.keyboard.press('Space');
+      await expect(page.locator('#password')).toHaveAttribute('type', 'password');
+      await page.keyboard.press('Tab');
+      await expect(page.locator('#kc-login')).toBeFocused();
+      await expect(page.locator('#kc-login')).toHaveCSS('outline-style', 'solid');
+      await page.keyboard.press('Enter');
+      await expect(page.locator('#input-error-username')).toBeVisible();
+      await checkIdentityTheme(page, 'login-error', entry.language, preference, dark);
+      await page.locator('#username').fill('demo-' + entry.role);
+      await page.locator('#password').fill(password);
+      await Promise.all([page.waitForURL(base + '/overview'), page.locator('#kc-login').click()]);
+      await expect(page.getByRole('button', { name: entry.logout, exact: true })).toBeEnabled();
+      const response = await context.request.get(base + '/api/auth/me');
+      expect(response.status()).toBe(200);
+      expect((await response.json()).roles).toEqual([entry.role.toUpperCase()]);
+      expect(
+        (await context.cookies(base)).find((cookie) => cookie.name === 'JSESSIONID')?.httpOnly,
+      ).toBe(true);
+      await page.goto(base + '/administration');
+      await expect(page).toHaveURL(
+        base + (entry.role === 'admin' ? '/administration' : '/overview'),
+      );
+      await page.goto(base + '/driver');
+      await expect(page).toHaveURL(base + (entry.role === 'passenger' ? '/overview' : '/driver'));
+      await page.goto(base + '/account');
+      await expect(page.locator('main')).toContainText('demo-' + entry.role);
+      await page.screenshot({
+        path: `test-results/real-account-${entry.role}.png`,
+        fullPage: true,
+      });
+      await page.getByRole('button', { name: entry.logout, exact: true }).click();
+      await page.waitForURL(base + '/overview');
+      await expect(page.getByRole('link', { name: entry.login, exact: true })).toBeVisible();
+      expect((await context.request.get(base + '/api/auth/me')).status()).toBe(401);
+      await page.getByRole('link', { name: entry.login, exact: true }).click();
+      await expect(page.locator('#kc-form-login')).toBeVisible();
+      await page.goto(base + '/overview');
+      await page.getByRole('link', { name: entry.signup, exact: true }).click();
+      await expect(page.locator('#kc-register-form')).toBeVisible();
+      await checkIdentityTheme(page, 'registration', entry.language, preference, dark);
+      await page.locator('#kc-register-form [type="submit"]').click();
+      await expect(page.locator('#username')).toHaveAttribute('aria-invalid', 'true');
+      await checkIdentityTheme(page, 'registration-error', entry.language, preference, dark);
+      expect(errors).toEqual([]);
+      console.log(
+        `PASS: real ${entry.role}/${entry.language} ${preference} UI login, route guards, session and browser/SSO logout`,
+      );
+      await context.close();
+    }
   }
   const context = await browser.newContext();
   const page = await context.newPage();

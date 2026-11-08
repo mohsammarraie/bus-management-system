@@ -1,26 +1,34 @@
 /* Match frontend/src/styles/_theme.scss. Keycloak keeps ownership of form markup. */
 :root {
-  color-scheme: light;
-  --bms-primary: #006799;
-  --bms-on-primary: #ffffff;
-  --bms-soft: #e2f2fc;
-  --bms-on-soft: #06354d;
+  color-scheme: light dark;
+  --bms-primary-hover: light-dark(#004c73, #b9e0ff);
+  --bms-primary: light-dark(#006799, #8dcdff);
+  --bms-on-primary: light-dark(#ffffff, #00344f);
+  --bms-soft: light-dark(#e2f2fc, #173d54);
+  --bms-on-soft: light-dark(#06354d, #cce7fb);
   --bms-accent: #f5aa00;
-  --bms-surface: #ffffff;
-  --bms-canvas: #f5f9fc;
-  --bms-text: #111820;
-  --bms-muted: #4c5f6d;
-  --bms-border: #d0dfe8;
-  --bms-outline: #6a7b86;
-  --bms-error: #ba1a1a;
+  --bms-surface: light-dark(#ffffff, #17212b);
+  --bms-canvas: light-dark(#f5f9fc, #101820);
+  --bms-text: light-dark(#111820, #e6edf3);
+  --bms-muted: light-dark(#4c5f6d, #b9c7d3);
+  --bms-border: light-dark(#d0dfe8, #3d505f);
+  --bms-outline: light-dark(#6a7b86, #8b9eac);
+  --bms-error: light-dark(#ba1a1a, #ffb4ab);
   --pf-v5-global--FontFamily--text: Arial, sans-serif;
   --pf-v5-global--FontFamily--heading: Arial, sans-serif;
   --pf-v5-global--primary-color--100: var(--bms-primary);
-  --pf-v5-global--primary-color--200: #004c73;
+  --pf-v5-global--primary-color--200: var(--bms-primary-hover);
   --pf-v5-global--link--Color: var(--bms-primary);
   --pf-v5-global--Color--100: var(--bms-text);
   --pf-v5-global--Color--200: var(--bms-muted);
   --pf-v5-global--danger-color--100: var(--bms-error);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body#keycloak-bg {
@@ -160,8 +168,8 @@ div.pf-v5-c-login__main-header:has(.pf-v5-c-login__main-header-utilities) {
 .pf-v5-c-button.pf-m-primary {
   --pf-v5-c-button--m-primary--BackgroundColor: var(--bms-primary);
   --pf-v5-c-button--m-primary--Color: var(--bms-on-primary);
-  --pf-v5-c-button--m-primary--hover--BackgroundColor: #004c73;
-  --pf-v5-c-button--m-primary--focus--BackgroundColor: #004c73;
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--bms-primary-hover);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--bms-primary-hover);
 }
 
 .pf-v5-c-button.pf-m-control {
@@ -177,7 +185,7 @@ a {
 }
 
 a:hover {
-  color: #004c73;
+  color: var(--bms-primary-hover);
 }
 
 :where(a, button, input[type="submit"], select):focus-visible,

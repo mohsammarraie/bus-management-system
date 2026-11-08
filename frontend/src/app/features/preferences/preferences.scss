@@ -4,6 +4,11 @@
   gap: 24px;
   margin-top: 32px;
 }
+mat-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
 mat-card {
   background: var(--app-color-surface);
   border-color: var(--app-color-border);

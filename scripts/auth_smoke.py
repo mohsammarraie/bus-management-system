@@ -2,6 +2,8 @@
 from html.parser import HTMLParser
 from http.cookiejar import CookieJar, DefaultCookiePolicy
 import json
+import hashlib
+import re
 from urllib.error import HTTPError
 from urllib.parse import urlencode, urlparse
 from urllib.request import build_opener, HTTPCookieProcessor, Request
@@ -13,12 +15,15 @@ class Forms(HTMLParser):
         super().__init__()
         self.forms = []
         self.stylesheets = []
+        self.scripts = []
         self.current = None
 
     def handle_starttag(self, tag, attributes):
         attrs = dict(attributes)
         if tag == 'link' and attrs.get('rel') == 'stylesheet':
             self.stylesheets.append(attrs.get('href', ''))
+        if tag == 'script' and attrs.get('src'):
+            self.scripts.append(attrs['src'])
         if tag == 'form':
             self.current = {'action': attrs.get('action'), 'fields': {}, 'id': attrs.get('id')}
             self.forms.append(self.current)
@@ -76,10 +81,18 @@ def verify_auth(base, password, registered=None):
         assert status == 200
         parser = Forms()
         parser.feed(body)
-        stylesheet = next((path for path in parser.stylesheets if path.endswith('/css/bus-management.css')), None)
+        stylesheet = next((path for path in parser.stylesheets
+                           if re.search(r'/css/bus-management\.[0-9a-f]{12}\.css$', path)), None)
         assert stylesheet, 'The configured Keycloak login theme must load'
         status, css, _ = send(client, stylesheet)
         assert status == 200 and '--bms-primary:' in css, 'The theme stylesheet must be served'
+        assert hashlib.sha256(css.encode()).hexdigest()[:12] in stylesheet, 'CSS URL must match its content hash'
+        appearance = next((path for path in parser.scripts
+                           if re.search(r'/js/appearance\.[0-9a-f]{12}\.js$', path)), None)
+        assert appearance, 'The identity appearance script must load'
+        status, script, _ = send(client, appearance)
+        assert status == 200 and 'bus-management.appearance=' in script, 'The appearance script must be served'
+        assert hashlib.sha256(script.encode()).hexdigest()[:12] in appearance, 'Script URL must match its content hash'
         initial_session = next(cookie.value for cookie in cookies if cookie.name == 'JSESSIONID')
         page = form(body, 'kc-form-login')
         fields = dict(page['fields'], username=username, password=password)
