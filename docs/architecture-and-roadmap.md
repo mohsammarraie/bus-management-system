@@ -1,6 +1,6 @@
 # Bus Management System: architecture and delivery plan
 
-Prepared 6 November 2026. Status: backend/database foundation, backend CI and Angular/Material shell implemented; business workflows and the local container stack is implemented; business workflows remain planned. See database-setup.md and next-steps.md for the current runnable scope. It builds on the legacy implementation assessment and database analysis. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
+Prepared 6 November 2026. Status: backend/database foundation, CI, Angular/Material shell, local containers, Keycloak/session security, appearance preferences and backend bus CRUD are implemented; Angular bus management and the remaining business workflows follow. See database-setup.md and next-steps.md for the current runnable scope. It builds on the legacy implementation assessment and database analysis. User-selected direction: Spring Boot 4, Gradle preference, modern Angular, RxJS, NgRx Store, CRUD APIs, automated testing, Docker images and Docker Compose, and a documented learning portfolio.
 
 ## Application identity
 
@@ -134,7 +134,7 @@ Proposed behavior decisions to resolve through acceptance examples:
 
 ## API and UI blueprint
 
-Base path `/api/v1`; JSON request/response DTOs, server-side validation, consistent problem-detail errors, paging and whitelisted sorting. Use 201 for creation, 400 for invalid inputs, 401/403 for authentication/authorization, 404 for absent accessible records, 409 for conflicts or invalid transitions. Authorization is enforced on the server regardless of frontend route guards.
+The implemented [buses contract](buses-api.md) is the reference slice. Base path `/api/v1`; JSON request/response DTOs, server-side validation, consistent problem-detail errors, paging and whitelisted sorting. Use 201 for creation, 400 for invalid inputs, 401/403 for authentication/authorization, 404 for absent accessible records, 409 for conflicts or invalid transitions. Authorization is enforced on the server regardless of frontend route guards.
 
 | Capability | Example contract |
 |---|---|

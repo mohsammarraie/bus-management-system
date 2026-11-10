@@ -12,6 +12,10 @@ import jakarta.persistence.Version;
 @Table(name = "buses", schema = "bus_management")
 public class Bus {
 
+    public static final int REGISTRATION_MAX_LENGTH = 32;
+    // Unicode text, no surrounding whitespace or control characters; exact case is preserved.
+    public static final String REGISTRATION_PATTERN = "(?U)[^\\s\\p{Cc}](?:[^\\p{Cc}]*[^\\s\\p{Cc}])?";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,15 +37,24 @@ public class Bus {
     }
 
     public Bus(String registrationNumber, int capacity) {
-        if (registrationNumber == null || registrationNumber.isBlank()
-                || !registrationNumber.equals(registrationNumber.strip()) || registrationNumber.length() > 32) {
-            throw new IllegalArgumentException("Registration number must be trimmed and contain 1 to 32 characters");
+        this(registrationNumber, capacity, true);
+    }
+
+    public Bus(String registrationNumber, int capacity, boolean active) {
+        changeDetails(registrationNumber, capacity, active);
+    }
+
+    public void changeDetails(String registrationNumber, int capacity, boolean active) {
+        if (registrationNumber == null || registrationNumber.length() > REGISTRATION_MAX_LENGTH
+                || !registrationNumber.matches(REGISTRATION_PATTERN)) {
+            throw new IllegalArgumentException("Registration number must be trimmed text of 1 to 32 characters");
         }
         if (capacity <= 0) {
             throw new IllegalArgumentException("Capacity must be positive");
         }
         this.registrationNumber = registrationNumber;
         this.capacity = capacity;
+        this.active = active;
     }
 
     public Long getId() {

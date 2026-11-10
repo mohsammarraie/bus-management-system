@@ -70,28 +70,31 @@ Implemented on feat/keycloak-login-theme: a native bus-management theme inheriti
 
 Real identity checks cover login/registration and error states in en/de/ar, keyboard/password controls, RTL, overflow and axe scans; host-run Angular/backend flows are also checked. The existing HTTP container smoke verifies the theme CSS is served without adding Chromium to Container CI. The user has merged the theme branch and updated main. Hosted results must still be checked from an observed run.
 
-## Current task: saved application and identity appearance
+## Completed: saved application and identity appearance
 
 Implemented on `feat/theme-preferences`: Preferences has localized, keyboard-operable Light/Dark/System radio controls. A validated cosmetic cookie saves the browser choice and shares it between Angular and Keycloak across localhost ports. Material and identity palettes use paired light/dark roles; System responds to live device changes. No backend, authentication protocol, database schema, new dependency or profile API change is needed.
 
-See [appearance preference and reading order](keycloak-theme.md#appearance-preference). Relevant verification includes preference restore/invalid/blocked storage behavior, desktop/mobile light/dark accessibility, and real identity forms in all three languages. Task changes remain unstaged/uncommitted for user review; hosted CI is pending publication.
+See [appearance preference and reading order](keycloak-theme.md#appearance-preference). Relevant verification includes preference restore/invalid/blocked storage behavior, desktop/mobile light/dark accessibility, and real identity forms in all three languages. The user merged this feature through PR #15 (main f50b8bc); inspect hosted results individually.
 
-## Next implementation: backend bus CRUD
+## Current task: backend bus CRUD
 
-Implement the first business API: an ADMIN-managed bus resource using the existing buses table. Agree the API contract, validation, pagination/filtering, optimistic-lock handling and error codes; enforce backend roles and test with real PostgreSQL. Keep legacy data import and trip ownership work separate.
+Implemented on `feat/backend-bus-crud`: ADMIN-only list/read/create/update/delete, bounded pagination, stable whitelisted sorting, registration search/active filtering, validated DTOs, optimistic version checks and safe problem-detail codes. The existing V1 table is used without changing an applied migration. Tests cover actual PostgreSQL constraints, rollback, roles/CSRF and concurrent writes. Container smoke now exercises the API using real Keycloak sessions. See [API contract, examples and code reading order](buses-api.md).
 
-Suggested model/effort: **Sol, High**, for the Spring/JPA API, permissions and database checks.
+Changes remain unstaged/uncommitted for user review; hosted Backend/Container CI awaits publication. The old manufacturer's/model/chassis fields and legacy data mapping remain a later schema extension. No Angular business screen, scheduling or trip ownership work is included in this branch.
 
-Then implement the Angular buses table/forms with NgRx Store/Effects/Entity in a separate branch, including en/de/ar, RTL and accessibility. No SMTP or email verification in the MVP.
+## Next implementation: Angular buses
+
+Build the first real business screen against the documented API: ADMIN route/navigation, Material table, paging/filter/sort, accessible create/edit/delete flows, conflict recovery and loading/empty/error states. Add NgRx Store/Effects/Entity for this shared business state, with request cancellation and no credentials/tokens in the store. Extend en/de/ar resources and verify RTL/mobile/keyboard behavior. Verify package compatibility when installing NgRx.
+
+Suggested model/effort: **Sol, High**, for the Angular forms/table, NgRx effects and accessibility tests. Keep this separate from the backend branch. No SMTP/email verification in the MVP.
 
 ## Following steps
 
-1. Review/merge the saved appearance branch and inspect its hosted CI results.
-2. Review the first bus API contract before implementing CRUD.
-3. Implement backend bus CRUD with ADMIN permissions and PostgreSQL integration tests.
-4. Implement the Angular buses feature with Material tables/forms and NgRx Store/Effects/Entity.
-5. Add routes/stops, schedules, assignments and the schedule overview, then trip lifecycle with ownership enforcement.
-6. Add foreground phone location capture, Leaflet tracking/replay and reports incrementally.
+1. Review/commit/push the backend buses branch, inspect Backend/Container CI, then merge and update main.
+2. Implement Angular buses with Material, NgRx and en/de/ar.
+3. Extend legacy bus details through a new migration when their contract/import mapping is settled.
+4. Add routes/stops, schedules, assignments and the schedule overview, then trip lifecycle with ownership enforcement.
+5. Add foreground phone location capture, Leaflet tracking/replay and reports incrementally.
 
 Acceptance for each slice: documented behavior, relevant local/hosted checks and a focused user-reviewed branch. Do not describe proposed scripts as implemented.
 

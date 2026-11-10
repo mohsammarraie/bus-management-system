@@ -50,12 +50,16 @@ def verify_auth(base, password, registered=None):
         cookies = CookieJar(policy=LocalDemoCookiePolicy())
         return build_opener(HTTPCookieProcessor(cookies)), cookies
 
-    def send(client, path, fields=None, headers=None):
+    def send(client, path, fields=None, headers=None, json_body=None, method=None):
         target = path if path.startswith('http') else base + path
         # Never submit synthetic credentials to an unexpected form origin.
         assert urlparse(target).netloc == urlparse(base).netloc, target
-        request = Request(target, data=urlencode(fields).encode() if fields is not None else None,
-                          headers=headers or {})
+        request_headers = dict(headers or {})
+        data = urlencode(fields).encode() if fields is not None else None
+        if json_body is not None:
+            data = json.dumps(json_body).encode()
+            request_headers['Content-Type'] = 'application/json'
+        request = Request(target, data=data, headers=request_headers, method=method)
         try:
             response = client.open(request, timeout=15)
         except HTTPError as error:
@@ -103,6 +107,40 @@ def verify_auth(base, password, registered=None):
         assert session.has_nonstandard_attr('HttpOnly')
         return client, cookies
 
+    def verify_buses(client, cookies, role):
+        api = '/api/v1/buses'
+        docs_status, schema, _ = send(client, '/api/openapi')
+        assert docs_status == (200 if role == 'admin' else 403)
+        assert send(client, '/api/docs')[0] == (200 if role == 'admin' else 403)
+        if role == 'admin':
+            assert '/api/v1/buses' in json.loads(schema)['paths']
+            assert send(client, '/api/swagger-ui/swagger-ui-bundle.js')[0] == 200
+        assert send(client, api)[0] == (200 if role == 'admin' else 403)
+        assert send(client, '/api/auth/csrf')[0] == 200
+        token = next(cookie.value for cookie in cookies if cookie.name == 'XSRF-TOKEN')
+        headers = {'X-XSRF-TOKEN': token}
+        payload = {'registrationNumber': 'SMOKE-' + uuid.uuid4().hex[:8], 'capacity': 40, 'active': True}
+        assert send(client, api, json_body=payload)[0] == 403, 'Bus creation must require CSRF'
+        status, body, _ = send(client, api, headers=headers, json_body=payload)
+        if role != 'admin':
+            assert status == 403, 'Driver/passenger accounts must not manage buses'
+            return
+        assert status == 201, status
+        bus = json.loads(body)
+        resource = api + '/' + str(bus['id'])
+        assert send(client, resource)[0] == 200
+        status, duplicate, _ = send(client, api, headers=headers, json_body=payload)
+        assert status == 409 and json.loads(duplicate)['code'] == 'BUS_REGISTRATION_CONFLICT'
+        changed = dict(payload, capacity=45, active=False, version=bus['version'])
+        status, body, _ = send(client, resource, headers=headers, json_body=changed, method='PUT')
+        assert status == 200 and json.loads(body)['active'] is False
+        version = json.loads(body)['version']
+        assert version == bus['version'] + 1
+        status, stale, _ = send(client, resource, headers=headers, json_body=changed, method='PUT')
+        assert status == 409 and json.loads(stale)['code'] == 'BUS_VERSION_CONFLICT'
+        assert send(client, resource + '?version=' + str(version), headers=headers, method='DELETE')[0] == 204
+        assert send(client, resource)[0] == 404
+
     identities = [(registered['username'], 'passenger')] if registered else [
         ('demo-' + role, role) for role in ['admin', 'driver', 'passenger']]
     for username, role in identities:
@@ -111,6 +149,7 @@ def verify_auth(base, password, registered=None):
         assert current['roles'] == [role.upper()]
         if registered:
             assert current == registered, 'Registered identity must survive recreation/recovery'
+        verify_buses(client, cookies, role)
         # These intentionally nonexistent routes test the filter boundary without fake APIs.
         assert send(client, '/api/admin/auth-smoke-not-found')[0] == (404 if role == 'admin' else 403)
         assert send(client, '/api/driver/auth-smoke-not-found')[0] == (403 if role == 'passenger' else 404)
@@ -139,5 +178,5 @@ def verify_auth(base, password, registered=None):
     assert status == 200 and destination == base + '/overview', destination.split('?')[0]
     value = account(client)
     assert value['username'] == username and value['roles'] == ['PASSENGER'], value
-    print('PASS: real OIDC logins, role boundaries, session rotation, CSRF logout/SSO and passenger signup')
+    print('PASS: real OIDC logins, ADMIN bus CRUD/conflicts, role/CSRF boundaries, session rotation, logout/SSO and passenger signup')
     return value

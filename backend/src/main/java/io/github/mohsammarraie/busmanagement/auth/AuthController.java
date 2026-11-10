@@ -2,6 +2,9 @@ package io.github.mohsammarraie.busmanagement.auth;
 
 import java.util.List;
 import java.util.Set;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,12 +37,14 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    ResponseEntity<CsrfResponse> csrf(CsrfToken token) {
+    @Operation(summary = "Refresh the CSRF cookie", description = "Swagger/Angular writes use the raw XSRF-TOKEN cookie in X-XSRF-TOKEN. The returned JSON token is masked for form logout.")
+    ResponseEntity<CsrfResponse> csrf(@Parameter(hidden = true) CsrfToken token) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .body(new CsrfResponse(token.getHeaderName(), token.getToken()));
     }
 
     @GetMapping("/me")
+    @Operation(summary = "Inspect the current application session", security = @SecurityRequirement(name = "sessionCookie"))
     ResponseEntity<AccountResponse> me(Authentication authentication) {
         OidcUser user = (OidcUser) authentication.getPrincipal();
         List<String> roles = authentication.getAuthorities().stream().map(Object::toString)
