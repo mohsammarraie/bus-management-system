@@ -61,6 +61,34 @@ def sql(query):
                    '-v', 'ON_ERROR_STOP=1', '-Atc', query, capture=True).strip()
 
 
+def verify_demo_data():
+    assert sql('SELECT count(*) FROM bus_management.buses') == '0', 'Startup must not seed buses'
+
+    def seed():
+        subprocess.run(['sh', str(ROOT / 'scripts/seed-demo-data.sh')], cwd=ROOT,
+                       env=dict(ENV, COMPOSE_PROJECT_NAME=PROJECT), check=True)
+
+    seed()
+    assert sql('''SELECT count(*) || ',' || count(*) FILTER (WHERE active) || ',' ||
+                  count(*) FILTER (WHERE NOT active) FROM bus_management.buses''') == '30,24,6'
+    assert sql('SELECT count(*) FROM bus_management.buses WHERE version = 0') == '30'
+    assert sql('SELECT count(DISTINCT capacity) FROM bus_management.buses') == '4'
+    # Simulate an existing edited row and an unrelated user-created bus.
+    sql("UPDATE bus_management.buses SET capacity=55, active=false, version=1 WHERE registration_number='DEMO-BUS-001'")
+    sql("INSERT INTO bus_management.buses (registration_number, capacity) VALUES ('USER-CREATED-SMOKE', 35)")
+    snapshot_query = '''SELECT id, registration_number, capacity, active, version
+                        FROM bus_management.buses ORDER BY id'''
+    before = sql(snapshot_query)
+    seed()
+    assert sql(snapshot_query) == before, 'Rerunning the seed must preserve every existing row'
+    sql("DELETE FROM bus_management.buses WHERE registration_number='DEMO-BUS-030'")
+    seed()
+    assert sql('SELECT count(*) FROM bus_management.buses') == '31', 'Missing demo registrations must be restored'
+    assert sql("SELECT capacity || ',' || version FROM bus_management.buses WHERE registration_number='DEMO-BUS-001'") == '55,1'
+    assert sql("SELECT count(*) FROM bus_management.buses WHERE registration_number='USER-CREATED-SMOKE'") == '1'
+    print('PASS: opt-in demo seed, varied data, safe reruns and preservation of edits/versions/user records')
+
+
 def save_diagnostics():
     if args.report_dir is None:
         return
@@ -98,6 +126,7 @@ try:
     for route in ['/api/v1/missing', '/api', '/api/auth/me']:
         assert get(route)[0] == 401, route
     registered = verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'])
+    verify_demo_data()
     for service in ['frontend', 'backend']:
         assert compose('exec', '-T', service, 'id', '-u', capture=True).strip() == '10001'
     if args.browser_tests:
@@ -110,6 +139,8 @@ try:
     compose('down')  # Keep this disposable project's volume to verify recreation.
     compose('up', '-d', '--wait', '--wait-timeout', '240')
     assert sql("SELECT count(*) FROM bus_management.buses WHERE registration_number='SMOKE-ONLY'") == '1'
+    assert sql("SELECT capacity || ',' || version FROM bus_management.buses WHERE registration_number='DEMO-BUS-001'") == '55,1'
+    assert sql("SELECT count(*) FROM bus_management.buses WHERE registration_number='USER-CREATED-SMOKE'") == '1'
     assert sql('SELECT count(*) FROM bus_management.flyway_schema_history WHERE success AND version IS NOT NULL') == '1'
     verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     compose('stop', 'db')

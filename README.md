@@ -84,6 +84,18 @@ docker compose up -d --wait db
 
 No separate dev override is needed. To stop the stack, use `docker compose down`. See [container setup](docs/container-stack.md) for images and smoke checks, and [authentication setup](docs/authentication-setup.md) for identity configuration.
 
+### Optional demo buses
+
+After PostgreSQL is running and Spring Boot has started successfully at least once (so Flyway has created the table), run from the repository root:
+
+```bash
+sh scripts/seed-demo-data.sh
+```
+
+This works in both local modes with existing database volumes. For an empty bus table, it inserts 30 synthetic buses (`DEMO-BUS-001` through `DEMO-BUS-030`): 24 active, 6 inactive, with capacities of 20, 30, 40 or 50. The command prints how many records it inserted; an unchanged rerun inserts zero. Existing registrations, edits and versions are preserved. Deleted or renamed demo registrations will be inserted again on a later run; IDs are database-generated and may have gaps.
+
+The seed is separate from Flyway migrations and normal startup. It adds no accounts or legacy data and does not reset the database. It needs Docker Compose and a POSIX shell, with no host PostgreSQL client. Read [the SQL](infra/demo/buses.sql), then [the launcher](scripts/seed-demo-data.sh). Refresh the ADMIN buses API or the `bus_management.buses` table in DBeaver to see the records. Container smoke checks cover opt-in loading, reruns and preservation of existing records.
+
 ## Run the backend
 
 Use a full **JDK 25** (including `javac`) and the committed Gradle wrapper. The project targets Java 25: Gradle reuses an installed JDK 25 or downloads one automatically through the Foojay toolchain resolver when launched with a compatible Java installation. The first build needs internet access for Gradle, plugins, dependencies and, if missing, JDK 25. No global Gradle installation is required. Offline builds require an installed JDK 25 and previously cached build dependencies; configure `JAVA_HOME` if needed.
@@ -118,7 +130,7 @@ java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar --spring.p
 
 Use `PORT=8081 ./gradlew bootRun --args='--spring.profiles.active=local'` if port 8080 is occupied; also update frontend/proxy.conf.json when using Angular against that port. On Windows, use `gradlew.bat` and set environment variables with the shell's syntax. [Database setup](docs/database-setup.md) covers configuration, persistence, backups and troubleshooting.
 
-Flyway applies the initial `bus_management.buses` schema on startup; Hibernate validates the mapping. No business CRUD APIs exist yet; the [authentication foundation](docs/authentication-setup.md) is available. [Backend setup and design](docs/backend-starter.md) explains the selected versions and tests.
+Flyway applies the initial `bus_management.buses` schema on startup; Hibernate validates the mapping. The [ADMIN buses API](docs/buses-api.md) is available with [session authentication](docs/authentication-setup.md). [Backend setup and design](docs/backend-starter.md) explains the selected versions and tests.
 
 Commands for later milestones in the architecture are proposals, not available scripts.
 
@@ -145,7 +157,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The frontend's development proxy forwards `/api/**` calls to the backend on port 8080. No business API exists yet. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. The [frontend CI workflow](docs/frontend-ci.md) runs these checks on PRs to main and main pushes once published.
+The frontend's development proxy forwards `/api/**` calls to the backend on port 8080, including the buses API; its Angular screen is the next feature. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. The [frontend CI workflow](docs/frontend-ci.md) runs these checks on PRs to main and main pushes once published.
 
 ## Project history and credits
 
