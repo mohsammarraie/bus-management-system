@@ -76,11 +76,19 @@ Implemented on `feat/theme-preferences`: Preferences has localized, keyboard-ope
 
 See [appearance preference and reading order](keycloak-theme.md#appearance-preference). Relevant verification includes preference restore/invalid/blocked storage behavior, desktop/mobile light/dark accessibility, and real identity forms in all three languages. The user merged this feature through PR #15 (main f50b8bc); inspect hosted results individually.
 
-## Current task: backend bus CRUD
+## Completed: backend bus CRUD
 
 Implemented on `feat/backend-bus-crud`: ADMIN-only list/read/create/update/delete, bounded pagination, stable whitelisted sorting, registration search/active filtering, validated DTOs, optimistic version checks and safe problem-detail codes. The existing V1 table is used without changing an applied migration. Tests cover actual PostgreSQL constraints, rollback, roles/CSRF and concurrent writes. Container smoke now exercises the API using real Keycloak sessions. See [API contract, examples and code reading order](buses-api.md).
 
-Changes remain unstaged/uncommitted for user review; hosted Backend/Container CI awaits publication. The old manufacturer's/model/chassis fields and legacy data mapping remain a later schema extension. No Angular business screen, scheduling or trip ownership work is included in this branch.
+Merged through PR #16 (main 6f37ebe). Hosted results must be checked from an observed run. The old manufacturer's/model/chassis fields and legacy data mapping remain a later schema extension. No Angular business screen, scheduling or trip ownership work is included in this branch.
+
+## Current task: opt-in demo buses
+
+Branch: `chore/demo-bus-data`. Add 30 synthetic buses for API practice and the upcoming table, using `sh scripts/seed-demo-data.sh` after Flyway has created the schema. Keep loading explicit and separate from normal startup and schema migrations. See [the command and behavior](../README.md#optional-demo-buses).
+
+Acceptance criteria: the default application starts without demo buses; a fresh seed has 24 active and 6 inactive buses with varied capacities; reruns preserve existing rows, IDs, edits and versions; existing volumes work without a reset. The existing Compose smoke test exercises the real seed command and persistence in its isolated database. No legacy dump, identity seed or new dependency is needed.
+
+Verified locally with the full isolated Compose smoke scenario, including seed reruns, restoration of a missing demo registration, container recreation and database outage/recovery. Changes remain unstaged/uncommitted for user review. Container CI verification awaits publication and an observed run.
 
 ## Next implementation: Angular buses
 
@@ -90,7 +98,7 @@ Suggested model/effort: **Sol, High**, for the Angular forms/table, NgRx effects
 
 ## Following steps
 
-1. Review/commit/push the backend buses branch, inspect Backend/Container CI, then merge and update main.
+1. Review/commit/push the demo-data branch, inspect Container CI, then merge and update main.
 2. Implement Angular buses with Material, NgRx and en/de/ar.
 3. Extend legacy bus details through a new migration when their contract/import mapping is settled.
 4. Add routes/stops, schedules, assignments and the schedule overview, then trip lifecycle with ownership enforcement.
