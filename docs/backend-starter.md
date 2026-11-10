@@ -14,7 +14,7 @@
 | JDBC driver | PostgreSQL 42.7.14 |
 | Integration containers | Testcontainers 2.0.5 |
 
-Application code is Java; the build uses Kotlin DSL. Group `io.github.mohsammarraie`; package `io.github.mohsammarraie.busmanagement`. The backend includes Web MVC, Actuator, JPA and Flyway. It has no business endpoints or authentication yet. The initial fleet entity is groundwork for bus CRUD.
+Application code is Java; the build uses Kotlin DSL. Group `io.github.mohsammarraie`; package `io.github.mohsammarraie.busmanagement`. The backend includes Web MVC, Actuator, JPA and Flyway. Keycloak/session security and the first ADMIN bus CRUD API are implemented; see [authentication setup](authentication-setup.md) and [buses API](buses-api.md).
 
 Java 25 is supported by the selected Boot and Gradle releases. Future CI jobs and backend Docker build/runtime stages must use it consistently. The generated wrapper JAR and pinned distribution checksum were verified against official Gradle checksums. The wrapper JAR is an intentional source-control exception for this bootstrap binary; downloaded JDKs, Gradle distributions and build outputs stay out of Git.
 
@@ -47,7 +47,7 @@ Use `./gradlew -q javaToolchains` to inspect JDK detection. If `JAVA_HOME` is in
 - `BusManagementSystemApplication` starts the application.
 - Actuator supplies `/actuator/health`; configuration hides components/details and other management endpoints. Health now includes database connectivity.
 - Flyway creates the `bus_management` schema and applies versioned SQL before Hibernate validates entity mappings. Hibernate never creates or updates the schema; open-in-view is disabled.
-- `fleet.domain.Bus` maps the initial bus table. Identity-generated IDs replace manual ID allocation; database constraints protect required/unique registration numbers and positive capacity. The version column prepares the entity for optimistic locking when editing is implemented.
+- `fleet.domain.Bus` maps the initial bus table. Identity-generated IDs replace manual ID allocation; database constraints protect required/unique registration numbers and positive capacity. The version column now protects bus updates/deletes against stale and concurrent edits.
 - Configuration stays in properties/environment; no credentials are hardcoded into Java or embedded in the JAR.
 
 ## Tests and learning checkpoints

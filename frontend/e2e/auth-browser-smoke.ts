@@ -60,6 +60,57 @@ const password = process.env['DEMO_USER_PASSWORD'];
 if (!base || !password)
   throw new Error('The isolated Compose smoke must provide base URL and demo password');
 const browser = await chromium.launch();
+
+async function checkSwagger(page: Page, base: string) {
+  await page.goto(base + '/api/docs');
+  await expect(page.locator('.swagger-ui .info .title')).toContainText('Bus Management System API');
+  const schemaResponse = await page.context().request.get(base + '/api/openapi');
+  expect(schemaResponse.status()).toBe(200);
+  await writeFile(
+    'test-results/openapi.json',
+    JSON.stringify(await schemaResponse.json(), null, 2),
+  );
+
+  const create = page.locator('#operations-Buses-createBus');
+  await create.locator('.opblock-summary-control').click();
+  await create.getByRole('button', { name: 'Try it out', exact: true }).click();
+  await create.locator('textarea').fill(
+    JSON.stringify({
+      registrationNumber: 'SWAGGER-' + randomUUID().slice(0, 8),
+      capacity: 40,
+      active: true,
+    }),
+  );
+  const createdResponse = page.waitForResponse(
+    (response) =>
+      response.url() === base + '/api/v1/buses' && response.request().method() === 'POST',
+  );
+  await create.getByRole('button', { name: 'Execute', exact: true }).click();
+  const response = await createdResponse;
+  expect(response.status()).toBe(201);
+  const csrf = (await page.context().cookies(base)).find((cookie) => cookie.name === 'XSRF-TOKEN');
+  expect(response.request().headers()['x-xsrf-token']).toBe(csrf?.value);
+  const bus = await response.json();
+  await page.screenshot({ path: 'test-results/swagger-buses.png', fullPage: true });
+
+  const remove = page.locator('#operations-Buses-deleteBus');
+  await remove.locator('.opblock-summary-control').click();
+  await remove.getByRole('button', { name: 'Try it out', exact: true }).click();
+  await remove.locator('tr[data-param-name="id"] input').fill(String(bus.id));
+  await remove.locator('tr[data-param-name="version"] input').fill(String(bus.version));
+  const deletedResponse = page.waitForResponse(
+    (result) =>
+      result.request().method() === 'DELETE' &&
+      result.url().startsWith(base + '/api/v1/buses/' + bus.id),
+  );
+  await remove.getByRole('button', { name: 'Execute', exact: true }).click();
+  expect((await deletedResponse).status()).toBe(204);
+  await page.goto(base + '/account');
+  console.log(
+    'PASS: real session Swagger UI loads through the proxy and sends CSRF-protected create/delete requests',
+  );
+}
+
 try {
   for (const entry of [
     { role: 'admin', language: 'en', login: 'Log in', logout: 'Log out', signup: 'Sign up' },
@@ -146,6 +197,7 @@ try {
         path: `test-results/real-account-${entry.role}.png`,
         fullPage: true,
       });
+      if (entry.role === 'admin' && preference === 'light') await checkSwagger(page, base);
       await page.getByRole('button', { name: entry.logout, exact: true }).click();
       await page.waitForURL(base + '/overview');
       await expect(page.getByRole('link', { name: entry.login, exact: true })).toBeVisible();

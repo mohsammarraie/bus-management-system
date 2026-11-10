@@ -78,6 +78,9 @@ public class SecurityConfiguration {
                         "/api/oauth2/**", "/api/login/oauth2/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/driver/**").hasAnyRole("ADMIN", "DRIVER")
+                .requestMatchers("/api/docs", "/api/swagger-ui/**", "/api/openapi", "/api/openapi/**", "/api/openapi.yaml")
+                    .hasRole("ADMIN")
+                .requestMatchers("/api/v1/buses", "/api/v1/buses/**").hasRole("ADMIN")
                 .requestMatchers("/api/**", "/api").authenticated()
                 .anyRequest().denyAll())
             .csrf(csrf -> csrf.csrfTokenRepository(
@@ -89,14 +92,16 @@ public class SecurityConfiguration {
                         response.sendError(404);
                     } else {
                         response.setStatus(401);
-                        response.setContentType("application/json");
-                        response.getWriter().write("{\"code\":\"AUTHENTICATION_REQUIRED\"}");
+                        response.setContentType("application/problem+json");
+                        response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Unauthorized\","
+                                + "\"status\":401,\"code\":\"AUTHENTICATION_REQUIRED\"}");
                     }
                 })
                 .accessDeniedHandler((request, response, error) -> {
                     response.setStatus(403);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"code\":\"ACCESS_DENIED\"}");
+                    response.setContentType("application/problem+json");
+                    response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Forbidden\","
+                            + "\"status\":403,\"code\":\"ACCESS_DENIED\"}");
                 }))
             .oauth2Login(oidc -> oidc
                 .authorizationEndpoint(endpoint -> endpoint.authorizationRequestResolver(resolver))

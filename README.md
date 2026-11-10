@@ -2,7 +2,7 @@
 
 A modern bus management application for managing buses, routes and trips, built with Angular, Spring Boot and PostgreSQL.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/Keycloak/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Keycloak/backend session login and passenger signup are implemented; Angular login/signup/logout controls, account state and role-guarded pages are implemented; business APIs are upcoming milestones; container CI is configured with hosted verification pending publication.
+**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/Keycloak/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Keycloak/backend session login and passenger signup, Angular account controls, role guards and saved light/dark/system appearance are implemented. The first business API provides ADMIN bus CRUD with pagination, validation and optimistic locking and secured Swagger/OpenAPI documentation; the Angular buses screen is next. New backend/container CI results await publication of this feature.
 
 ## Intended experience
 
@@ -31,6 +31,7 @@ The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 wi
 12. [Authentication setup and API](docs/authentication-setup.md)
 13. [Authentication architecture decision](docs/decisions/0003-backend-managed-keycloak-login.md)
 14. [Keycloak login theme](docs/keycloak-theme.md)
+15. [Buses API, Swagger and code reading order](docs/buses-api.md)
 
 ## Run locally
 

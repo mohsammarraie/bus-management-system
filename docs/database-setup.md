@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-The host-run Spring Boot backend connects to PostgreSQL in Docker. Flyway applies the schema; Hibernate validates the JPA mapping. Compose also provides the backend/frontend images; see [container setup](container-stack.md). The db-only commands below remain for host-run development. Business endpoints and legacy data import are later tasks. The [authentication foundation](authentication-setup.md) uses a separate Keycloak database on this PostgreSQL server; db-only commands below do not start identity services.
+The host-run Spring Boot backend connects to PostgreSQL in Docker. Flyway applies the schema; Hibernate validates the JPA mapping. Compose also provides the backend/frontend images; see [container setup](container-stack.md). The db-only commands below remain for host-run development. The [ADMIN buses API](buses-api.md) uses the existing table; legacy data import remains a later task. The [authentication foundation](authentication-setup.md) uses a separate Keycloak database on this PostgreSQL server; db-only commands below do not start identity services.
 
 PostgreSQL **18.6-bookworm** is pinned by the same official image digest in `compose.yaml` and `PostgresTestConfiguration`. Update both references together and rerun database tests and Compose smoke checks when updating the image. Spring Boot 4.1.2 manages Flyway **12.4.0**, PostgreSQL JDBC **42.7.14** and Testcontainers **2.0.5**. No database extension is required for this foundation.
 
@@ -55,10 +55,10 @@ Flyway creates its configured `bus_management` schema and records applied versio
 | `id` | PostgreSQL-generated bigint identity; callers do not allocate IDs |
 | `registration_number` | Required, 1–32 characters, no surrounding whitespace; exact, case-sensitive uniqueness |
 | `capacity` | Required positive integer |
-| `active` | Required, defaults to true; lifecycle changes follow with fleet CRUD |
+| `active` | Required, defaults to true; ADMIN CRUD can deactivate/reactivate a bus |
 | `version` | JPA optimistic-lock version, defaults to zero |
 
-This is new fleet groundwork, not a recovered Oracle schema. The Java constructor also rejects blank/whitespace-padded registration numbers and nonpositive capacity. Legacy identifier mapping and cleanup rules remain part of the separate import plan. No demo users, production records or legacy dumps are loaded by migrations.
+This is new fleet groundwork, not a recovered Oracle schema. The Java entity/API additionally reject surrounding Unicode whitespace and control characters in registration numbers; positive capacity and the existing exact uniqueness are preserved. Legacy identifier mapping and cleanup rules remain part of the separate import plan. No demo users, production records or legacy dumps are loaded by migrations.
 
 Flyway is the only schema writer. `spring.jpa.hibernate.ddl-auto=validate` verifies mappings; `spring.sql.init.mode=never` prevents parallel schema.sql/data.sql initialization, open-in-view is disabled, and Flyway clean is disabled. Hibernate validation alone does not verify every check/unique constraint: integration tests exercise those rules directly.
 

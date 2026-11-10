@@ -1,6 +1,8 @@
 # Development workflow templates
 
-Proposed content to place in the successor repository during its foundation PR. These are planning templates, not installed GitHub automation.
+Templates for feature work and review. The issue/PR forms and CI workflows live under `.github`; these notes do not create additional automation.
+
+The [working buses API](buses-api.md#code-reading-order-and-reusable-feature-pattern) is the Java/Spring reference slice: request/response DTOs, controller, transactional service, repository/entity, errors, security and real PostgreSQL tests. Adapt its rules for each feature instead of copying speculative generic CRUD infrastructure. Add a new Flyway migration only when the schema actually changes.
 
 ## Working agreement
 
