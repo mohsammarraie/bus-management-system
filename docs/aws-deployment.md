@@ -1,6 +1,6 @@
 # AWS demo deployment
 
-Status: local preparation only. Selected hostname: `bms.timbalonia.de`, with DNS managed at IONOS. AWS resources, registry images, DNS changes and GitHub deployment permissions remain pending. See [capacity and costs](deployment-learning-plan.md).
+Status: deployment configuration and [ECR publication workflow/template](ecr-publication.md) prepared locally. Selected hostname: `bms.timbalonia.de`, with DNS managed at IONOS. AWS resource creation, actual image publication, DNS changes and EC2 deployment permissions remain pending. See [capacity and costs](deployment-learning-plan.md).
 
 ## Target
 
@@ -14,7 +14,7 @@ Install Docker/Compose through the official Ubuntu instructions, enable Docker a
 
 ## Planned CI/CD pipeline
 
-Use continuous delivery with automated checks/image publication and a manual deployment trigger. Current work implements CI and local deployment preparation; registry publication, AWS IAM/OIDC integration and the deployment workflow remain planned. Establish the first working deployment before automating it.
+Target continuous delivery with automated checks/image publication and a manual deployment trigger. CI, local deployment preparation and a manually triggered ECR publication workflow are implemented in source; apply its AWS IAM/OIDC template and verify the first publication next. Automatic publication and the EC2 deployment workflow remain planned. Establish the first working deployment before automating it.
 
 ```mermaid
 flowchart TD
@@ -35,7 +35,7 @@ Full `smoke-aws.py` verification is a manual local check before deployment or af
 
 ## Images and configuration
 
-Publish tested frontend, backend and themed Keycloak images to ECR before launch, using ARM64 builds outside EC2. Retain the release commit and all three image digests for rollback. PostgreSQL is pulled from its pinned upstream reference. Image publication and GitHub automation are the next step; the existing CI checks do not publish images.
+Use [ECR publication](ecr-publication.md) to publish tested frontend, backend and themed Keycloak images before launch, using ARM64 builds outside EC2. Retain its release manifest, source commit and all three image digests for rollback. PostgreSQL is pulled from its pinned upstream reference. Ordinary PR/main CI checks do not publish images; publication is manually triggered after successful CI.
 
 Check out the matching release commit on the VM for Compose, gateway and bootstrap files. From the repository root, with the three published `repository@sha256:...` references in the named shell variables:
 

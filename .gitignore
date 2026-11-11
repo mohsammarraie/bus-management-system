@@ -16,6 +16,8 @@
 /volumes/
 # Generated deployment credentials and first-boot realm template
 /infra/aws/generated/
+# Non-secret release manifests produced during image publication
+/publication-results/
 # Build and dependency outputs
 **/build/
 **/.gradle/

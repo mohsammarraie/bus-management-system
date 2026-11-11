@@ -1,0 +1,119 @@
+name: ECR publication
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Publication configuration checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.nvmrc
+      - name: Check publication gates, publisher and IAM contract
+        run: node --test scripts/release-publication.test.cjs
+
+  publish:
+    name: Build, verify and publish ARM64 images
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'mohsammarraie/bus-management-system'
+    needs: validate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      AWS_REGION: eu-central-1
+      AWS_ACCOUNT_ID: '749789489994'
+      AWS_PAGER: ''
+      POSTGRES_PASSWORD: synthetic-smoke-only
+    steps:
+      - name: Check out the selected main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: frontend/.nvmrc
+      - name: Require all CI workflows to pass for this commit
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { verifyReleaseCi } = require('./scripts/release-ci.cjs');
+            await verifyReleaseCi({ github, context });
+      - name: Verify native ARM Docker and tools
+        run: |
+          docker version
+          docker compose version
+          aws --version
+          python3 --version
+          case "$(docker info --format '{{.Architecture}}')" in
+            arm64|aarch64) ;;
+            *) echo 'Expected a native ARM64 Docker host'; exit 1 ;;
+          esac
+      - name: Build ARM64 stack images
+        timeout-minutes: 15
+        run: docker compose --env-file .env.example --progress plain build
+      - name: Verify the ARM64 release stack
+        run: timeout --signal=INT --kill-after=60s 8m python3 scripts/smoke-compose.py --report-dir container-test-results
+      - name: Recheck CI before requesting AWS credentials
+        id: ci
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { verifyReleaseCi } = require('./scripts/release-ci.cjs');
+            const result = await verifyReleaseCi({ github, context });
+            core.setOutput('runs', JSON.stringify(result.ci));
+      - name: Assume the ECR publisher role using OIDC
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          allowed-account-ids: ${{ env.AWS_ACCOUNT_ID }}
+          role-to-assume: arn:aws:iam::749789489994:role/bus-management-ecr-publisher
+          role-session-name: bms-publication-${{ github.run_id }}
+          role-duration-seconds: 900
+          unset-current-credentials: true
+      - name: Publish tested images and write release manifest
+        timeout-minutes: 10
+        env:
+          CI_RUNS_JSON: ${{ steps.ci.outputs.runs }}
+        run: node infra/aws/publish-images.cjs
+      - name: Upload immutable release references
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: arm64-release-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: publication-results/release.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload ARM smoke diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: arm64-publication-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: container-test-results/
+          if-no-files-found: ignore
+          retention-days: 7
