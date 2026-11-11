@@ -126,6 +126,7 @@ Backend tests require Docker and use temporary PostgreSQL containers. Frontend t
 - [Migration plan](docs/database-migration-plan.md) and [development workflow](docs/development-workflow-templates.md).
 - [Security policy and vulnerability reporting](SECURITY.md).
 - [AWS demo deployment preparation](docs/aws-deployment.md) (ARM64 Compose, HTTPS, setup/recovery; not deployed yet).
+- [ARM64 image publication](docs/ecr-publication.md) (manual GitHub workflow, ECR and OIDC/IAM setup).
 
 ## Project history and credits
 

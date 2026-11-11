@@ -1,0 +1,140 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Bus Management System: private ECR repositories and a GitHub main-branch OIDC publisher. No compute or deployment permissions.",
+  "Metadata": {
+    "IntendedAccount": "749789489994",
+    "IntendedRegion": "eu-central-1",
+    "GitHubRepository": "mohsammarraie/bus-management-system",
+    "GitHubRepositoryId": "1448687716",
+    "GitHubOwnerId": "31845082"
+  },
+  "Parameters": {
+    "ExistingGitHubOidcProviderArn": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Reuse an existing token.actions.githubusercontent.com IAM provider; leave empty only if none exists.",
+      "AllowedPattern": "^$|^arn:aws:iam::749789489994:oidc-provider/token\\.actions\\.githubusercontent\\.com$"
+    }
+  },
+  "Conditions": {
+    "CreateGitHubOidcProvider": {
+      "Fn::Equals": [{ "Ref": "ExistingGitHubOidcProviderArn" }, ""]
+    }
+  },
+  "Resources": {
+    "GitHubOidcProvider": {
+      "Type": "AWS::IAM::OIDCProvider",
+      "Condition": "CreateGitHubOidcProvider",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Url": "https://token.actions.githubusercontent.com",
+        "ClientIdList": ["sts.amazonaws.com"]
+      }
+    },
+    "FrontendRepository": {
+      "Type": "AWS::ECR::Repository",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RepositoryName": "bus-management-system/frontend",
+        "ImageTagMutability": "IMMUTABLE",
+        "EncryptionConfiguration": { "EncryptionType": "AES256" },
+        "EmptyOnDelete": false,
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Expire untagged images after seven days; retain tagged releases\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countUnit\":\"days\",\"countNumber\":7},\"action\":{\"type\":\"expire\"}}]}"
+        }
+      }
+    },
+    "BackendRepository": {
+      "Type": "AWS::ECR::Repository",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RepositoryName": "bus-management-system/backend",
+        "ImageTagMutability": "IMMUTABLE",
+        "EncryptionConfiguration": { "EncryptionType": "AES256" },
+        "EmptyOnDelete": false,
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Expire untagged images after seven days; retain tagged releases\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countUnit\":\"days\",\"countNumber\":7},\"action\":{\"type\":\"expire\"}}]}"
+        }
+      }
+    },
+    "KeycloakRepository": {
+      "Type": "AWS::ECR::Repository",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RepositoryName": "bus-management-system/keycloak",
+        "ImageTagMutability": "IMMUTABLE",
+        "EncryptionConfiguration": { "EncryptionType": "AES256" },
+        "EmptyOnDelete": false,
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Expire untagged images after seven days; retain tagged releases\",\"selection\":{\"tagStatus\":\"untagged\",\"countType\":\"sinceImagePushed\",\"countUnit\":\"days\",\"countNumber\":7},\"action\":{\"type\":\"expire\"}}]}"
+        }
+      }
+    },
+    "PublisherRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "bus-management-ecr-publisher",
+        "MaxSessionDuration": 3600,
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": {
+                "Fn::If": ["CreateGitHubOidcProvider", { "Ref": "GitHubOidcProvider" }, { "Ref": "ExistingGitHubOidcProviderArn" }]
+              }
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:mohsammarraie@31845082/bus-management-system@1448687716:ref:refs/heads/main"
+              }
+            }
+          }]
+        },
+        "Policies": [{
+          "PolicyName": "PublishApplicationImages",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": "ecr:GetAuthorizationToken",
+                "Resource": "*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecr:BatchCheckLayerAvailability",
+                  "ecr:InitiateLayerUpload",
+                  "ecr:UploadLayerPart",
+                  "ecr:CompleteLayerUpload",
+                  "ecr:PutImage",
+                  "ecr:BatchGetImage",
+                  "ecr:DescribeImages"
+                ],
+                "Resource": [
+                  { "Fn::GetAtt": ["FrontendRepository", "Arn"] },
+                  { "Fn::GetAtt": ["BackendRepository", "Arn"] },
+                  { "Fn::GetAtt": ["KeycloakRepository", "Arn"] }
+                ]
+              }
+            ]
+          }
+        }]
+      }
+    }
+  },
+  "Outputs": {
+    "PublisherRoleArn": { "Value": { "Fn::GetAtt": ["PublisherRole", "Arn"] } },
+    "Registry": { "Value": { "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com" } },
+    "FrontendRepositoryUri": { "Value": { "Fn::GetAtt": ["FrontendRepository", "RepositoryUri"] } },
+    "BackendRepositoryUri": { "Value": { "Fn::GetAtt": ["BackendRepository", "RepositoryUri"] } },
+    "KeycloakRepositoryUri": { "Value": { "Fn::GetAtt": ["KeycloakRepository", "RepositoryUri"] } }
+  }
+}
