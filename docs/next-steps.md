@@ -13,9 +13,22 @@
 
 ## Current branch
 
-`refactor/shared-scss-tokens` centralizes responsive thresholds and font sizes, preserving existing layouts. Changes remain uncommitted for review; hosted checks await publication.
+`docs/prioritize-cloud-demo` records the first cloud demo as the next milestone and adds [SECURITY.md](../SECURITY.md). Includes local capacity measurements, developer-confirmed ARM64 compatibility, and Frankfurt pricing with the current t4g.small compute promotion. No cloud resources or deployment configuration have been created.
 
-## Next: routes and stops
+## Next: first cloud demo
+
+Deploy the existing buses CRUD and Keycloak login before adding more business features. Prefer an On-Demand **t4g.small in Frankfurt**, using prebuilt ARM64 images. The developer confirmed native ARM64 images and successful login/CRUD on an M4; AWS memory headroom remains unverified. The reported Free plan has $100 credit until 11 May 2027 or credit exhaustion; the separate 750-hour/month t4g.small compute promotion ends 31 December 2026. Disk/IP and other chargeable usage still consume credit. See the [capacity, costs and fallback assessment](deployment-learning-plan.md).
+
+1. Confirm account eligibility, the t4g.small promotion and demo schedule; account for ancillary costs and standard rates after the promotion. Local measurements passed; verify AWS memory peaks and billing after launch.
+2. Prepare deployment configuration: HTTPS/public origin, exact OIDC redirects, secure cookies, fresh secrets, private internal services and persistent application/identity data. Preserve local development modes.
+3. Deploy a temporary synthetic demo; verify signup/login/logout, ADMIN CRUD and role restrictions from desktop and a real phone, including en/de/ar and RTL. Check persistence after restart.
+4. Add bounded logs, health/resource monitoring and reproducible setup/teardown instructions. See the [deployment learning plan](deployment-learning-plan.md).
+
+### To-do before public deployment: private vulnerability reporting
+
+[SECURITY.md](../SECURITY.md) now covers maintenance scope, a contact-request fallback, required report details and coordinated disclosure with best-effort responses. GitHub private vulnerability reporting was checked on 11 November 2026 and is disabled. Before public deployment, enable it in repository Settings → Advanced Security → Private vulnerability reporting, verify that the report form is available, then replace the fallback in SECURITY.md with the verified private reporting link. Repository settings have not been changed.
+
+## After the cloud demo: routes and stops
 
 Implement routes and stops, starting with the backend. Confirm the legacy use cases and define stops, localized names and ordered route stops. Add Flyway migrations, ADMIN CRUD endpoints, validation, integration tests and Swagger documentation. Follow with the Angular management screen in a separate slice.
 
@@ -36,4 +49,4 @@ The user-supplied reference dump is the primary candidate; retain the repository
 
 ## Deployment and monitoring
 
-AWS is the preferred personal demo host if account eligibility and whole-stack costs allow no out-of-pocket spend. Evaluate this after the runnable MVP, including CloudWatch logs/metrics, bounded alarms and teardown. Keep an alternative host available. See the [deployment learning plan](deployment-learning-plan.md).
+AWS is the preferred personal demo host if account eligibility and whole-stack costs allow no out-of-pocket spend. This is the next milestone, using the current authentication and buses CRUD slice; include bounded logs/metrics and teardown. Keep an alternative host available. See the [deployment learning plan](deployment-learning-plan.md).

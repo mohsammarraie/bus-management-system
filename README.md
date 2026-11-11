@@ -124,6 +124,7 @@ Backend tests require Docker and use temporary PostgreSQL containers. Frontend t
 - [Authentication](docs/authentication-setup.md), [Keycloak theme](docs/keycloak-theme.md), [container stack](docs/container-stack.md).
 - CI: [backend](docs/backend-ci.md), [frontend](docs/frontend-ci.md), [containers](docs/container-ci.md).
 - [Migration plan](docs/database-migration-plan.md) and [development workflow](docs/development-workflow-templates.md).
+- [Security policy and vulnerability reporting](SECURITY.md).
 
 ## Project history and credits
 
