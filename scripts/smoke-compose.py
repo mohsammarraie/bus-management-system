@@ -56,6 +56,17 @@ def health(expected):
     raise AssertionError('Health did not reach HTTP ' + str(expected))
 
 
+def backend_probe(healthy):
+    container = compose('ps', '-q', 'backend', capture=True).strip()
+    test = subprocess.run(['docker', 'inspect', '--format', '{{json .Config.Healthcheck.Test}}',
+                           container], env=ENV, check=True, capture_output=True, text=True)
+    command = json.loads(test.stdout)
+    assert command[0] == 'CMD', 'Expected an exec-form backend health check'
+    probe = subprocess.run(COMMAND + ['exec', '-T', 'backend'] + command[1:],
+                           cwd=ROOT, env=ENV, capture_output=True, text=True, timeout=10)
+    assert (probe.returncode == 0) == healthy, 'Backend health check returned an unexpected result'
+
+
 def sql(query):
     return compose('exec', '-T', 'db', 'psql', '-U', 'bus_management', '-d', 'bus_management',
                    '-v', 'ON_ERROR_STOP=1', '-Atc', query, capture=True).strip()
@@ -117,6 +128,7 @@ failure = None
 try:
     compose('up', '-d', '--wait', '--wait-timeout', '240')
     assert health(200)['status'] == 'UP'
+    backend_probe(True)
     for route in ['/', '/overview', '/preferences', '/unknown-page']:
         status, body = get(route)
         assert status == 200 and '<app-root' in body, route
@@ -145,8 +157,10 @@ try:
     verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     compose('stop', 'db')
     assert health(503)['status'] == 'DOWN'
+    backend_probe(False)
     compose('start', 'db')
     assert health(200)['status'] == 'UP'
+    backend_probe(True)
     compose('up', '-d', '--wait', '--wait-timeout', '240')
     verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     passed = True

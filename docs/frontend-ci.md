@@ -4,7 +4,7 @@
 
 `.github/workflows/frontend-ci.yml` defines **Frontend CI**, with two independent jobs: **Frontend checks and build** (`frontend`) and **Frontend browser and accessibility tests** (`e2e`). It runs for PRs targeting main, pushes to main and manual dispatches. No path filters are used, so documentation PRs receive the same check. A feature-branch push alone does not trigger it; open a PR targeting main. Manual dispatch is available in the Actions UI after the workflow reaches the default branch.
 
-Both Ubuntu 24.04 jobs select Node from frontend/.nvmrc (currently 24.22.2), install npm 11.19.1, restore the lockfile-keyed npm download cache and run npm ci. They have no needs dependency and can run in parallel, subject to runner availability. Each job sets CI=true and runs commands from frontend/.
+Both jobs select Node from frontend/.nvmrc (currently 24.22.2), install npm 11.19.1, restore the lockfile-keyed npm download cache and run npm ci. They have no needs dependency and can run in parallel, subject to runner availability. Each job sets CI=true and runs commands from frontend/. The browser job uses the version/digest-pinned official Playwright 1.65.0 Noble image with Chromium, fonts and system libraries preinstalled. Keep its version aligned with @playwright/test in package.json/package-lock.json.
 
 The checks/build job has a ten-minute timeout and runs:
 
@@ -19,13 +19,12 @@ npm run build
 The browser job has a twenty-minute timeout and runs:
 
 ```bash
-npx playwright install --with-deps chromium
 npm run test:e2e
 ```
 
-Only the browser job installs Chromium and uploads browser reports. Playwright starts its own loopback development server, so it does not depend on production assets from the other job. It forbids focused tests, uses two workers, allows one retry and bounds the browser suite to five minutes so reporters can finish. Tests cover desktop/mobile Chromium, localization, keyboard navigation, reflow and axe scans; they do not establish full WCAG conformance or real-device/screen-reader coverage. Neither job requires backend/database services or repository secrets. Packaged stack checks remain in the independent Container CI workflow.
+The browser job uses bundled Chromium without an APT/browser installation step and uploads browser reports. Playwright starts its own loopback development server, so it does not depend on production assets from the other job. It forbids focused tests, uses two workers, allows one retry and bounds the browser suite to five minutes so reporters can finish. Tests cover desktop/mobile Chromium, localization, keyboard navigation, reflow and axe scans; they do not establish full WCAG conformance or real-device/screen-reader coverage. Neither job requires backend/database services or repository secrets. Packaged stack checks remain in the independent Container CI workflow.
 
-This split makes source/build results available without waiting for browser setup. It does not speed up Chromium installation itself. Two jobs repeat checkout/npm setup, which can increase runner usage. Both checks must pass for the workflow to succeed. If the previous combined check was required by branch protection, update that setting to require both new names; this task does not change repository settings.
+This split makes source/build results available without waiting for browser setup. The browser job pulls a prepared image instead of downloading OS packages from Ubuntu mirrors. Two jobs repeat checkout/npm setup, which can increase runner usage. Both checks must pass for the workflow to succeed. If the previous combined check was required by branch protection, update that setting to require both new names; this task does not change repository settings.
 
 ## Permissions, cache and diagnostics
 
@@ -38,21 +37,16 @@ This split makes source/build results available without waiting for browser setu
 
 ## Verification and publication
 
-Local validation passed with Node 24.22.2/npm 11.19.1: clean npm ci (zero known audit findings), format/lint/browser-test type checks, all eight unit tests, production build and all 38 browser cases with CI=true (no retries/skips). actionlint 1.7.12 validated all three workflows; ShellCheck was disabled because it is not installed. Action release commits and setup-node inputs were checked against official GitHub metadata. Local validation does not execute GitHub JavaScript actions or reproduce the hosted runner.
+The pinned-image job passed a local clean npm ci and all 152 CI-mode browser cases with Node 24.22.2/npm 11.19.1, without retries or skips. All three workflows passed actionlint 1.7.12 with ShellCheck disabled. Local execution does not execute GitHub JavaScript actions or establish hosted networking/performance; the updated job requires a new hosted run after publication.
 
-A dry run of the Chromium --with-deps installer reported seven missing local packages (six font packages and xvfb) and exited nonzero. No OS packages were installed locally. The headless browser suite passed using the existing Chromium installation; the subsequent combined-job hosted runs below verified browser setup successfully. On a local machine with Chromium/system libraries installed, CI=true npm run test:e2e exercises CI mode without installing OS packages. The workflow installs Chromium system dependencies on its disposable hosted runner.
+## Timing comparison
 
-**Previous combined job: verified successful after merge through PR #7.** The [PR run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42315912538) at 29c64ac and the [main push run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42316124028) at 7d30dbe both completed successfully, verified through the public Actions API. Check future runs individually and inspect frontend-browser-reports on the run summary. Branch protection remains unchanged.
-
-## Split-job verification and timing comparison
-
-The split jobs require a new hosted run after publication; previous successful combined runs do not verify the new topology. After splitting, a clean npm ci, formatting, lint, browser-test type checking, all eight unit tests, the production build and all 38 CI-mode browser cases passed locally (no retries/skips). All three workflows passed actionlint 1.7.12 with ShellCheck disabled. Local execution does not establish GitHub scheduling or performance; the hosted Chromium/system-package install was not rerun locally.
-
-Timing baseline from the [combined PR #9 frontend run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42320952868): whole job 5m20s, production build 3s, Chromium/system-dependency installation 4m12s, browser tests 40s. After pushing and opening a PR, compare the checks/build job duration, browser job duration, browser-install step and total workflow completion (including queue time). The expected benefit is earlier source/build feedback; the full workflow may remain dominated by browser setup. No browser-image change or browser cache is introduced in this split.
+Timing baseline from the [combined PR #9 frontend run](https://github.com/mohsammarraie/bus-management-system/actions/runs/42320952868): whole job 5m20s, production build 3s, Chromium/system-dependency installation 4m12s, browser tests 40s. Compare future runs using total job time, image pull and browser tests; the pinned-image change needs an observed hosted run before claiming a timing improvement.
 
 ## References
 
 - [setup-node caching and inputs](https://github.com/actions/setup-node)
 - [Playwright CI setup](https://playwright.dev/docs/ci-intro)
+- [Playwright Docker image](https://playwright.dev/docs/docker)
 - [GitHub cache scope](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache)
 - [Artifact upload](https://github.com/actions/upload-artifact)

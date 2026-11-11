@@ -8,9 +8,7 @@ RUN chmod +x gradlew
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon --console=plain bootJar
 
 FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd --gid 10001 app && useradd --uid 10001 --gid app --no-create-home app
+RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --no-create-home app
 WORKDIR /app
 COPY --from=build --chown=10001:10001 /workspace/build/libs/*-SNAPSHOT.jar app.jar
 USER 10001:10001
