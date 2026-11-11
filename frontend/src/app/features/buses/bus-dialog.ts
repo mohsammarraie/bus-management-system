@@ -1,5 +1,15 @@
 import { BidiModule } from '@angular/cdk/bidi';
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  Injector,
+  viewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -11,7 +21,7 @@ import { Store } from '@ngrx/store';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../shared/icon';
 import { LoadingOverlay } from '../../shared/loading-overlay';
-import { BusDialogMode } from './buses.models';
+import { BusDialogData } from './buses.models';
 import { busesActions, busesFeature } from './buses.state';
 
 const integer: ValidatorFn = (control) =>
@@ -38,15 +48,21 @@ const integer: ValidatorFn = (control) =>
 export class BusDialog {
   private readonly store = inject(Store);
   private readonly dialog = inject(MatDialogRef<BusDialog, boolean>);
-  protected readonly mode = inject<{ mode: BusDialogMode }>(MAT_DIALOG_DATA).mode;
+  private readonly data = inject<BusDialogData>(MAT_DIALOG_DATA);
+  private readonly injector = inject(Injector);
+  private readonly registrationInput = viewChild<ElementRef<HTMLInputElement>>('registrationInput');
+  protected readonly mode = this.data.mode;
   protected readonly language = inject(LanguageService);
   protected readonly bus = this.store.selectSignal(busesFeature.selectSelectedBus);
   protected readonly mutation = this.store.selectSignal(busesFeature.selectMutation);
   protected readonly error = this.store.selectSignal(busesFeature.selectMutationError);
   protected readonly busy = computed(() => ['saving', 'reloading'].includes(this.mutation()));
+  protected readonly saving = computed(() => this.mutation() === 'saving');
+  private focusOnLoad = this.mode === 'edit';
   protected readonly blocked = computed(
     () =>
       this.busy() ||
+      (this.mode === 'edit' && !this.bus()) ||
       [
         'BUS_VERSION_CONFLICT',
         'BUS_NOT_FOUND',
@@ -71,15 +87,25 @@ export class BusDialog {
   constructor() {
     effect(() => {
       const bus = this.bus();
-      if (bus)
+      if (bus) {
         this.form.reset({
           registrationNumber: bus.registrationNumber,
           capacity: bus.capacity,
           active: bus.active,
         });
+        if (this.focusOnLoad) {
+          this.focusOnLoad = false;
+          afterNextRender(
+            () => this.registrationInput()?.nativeElement.focus({ preventScroll: true }),
+            {
+              injector: this.injector,
+            },
+          );
+        }
+      }
     });
     effect(() => {
-      this.dialog.disableClose = this.busy();
+      this.dialog.disableClose = this.saving();
       if (this.mutation() === 'succeeded') this.dialog.close(true);
     });
   }
@@ -113,7 +139,7 @@ export class BusDialog {
   }
 
   protected reloadLatest(): void {
-    const bus = this.bus();
-    if (bus && !this.busy()) this.store.dispatch(busesActions.latestRequested({ id: bus.id }));
+    const id = this.bus()?.id ?? this.data.id;
+    if (id !== undefined && !this.busy()) this.store.dispatch(busesActions.latestRequested({ id }));
   }
 }

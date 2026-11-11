@@ -56,6 +56,46 @@ def health(expected):
     raise AssertionError('Health did not reach HTTP ' + str(expected))
 
 
+def backend_probe(healthy):
+    container = compose('ps', '-q', 'backend', capture=True).strip()
+    test = subprocess.run(['docker', 'inspect', '--format', '{{json .Config.Healthcheck.Test}}',
+                           container], env=ENV, check=True, capture_output=True, text=True)
+    command = json.loads(test.stdout)
+    assert command[0] == 'CMD', 'Expected an exec-form backend health check'
+    probe = subprocess.run(COMMAND + ['exec', '-T', 'backend'] + command[1:],
+                           cwd=ROOT, env=ENV, capture_output=True, text=True, timeout=10)
+    assert (probe.returncode == 0) == healthy, 'Backend health check returned an unexpected result'
+
+
+def keycloak_health(expected):
+    # The management port is internal. Read its DB-aware readiness response inside the container.
+    request = ("exec 3<>/dev/tcp/127.0.0.1/9000; "
+               "printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; "
+               "cat <&3")
+    deadline = time.monotonic() + 90
+    last = 'No readiness response'
+    while time.monotonic() < deadline:
+        try:
+            result = subprocess.run(COMMAND + ['exec', '-T', 'keycloak', 'bash', '-ec', request],
+                                    cwd=ROOT, env=ENV, capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                headers, _, body = result.stdout.partition('\n\n')
+                status = int(headers.splitlines()[0].split()[1])
+                health = json.loads(body)
+                database = next((check for check in health.get('checks', [])
+                                 if 'database' in check['name'].lower()), None)
+                assert database is not None, 'Keycloak readiness must include the database check'
+                wanted = 'UP' if expected == 200 else 'DOWN'
+                last = f"HTTP {status}, database {database['status']}"
+                if status == expected and health['status'] == wanted and database['status'] == wanted:
+                    print('PASS: Keycloak database readiness ' + wanted)
+                    return
+        except (OSError, ValueError, IndexError, subprocess.TimeoutExpired) as error:
+            last = type(error).__name__
+        time.sleep(1)
+    raise AssertionError(f'Keycloak database readiness did not reach HTTP {expected}: {last}')
+
+
 def sql(query):
     return compose('exec', '-T', 'db', 'psql', '-U', 'bus_management', '-d', 'bus_management',
                    '-v', 'ON_ERROR_STOP=1', '-Atc', query, capture=True).strip()
@@ -117,6 +157,8 @@ failure = None
 try:
     compose('up', '-d', '--wait', '--wait-timeout', '240')
     assert health(200)['status'] == 'UP'
+    backend_probe(True)
+    keycloak_health(200)
     for route in ['/', '/overview', '/preferences', '/unknown-page']:
         status, body = get(route)
         assert status == 200 and '<app-root' in body, route
@@ -142,11 +184,16 @@ try:
     assert sql("SELECT capacity || ',' || version FROM bus_management.buses WHERE registration_number='DEMO-BUS-001'") == '55,1'
     assert sql("SELECT count(*) FROM bus_management.buses WHERE registration_number='USER-CREATED-SMOKE'") == '1'
     assert sql('SELECT count(*) FROM bus_management.flyway_schema_history WHERE success AND version IS NOT NULL') == '1'
+    keycloak_health(200)
     verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     compose('stop', 'db')
     assert health(503)['status'] == 'DOWN'
+    backend_probe(False)
+    keycloak_health(503)
     compose('start', 'db')
     assert health(200)['status'] == 'UP'
+    backend_probe(True)
+    keycloak_health(200)
     compose('up', '-d', '--wait', '--wait-timeout', '240')
     verify_auth('http://localhost:' + ENV['FRONTEND_PORT'], ENV['DEMO_USER_PASSWORD'], registered)
     passed = True

@@ -54,6 +54,7 @@ services:
       KC_HOSTNAME: http://localhost:${FRONTEND_PORT:-8082}/identity
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
       APP_PUBLIC_URL: http://localhost:${FRONTEND_PORT:-8082}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?Set OIDC_CLIENT_SECRET}
       DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:?Set DEMO_USER_PASSWORD}
@@ -87,7 +88,15 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/actuator/health"]
+      test:
+        - CMD
+        - bash
+        - -ec
+        - |
+          exec 3<>/dev/tcp/127.0.0.1/8080
+          printf 'GET /actuator/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3
+          read -r protocol status rest <&3
+          [[ "$$status" == 200 ]]
       interval: 5s
       timeout: 4s
       retries: 12

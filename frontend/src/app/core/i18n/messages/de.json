@@ -144,7 +144,8 @@
       "reload": "Aktuellen Bus laden",
       "reloadWarning": "Beim Neuladen werden Ihre ungespeicherten Eingaben ersetzt. Prüfen Sie die aktuellen Daten vor dem erneuten Speichern.",
       "saving": "Änderung wird gespeichert…",
-      "reloading": "Aktueller Bus wird geladen…"
+      "reloading": "Aktueller Bus wird geladen…",
+      "loadFailed": "Dieser Bus konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
     },
     "validation": {
       "REQUIRED": "Dieses Feld ist erforderlich.",

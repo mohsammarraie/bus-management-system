@@ -101,7 +101,8 @@ def verify_auth(base, password, registered=None):
         page = form(body, 'kc-form-login')
         fields = dict(page['fields'], username=username, password=password)
         status, _, destination = send(client, page['action'], fields)
-        assert status == 200 and destination == base + '/overview', destination.split('?')[0]
+        assert status == 200 and destination == base + '/overview', (
+            f'Login did not complete: HTTP {status}, path {urlparse(destination).path}')
         session = next(cookie for cookie in cookies if cookie.name == 'JSESSIONID')
         assert session.value != initial_session, 'Session ID must rotate on authentication'
         assert session.has_nonstandard_attr('HttpOnly')

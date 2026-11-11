@@ -82,7 +82,8 @@ async function busesApi(page: Page, role: string | null = 'ADMIN') {
         },
       });
     } else if (method === 'GET') {
-      await route.fulfill({ json: state.rows.find((row) => row.id === id) });
+      const row = state.rows.find((row) => row.id === id);
+      await route.fulfill(row ? { json: row } : { status: 404, json: { code: 'BUS_NOT_FOUND' } });
     } else if (method === 'POST') {
       if (state.rows.some((row) => row.registrationNumber === body?.['registrationNumber'])) {
         await route.fulfill({ status: 409, json: { code: 'BUS_REGISTRATION_CONFLICT' } });
@@ -132,7 +133,7 @@ async function openBusAction(page: Page, action: 'Edit' | 'Delete', registration
 for (const role of [null, 'PASSENGER', 'DRIVER']) {
   test(`${role ?? 'anonymous'} cannot enter buses or request its API`, async ({ page }) => {
     const state = await busesApi(page, role);
-    await page.goto('/buses');
+    await page.goto('/buses?edit=1');
     await expect(page).toHaveURL(/\/overview$/);
     expect(state.requests).toHaveLength(0);
     await expect(page.getByRole('link', { name: 'Buses', exact: true })).toHaveCount(0);
@@ -223,6 +224,444 @@ test('refresh repeats the applied query; Reset clears draft and applied filters 
   expect(params.get('size')).toBe('20');
   expect(params.get('sort')).toBe('registrationNumber');
   await expect(page.locator('mat-paginator')).toContainText('1–20 of 30');
+});
+
+test('a direct bus URL restores every query field on first load, reload and a copied link', async ({
+  page,
+  context,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses?q=DEMO-BUS-0&active=false&page=1&size=2&sort=capacity&direction=desc');
+  const search = page.getByRole('searchbox', { name: 'Search registration' });
+  await expect(page.locator('.bus-entry')).toHaveCount(2);
+  await expect(search).toHaveValue('DEMO-BUS-0');
+  await expect(page.getByRole('combobox', { name: 'Status', exact: true })).toContainText(
+    'Inactive',
+  );
+  await expect(page.locator('mat-paginator')).toContainText('3–4 of 6');
+  await expect(
+    page.getByRole('columnheader', { name: 'Passenger capacity', exact: true }),
+  ).toHaveAttribute('aria-sort', 'descending');
+  expect(state.requests).toHaveLength(1);
+  const expected = {
+    q: 'DEMO-BUS-0',
+    active: 'false',
+    page: '1',
+    size: '2',
+    sort: 'capacity',
+    direction: 'desc',
+  };
+  expect(Object.fromEntries(state.requests[0]!.url.searchParams)).toEqual(expected);
+  const link = page.url();
+  await search.fill('draft-that-must-not-survive-reload');
+  expect(page.url()).toBe(link);
+  await page.reload();
+  await expect(search).toHaveValue('DEMO-BUS-0');
+  await expect(page.locator('.bus-entry')).toHaveCount(2);
+  expect(state.requests).toHaveLength(2);
+  expect(Object.fromEntries(state.requests[1]!.url.searchParams)).toEqual(expected);
+  const other = await context.newPage();
+  try {
+    const copied = await busesApi(other);
+    await other.goto(link);
+    await expect(other.locator('.bus-entry')).toHaveCount(2);
+    await expect(other.getByRole('searchbox')).toHaveValue('DEMO-BUS-0');
+    expect(copied.requests).toHaveLength(1);
+    expect(Object.fromEntries(copied.requests[0]!.url.searchParams)).toEqual(expected);
+  } finally {
+    await other.close();
+  }
+});
+
+test('URL history restores applied filters, Reset and sorting with one request per changed query', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses?size=10&sort=capacity&direction=desc&keep=demo#bus-table-hint');
+  await expect(page.locator('.bus-entry')).toHaveCount(10);
+  const search = page.getByRole('searchbox', { name: 'Search registration' });
+  const status = page.getByRole('combobox', { name: 'Status', exact: true });
+  await search.fill('DEMO-BUS-00');
+  const beforeSearch = state.requests.length;
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(page.locator('.bus-entry')).toHaveCount(9);
+  expect(state.requests).toHaveLength(beforeSearch + 1);
+  const searched = page.url();
+  expect(new URL(searched).searchParams.get('q')).toBe('DEMO-BUS-00');
+  await status.click();
+  await page.getByRole('option', { name: 'Inactive', exact: true }).click();
+  expect(page.url()).toBe(searched);
+  expect(state.requests).toHaveLength(beforeSearch + 1);
+  await search.press('Enter');
+  await expect(page.locator('.bus-entry')).toHaveCount(1);
+  const filtered = page.url();
+  expect(new URL(filtered).searchParams.get('active')).toBe('false');
+  const historyLength = await page.evaluate(() => history.length);
+  const beforeRepeat = state.requests.length;
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect.poll(() => state.requests.length).toBe(beforeRepeat + 1);
+  await expect(page.getByRole('button', { name: 'Refresh list', exact: true })).toBeEnabled();
+  expect(await page.evaluate(() => history.length)).toBe(historyLength);
+  expect(page.url()).toBe(filtered);
+  await page.getByRole('button', { name: 'Reset filters', exact: true }).click();
+  await expect(page.locator('.bus-entry')).toHaveCount(10);
+  const reset = page.url();
+  const params = new URL(reset).searchParams;
+  expect(params.get('q')).toBeNull();
+  expect(params.get('active')).toBeNull();
+  expect(params.get('page')).toBeNull();
+  expect(params.get('size')).toBe('10');
+  expect(params.get('sort')).toBe('capacity');
+  expect(params.get('direction')).toBe('desc');
+  expect(params.get('keep')).toBe('demo');
+  expect(new URL(reset).hash).toBe('#bus-table-hint');
+  for (const [url, count, active] of [
+    [filtered, 1, 'Inactive'],
+    [searched, 9, 'All statuses'],
+  ] as const) {
+    const before = state.requests.length;
+    await page.goBack();
+    await expect(page).toHaveURL(url);
+    await expect(search).toHaveValue('DEMO-BUS-00');
+    await expect(status).toContainText(active);
+    await expect(page.locator('.bus-entry')).toHaveCount(count);
+    expect(state.requests).toHaveLength(before + 1);
+  }
+  for (const [url, count] of [
+    [filtered, 1],
+    [reset, 10],
+  ] as const) {
+    const before = state.requests.length;
+    await page.goForward();
+    await expect(page).toHaveURL(url);
+    await expect(page.locator('.bus-entry')).toHaveCount(count);
+    expect(state.requests).toHaveLength(before + 1);
+  }
+  await expect(search).toHaveValue('');
+  await expect(status).toContainText('All statuses');
+});
+
+test('malformed and repeated query parameters never reach the bus API as invalid values', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto(
+    '/buses?' +
+      new URLSearchParams({
+        q: 'x'.repeat(101),
+        active: 'invalid',
+        page: '-1',
+        size: '101',
+        sort: 'unknown',
+        direction: 'sideways',
+        keep: 'demo',
+      }),
+  );
+  await expect(page.locator('.bus-entry')).toHaveCount(20);
+  expect(state.requests).toHaveLength(1);
+  const defaults = { page: '0', size: '20', sort: 'registrationNumber', direction: 'asc' };
+  expect(Object.fromEntries(state.requests[0]!.url.searchParams)).toEqual(defaults);
+  await expect(page.getByRole('searchbox')).toHaveValue('');
+  await page.getByRole('button', { name: 'Reset filters', exact: true }).click();
+  await expect(page).toHaveURL(/\/buses\?keep=demo$/);
+  await expect(page.getByRole('button', { name: 'Refresh list', exact: true })).toBeEnabled();
+  expect(state.requests).toHaveLength(2);
+  await page.getByRole('searchbox').fill('DEMO-BUS-001');
+  await page.getByRole('searchbox').press('Enter');
+  await expect(page.locator('.bus-entry')).toHaveCount(1);
+  expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({
+    q: 'DEMO-BUS-001',
+    keep: 'demo',
+  });
+  await page.goto(
+    '/buses?q=one&q=two&active=true&active=false&page=1&page=2&size=10&size=20&sort=capacity&sort=active&direction=asc&direction=desc',
+  );
+  await expect(page.locator('.bus-entry')).toHaveCount(20);
+  expect(state.requests).toHaveLength(4);
+  expect(Object.fromEntries(state.requests.at(-1)!.url.searchParams)).toEqual(defaults);
+});
+
+test('Unicode and URL punctuation remain literal through a copied query and reapplying search', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  const registration = 'حافلة & %_\\+?#= 01';
+  state.rows[0]!.registrationNumber = registration;
+  await page.goto('/buses?' + new URLSearchParams({ q: registration, active: 'true' }));
+  await expect(page.locator('.bus-entry')).toHaveCount(1);
+  await expect(page.getByRole('searchbox')).toHaveValue(registration);
+  expect(state.requests[0]!.url.searchParams.get('q')).toBe(registration);
+  await page.getByRole('searchbox').press('Enter');
+  await expect.poll(() => state.requests.length).toBe(2);
+  expect(state.requests.at(-1)!.url.searchParams.get('q')).toBe(registration);
+  expect(new URL(page.url()).searchParams.get('q')).toBe(registration);
+});
+
+test('deleting the last row of a page corrects and replaces the URL without duplicate loads', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  state.rows = state.rows.slice(0, 3);
+  await page.goto('/buses?size=1');
+  await expect(page.locator('mat-paginator')).toContainText('1–1 of 3');
+  await page.getByRole('button', { name: 'Next page', exact: true }).click();
+  await expect(page.locator('mat-paginator')).toContainText('2–2 of 3');
+  await page.getByRole('button', { name: 'Next page', exact: true }).click();
+  await expect(page.locator('mat-paginator')).toContainText('3–3 of 3');
+  expect(new URL(page.url()).searchParams.get('page')).toBe('2');
+  await openBusAction(page, 'Delete', 'DEMO-BUS-003');
+  const before = state.requests.length;
+  await page.getByRole('button', { name: 'Delete permanently', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('mat-paginator')).toContainText('2–2 of 2');
+  expect(new URL(page.url()).searchParams.get('page')).toBe('1');
+  expect(
+    state.requests
+      .slice(before)
+      .map((request) => [request.method, request.url.searchParams.get('page')]),
+  ).toEqual([
+    ['DELETE', null],
+    ['GET', '2'],
+    ['GET', '1'],
+  ]);
+  const beforeBack = state.requests.length;
+  await page.goBack();
+  await expect(page).toHaveURL(/page=1/);
+  expect(state.requests).toHaveLength(beforeBack);
+  await page.goBack();
+  await expect(page.locator('mat-paginator')).toContainText('1–1 of 2');
+  expect(new URL(page.url()).searchParams.get('page')).toBeNull();
+  expect(state.requests).toHaveLength(beforeBack + 1);
+});
+
+test('leaving the buses route and going Back restores its URL query before fetching', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses?q=DEMO-BUS-00&active=true&size=10&sort=active&direction=desc');
+  await expect(page.locator('.bus-entry')).toHaveCount(8);
+  const link = page.url();
+  const menu = page.getByRole('button', { name: 'Open navigation', exact: true });
+  if (await menu.isVisible()) await menu.click();
+  await page.getByRole('link', { name: 'Preferences', exact: true }).click();
+  await expect(page).toHaveURL(/\/preferences$/);
+  const before = state.requests.length;
+  await page.goBack();
+  await expect(page).toHaveURL(link);
+  await expect(page.locator('.bus-entry')).toHaveCount(8);
+  await expect(page.getByRole('searchbox')).toHaveValue('DEMO-BUS-00');
+  expect(state.requests).toHaveLength(before + 1);
+  expect(state.requests.at(-1)!.url.searchParams.get('active')).toBe('true');
+  expect(state.requests.at(-1)!.url.searchParams.get('sort')).toBe('active');
+});
+
+test('an edit URL restores the latest saved bus after refresh and in a copied link without preserving drafts', async ({
+  page,
+  context,
+}) => {
+  const state = await busesApi(page);
+  Object.assign(state.rows[24]!, { capacity: 61, version: 3 });
+  await page.goto('/buses?q=DEMO-BUS-00&active=false&size=1&sort=capacity&direction=desc&edit=25');
+  const dialog = page.getByRole('dialog', { name: 'Edit bus', exact: true });
+  await expect(dialog.getByRole('textbox')).toHaveValue('DEMO-BUS-025');
+  await expect(dialog.getByRole('spinbutton')).toHaveValue('61');
+  await expect(dialog.getByRole('textbox')).toBeFocused();
+  const list = () => state.requests.filter((request) => request.url.pathname === '/api/v1/buses');
+  const details = () =>
+    state.requests.filter((request) => request.url.pathname === '/api/v1/buses/25');
+  expect(list()).toHaveLength(1);
+  expect(details()).toHaveLength(1);
+  await dialog.getByRole('spinbutton').fill('99');
+  Object.assign(state.rows[24]!, { capacity: 62, version: 4 });
+  const link = page.url();
+  await page.reload();
+  await expect(dialog.getByRole('spinbutton')).toHaveValue('62');
+  expect(page.url()).toBe(link);
+  expect(list()).toHaveLength(2);
+  expect(details()).toHaveLength(2);
+  expect(state.requests.some((request) => request.method === 'PUT')).toBe(false);
+  const other = await context.newPage();
+  try {
+    const copied = await busesApi(other);
+    copied.rows = state.rows;
+    await other.goto(link);
+    await expect(other.getByRole('dialog').getByRole('spinbutton')).toHaveValue('62');
+    expect(copied.requests).toHaveLength(2);
+  } finally {
+    await other.close();
+  }
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => new URL(page.url()).searchParams.get('edit')).toBeNull();
+  expect(new URL(page.url()).searchParams.get('q')).toBe('DEMO-BUS-00');
+  expect(new URL(page.url()).searchParams.get('size')).toBe('1');
+  expect(list()).toHaveLength(2);
+});
+
+test('edit Back/Forward restores saved values and a successful save removes edit with one list refresh', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses?q=DEMO&active=true&page=1&size=10');
+  await expect(page.locator('.bus-entry')).toHaveCount(10);
+  const base = page.url();
+  const lists = () => state.requests.filter((request) => request.url.pathname === '/api/v1/buses');
+  await openBusAction(page, 'Edit', 'DEMO-BUS-013');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('spinbutton')).toHaveValue('20');
+  expect(new URL(page.url()).searchParams.get('edit')).toBe('13');
+  await dialog.getByRole('spinbutton').fill('99');
+  await page.goBack();
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL(base);
+  Object.assign(state.rows[12]!, { capacity: 36, version: 1 });
+  await page.goForward();
+  await expect(dialog.getByRole('spinbutton')).toHaveValue('36');
+  expect(lists()).toHaveLength(1);
+  await dialog.getByRole('spinbutton').fill('52');
+  await dialog.getByRole('button', { name: 'Save bus', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL(base);
+  await expect(page.getByRole('button', { name: 'Refresh list', exact: true })).toBeEnabled();
+  expect(lists()).toHaveLength(2);
+  expect(state.requests.find((request) => request.method === 'PUT')!.body).toMatchObject({
+    capacity: 52,
+    version: 1,
+  });
+  await expect(page.locator('mat-snack-bar-container')).toHaveText(en.buses.saved.update);
+});
+
+test('edit load failures permit retry and a missing bus cannot submit an empty form', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses');
+  await expect(page.locator('.bus-entry')).toHaveCount(20);
+  state.failure = { method: 'GET', status: 503, code: 'INTERNAL_ERROR' };
+  await openBusAction(page, 'Edit', 'DEMO-BUS-001');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('alert')).toHaveText(en.buses.dialog.loadFailed);
+  await expect(dialog.getByRole('textbox')).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Save bus', exact: true })).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(dialog.getByRole('textbox')).toHaveValue('DEMO-BUS-001');
+  expect(state.requests.filter((request) => request.url.pathname === '/api/v1/buses')).toHaveLength(
+    1,
+  );
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.goto('/buses?edit=999');
+  await expect(dialog.getByRole('alert')).toHaveText(en.buses.errors.BUS_NOT_FOUND);
+  await expect(dialog.getByRole('textbox')).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Save bus', exact: true })).toBeDisabled();
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => new URL(page.url()).searchParams.get('edit')).toBeNull();
+  expect(state.requests.some((request) => request.method !== 'GET')).toBe(false);
+});
+
+test('invalid or repeated edit IDs never open a dialog or request an individual bus', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  for (const query of ['edit=0', 'edit=-1', 'edit=9007199254740992', 'edit=1&edit=2']) {
+    await page.goto('/buses?' + query);
+    await expect(page.locator('.bus-entry')).toHaveCount(20);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+  expect(state.requests).toHaveLength(4);
+  expect(state.requests.every((request) => request.url.pathname === '/api/v1/buses')).toBe(true);
+});
+
+test('a pending edit read can be cancelled without a list reload or stale selection', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses');
+  await expect(page.locator('.bus-entry')).toHaveCount(20);
+  let resume!: () => void;
+  state.pause = { method: 'GET', until: new Promise<void>((resolve) => (resume = resolve)) };
+  try {
+    await openBusAction(page, 'Edit', 'DEMO-BUS-001');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.locator('app-loading-overlay.active')).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeEnabled();
+    await expect(dialog.getByRole('button', { name: 'Save bus', exact: true })).toBeDisabled();
+    const failed = page.waitForEvent(
+      'requestfailed',
+      (request) => new URL(request.url()).pathname === '/api/v1/buses/1',
+    );
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await failed;
+    await expect.poll(() => new URL(page.url()).searchParams.get('edit')).toBeNull();
+    state.pause = null;
+    resume();
+    await openBusAction(page, 'Edit', 'DEMO-BUS-002');
+    await expect(dialog.getByRole('textbox')).toHaveValue('DEMO-BUS-002');
+    expect(
+      state.requests.filter((request) => request.url.pathname === '/api/v1/buses'),
+    ).toHaveLength(1);
+  } finally {
+    state.pause = null;
+    resume();
+  }
+});
+
+test('rapid edit Back/Forward does not let the closing dialog remove the newer URL selection', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.goto('/buses');
+  await openBusAction(page, 'Edit', 'DEMO-BUS-001');
+  await expect(page.getByRole('dialog').getByRole('textbox')).toHaveValue('DEMO-BUS-001');
+  await page.goBack();
+  await page.goForward();
+  await expect
+    .poll(
+      () => state.requests.filter((request) => request.url.pathname === '/api/v1/buses/1').length,
+    )
+    .toBe(2);
+  await expect(page.getByRole('dialog').getByRole('textbox')).toHaveValue('DEMO-BUS-001');
+  expect(new URL(page.url()).searchParams.get('edit')).toBe('1');
+  expect(state.requests.filter((request) => request.url.pathname === '/api/v1/buses')).toHaveLength(
+    1,
+  );
+});
+
+test('a restored edit dialog supports Arabic RTL, dark mode, keyboard focus and accessible controls', async ({
+  page,
+  context,
+  baseURL,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => localStorage.setItem('bus-management.language', 'ar'));
+  await context.addCookies([{ name: 'bus-management.appearance', value: 'dark', url: baseURL! }]);
+  const state = await busesApi(page);
+  await page.goto('/buses?q=DEMO&edit=25');
+  const dialog = page.getByRole('dialog', { name: ar.buses.dialog.edit, exact: true });
+  await expect(dialog.getByRole('textbox')).toHaveValue('DEMO-BUS-025');
+  await expect(dialog.getByRole('textbox')).toBeFocused();
+  await expect(dialog).toHaveCSS('direction', 'rtl');
+  await expect(
+    dialog.getByRole('button', { name: ar.buses.dialog.save, exact: true }),
+  ).toBeEnabled();
+  const audit = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
+    .analyze();
+  await info.attach('axe-restored-bus-edit', {
+    body: Buffer.from(
+      JSON.stringify({ violations: audit.violations, manualReview: audit.incomplete }),
+    ),
+    contentType: 'application/json',
+  });
+  expect(audit.violations.map((violation) => violation.id)).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('button', { name: ar.buses.add, exact: true })).toBeFocused();
+  expect(state.requests.filter((request) => request.url.pathname === '/api/v1/buses')).toHaveLength(
+    1,
+  );
 });
 
 test('create validates input, preserves duplicate errors, saves once, edits availability and deletes with confirmation', async ({
@@ -392,8 +831,8 @@ test('loading overlays preserve rows and clear after reads, failed saves, reload
   await dialog.getByRole('button', { name: en.buses.dialog.save, exact: true }).click();
   await expect(dialog.locator('app-loading-overlay.active')).toBeVisible();
   await expect(dialog.getByRole('status')).toHaveText(en.buses.dialog.saving);
-  await expect(dialog.locator('form')).toHaveAttribute('aria-busy', 'true');
-  await expect(dialog.locator('form [role="status"]')).toHaveCount(0);
+  await expect(dialog.locator('mat-dialog-content')).toHaveAttribute('aria-busy', 'true');
+  await expect(dialog.locator('[aria-busy="true"] [role="status"]')).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: en.buses.dialog.cancel })).toBeDisabled();
   await expect(dialog.getByRole('button', { name: en.buses.dialog.save })).toBeDisabled();
   await page.keyboard.press('Escape');
@@ -438,7 +877,7 @@ test('loading overlays preserve rows and clear after reads, failed saves, reload
 });
 
 for (const mode of ['Edit', 'Delete'] as const) {
-  test(`${mode} cancellation preserves the page, records, focus and scroll without a request`, async ({
+  test(`${mode} cancellation preserves the page, records, focus and scroll without a list request`, async ({
     page,
   }) => {
     const state = await busesApi(page);
@@ -460,12 +899,12 @@ for (const mode of ['Edit', 'Delete'] as const) {
     await expect(dialog).not.toBeVisible();
     await expect(trigger).toBeFocused();
     await expect(page.locator('.bus-entry')).toHaveCount(10);
-    expect(state.requests).toHaveLength(requestsBefore);
+    expect(state.requests).toHaveLength(requestsBefore + (mode === 'Edit' ? 1 : 0));
     await expect(page.locator('mat-snack-bar-container')).toHaveCount(0);
     expect(state.rows.find((bus) => bus.registrationNumber === 'DEMO-BUS-028')?.capacity).not.toBe(
       99,
     );
-    expect(state.requests.at(-1)?.url.searchParams.get('page')).toBe('1');
+    expect(new URL(page.url()).searchParams.get('page')).toBe('1');
     const after = await page
       .locator('mat-sidenav-content')
       .evaluate((element) => element.scrollTop);
@@ -506,7 +945,7 @@ test('a 320px screen keeps all table columns and long registrations readable wit
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(trigger).toBeFocused();
-  expect(state.requests).toHaveLength(before);
+  expect(state.requests).toHaveLength(before + 1);
   await page.keyboard.press('Enter');
   await expect(page.getByRole('menuitem', { name: 'Edit', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');

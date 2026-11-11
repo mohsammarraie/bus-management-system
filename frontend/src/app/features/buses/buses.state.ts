@@ -12,9 +12,10 @@ import { Bus, BusCommand, BusFailure, BusPage, BusQuery, DEFAULT_BUS_QUERY } fro
 export const busesActions = createActionGroup({
   source: 'Buses',
   events: {
-    'Page Opened': emptyProps(),
+    'Page Opened': props<{ query: BusQuery }>(),
     'Page Left': emptyProps(),
     'Query Changed': props<{ query: BusQuery }>(),
+    'Page Correction Requested': props<{ query: BusQuery }>(),
     'Refresh Requested': emptyProps(),
     'Load Succeeded': props<{ page: BusPage }>(),
     'Load Failed': props<{ error: BusFailure }>(),
@@ -54,7 +55,7 @@ export const busesFeature = createFeature({
   name: 'buses',
   reducer: createReducer(
     initialState,
-    on(busesActions.pageOpened, () => loading(initialState)),
+    on(busesActions.pageOpened, (_, { query }) => loading({ ...initialState, query })),
     on(busesActions.pageLeft, () => initialState),
     on(busesActions.queryChanged, (state, { query }) => loading({ ...state, query })),
     on(busesActions.refreshRequested, (state) => loading(state)),

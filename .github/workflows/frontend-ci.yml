@@ -61,9 +61,13 @@ jobs:
   e2e:
     name: Frontend browser and accessibility tests
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble@sha256:6e3fb709361521eb27161606e6da6d2674e5e89fa16516cb37d6fdd91372273d
+      options: --ipc=host
     timeout-minutes: 20
     defaults:
       run:
+        shell: bash
         working-directory: frontend
     env:
       CI: 'true'
@@ -85,9 +89,6 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci
-
-      - name: Install Chromium and system dependencies
-        run: npx playwright install --with-deps chromium
 
       - name: Run browser and accessibility tests
         run: npm run test:e2e
