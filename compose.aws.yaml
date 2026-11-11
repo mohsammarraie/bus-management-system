@@ -1,0 +1,153 @@
+# Standalone deployment file; do not merge with the local compose.yaml.
+name: bus-management-demo
+
+x-logging: &logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:18.6-bookworm@sha256:f1ea2a1a4fb7b68d4836be1fdcb8a6466a89b072158bf9d97663600538c294c5
+    platform: linux/arm64
+    restart: unless-stopped
+    mem_limit: 256m
+    memswap_limit: 256m
+    cpus: 0.25
+    shm_size: 128mb
+    logging: *logging
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: deployment_db_admin
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Run infra/aws/prepare.py}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U deployment_db_admin -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  database-init:
+    image: postgres:18.6-bookworm@sha256:f1ea2a1a4fb7b68d4836be1fdcb8a6466a89b072158bf9d97663600538c294c5
+    platform: linux/arm64
+    mem_limit: 64m
+    memswap_limit: 64m
+    cpus: 0.25
+    logging: *logging
+    entrypoint: ["sh", "/bootstrap/init-db.sh"]
+    environment:
+      PGPASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Run infra/aws/prepare.py}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run infra/aws/prepare.py}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run infra/aws/prepare.py}
+    volumes:
+      - ./infra/aws/init-db.sh:/bootstrap/init-db.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  keycloak:
+    image: ${KEYCLOAK_IMAGE:?Set the published ARM64 image digest}
+    platform: linux/arm64
+    restart: unless-stopped
+    mem_limit: 768m
+    memswap_limit: 768m
+    cpus: 0.75
+    logging: *logging
+    command: ["start", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run infra/aws/prepare.py}
+      KC_BOOTSTRAP_ADMIN_USERNAME: deployment-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Run infra/aws/prepare.py}
+      KC_HTTP_ENABLED: 'true'
+      KC_HTTP_RELATIVE_PATH: /identity
+      KC_HTTP_MANAGEMENT_RELATIVE_PATH: /
+      KC_HOSTNAME: https://${APP_HOST:?Set a public DNS hostname}/identity
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
+      APP_PUBLIC_URL: https://${APP_HOST:?Set a public DNS hostname}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?Run infra/aws/prepare.py}
+    volumes:
+      - ./infra/aws/generated/bus-management-realm.json:/opt/keycloak/data/import/bus-management-realm.json:ro
+    depends_on:
+      database-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bash", "-ec", "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3; read -r status <&3; [[ \"$$status\" == *200* ]]"]
+      interval: 5s
+      timeout: 4s
+      retries: 30
+      start_period: 60s
+
+  backend:
+    image: ${BACKEND_IMAGE:?Set the published ARM64 image digest}
+    platform: linux/arm64
+    restart: unless-stopped
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 0.75
+    logging: *logging
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bus_management
+      SPRING_DATASOURCE_USERNAME: bus_management
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Run infra/aws/prepare.py}
+      APP_PUBLIC_URL: https://${APP_HOST:?Set a public DNS hostname}
+      OIDC_ISSUER: https://${APP_HOST:?Set a public DNS hostname}/identity/realms/bus-management
+      OIDC_INTERNAL_ISSUER: http://keycloak:8080/identity/realms/bus-management
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?Run infra/aws/prepare.py}
+      SESSION_COOKIE_SECURE: 'true'
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -ec
+        - |
+          exec 3<>/dev/tcp/127.0.0.1/8080
+          printf 'GET /actuator/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3
+          read -r protocol status rest <&3
+          [[ "$$status" == 200 ]]
+      interval: 5s
+      timeout: 4s
+      retries: 18
+      start_period: 30s
+
+  frontend:
+    image: ${FRONTEND_IMAGE:?Set the published ARM64 image digest}
+    platform: linux/arm64
+    restart: unless-stopped
+    mem_limit: 64m
+    memswap_limit: 64m
+    cpus: 0.25
+    logging: *logging
+    environment:
+      APP_HOST: ${APP_HOST:?Set a public DNS hostname}
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - ./infra/aws/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/tmp/data
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  caddy_data:

@@ -125,6 +125,7 @@ Backend tests require Docker and use temporary PostgreSQL containers. Frontend t
 - CI: [backend](docs/backend-ci.md), [frontend](docs/frontend-ci.md), [containers](docs/container-ci.md).
 - [Migration plan](docs/database-migration-plan.md) and [development workflow](docs/development-workflow-templates.md).
 - [Security policy and vulnerability reporting](SECURITY.md).
+- [AWS demo deployment preparation](docs/aws-deployment.md) (ARM64 Compose, HTTPS, setup/recovery; not deployed yet).
 
 ## Project history and credits
 

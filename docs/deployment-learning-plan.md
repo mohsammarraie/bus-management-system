@@ -1,6 +1,6 @@
 # Deployment and monitoring learning plan
 
-Status: next milestone, before routes/stops and further business features; no cloud resources or deployment automation implemented. Updated 11 November 2026.
+Status: [local AWS deployment configuration and runbook](aws-deployment.md) prepared for `bms.timbalonia.de` (IONOS DNS); image publication, DNS records and cloud launch remain pending. No cloud resources or deployment automation implemented. Updated 11 November 2026.
 
 ## Goal and budget
 

@@ -13,14 +13,14 @@
 
 ## Current branch
 
-`docs/prioritize-cloud-demo` records the first cloud demo as the next milestone and adds [SECURITY.md](../SECURITY.md). Includes local capacity measurements, developer-confirmed ARM64 compatibility, and Frankfurt pricing with the current t4g.small compute promotion. No cloud resources or deployment configuration have been created.
+`feat/aws-deployment-preparation` adds standalone ARM64 deployment Compose, HTTPS routing, generated private configuration/realm, resource limits and a disposable local verification script. See the [AWS runbook](aws-deployment.md). No AWS resources or registry publications have been created; hosted checks await publication.
 
 ## Next: first cloud demo
 
 Deploy the existing buses CRUD and Keycloak login before adding more business features. Prefer an On-Demand **t4g.small in Frankfurt**, using prebuilt ARM64 images. The developer confirmed native ARM64 images and successful login/CRUD on an M4; AWS memory headroom remains unverified. The reported Free plan has $100 credit until 11 May 2027 or credit exhaustion; the separate 750-hour/month t4g.small compute promotion ends 31 December 2026. Disk/IP and other chargeable usage still consume credit. See the [capacity, costs and fallback assessment](deployment-learning-plan.md).
 
-1. Confirm account eligibility, the t4g.small promotion and demo schedule; account for ancillary costs and standard rates after the promotion. Local measurements passed; verify AWS memory peaks and billing after launch.
-2. Prepare deployment configuration: HTTPS/public origin, exact OIDC redirects, secure cookies, fresh secrets, private internal services and persistent application/identity data. Preserve local development modes.
+1. Use the selected `bms.timbalonia.de` hostname (IONOS DNS), confirm account eligibility/the t4g.small promotion and publish tested ARM64 images to ECR. Account for ancillary costs and standard rates after the promotion.
+2. Use the prepared [deployment configuration](aws-deployment.md) for a guided Frankfurt EC2 launch. Set DNS and exact public issuer/callback/logout URLs, preserve private internal services, and verify AWS memory peaks/billing. Existing local development modes remain unchanged.
 3. Deploy a temporary synthetic demo; verify signup/login/logout, ADMIN CRUD and role restrictions from desktop and a real phone, including en/de/ar and RTL. Check persistence after restart.
 4. Add bounded logs, health/resource monitoring and reproducible setup/teardown instructions. See the [deployment learning plan](deployment-learning-plan.md).
 
