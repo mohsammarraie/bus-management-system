@@ -1,142 +1,59 @@
 # Bus Management System
 
-A modern bus management application for managing buses, routes and trips, built with Angular, Spring Boot and PostgreSQL.
+A modernization of a bus management application using Angular, Spring Boot and PostgreSQL.
 
-**Status:** backend and database foundation implemented: Java 25, Spring Boot, PostgreSQL, Flyway, JPA and real database integration tests. Compose runs the complete local frontend/backend/Keycloak/PostgreSQL stack. Backend GitHub Actions CI is merged and has passed on GitHub. The Angular/Material starter includes a responsive shell and English/German/Arabic language switching. Keycloak/backend session login and passenger signup, Angular account controls, role guards and saved light/dark/system appearance are implemented. The first business API provides ADMIN bus CRUD with pagination, validation and optimistic locking and secured Swagger/OpenAPI documentation; the Angular buses screen is next. New backend/container CI results await publication of this feature.
+**Implemented:** ADMIN bus CRUD, server-side search/pagination, session authentication, passenger signup, English/German/Arabic, RTL and Light/Dark/System appearance. Routes, schedules, trips and live Leaflet tracking are planned; see the [roadmap](docs/next-steps.md).
 
-## Intended experience
+## Stack
 
-- Administrators manage buses, drivers, stops, routes, schedules and reports.
-- Drivers start trips on their phones and explicitly share location.
-- Passengers browse ongoing trips, watch the bus on a Leaflet map and review completed trips.
-- Mobile-friendly screens will support English (`en`), German (`de`) and Arabic (`ar`), including right-to-left Arabic layouts.
-
-## Technology direction
-
-The backend uses Java 25, Spring Boot 4.1.2, Gradle 9.8.2 and PostgreSQL 18.6 with Flyway migrations. The frontend uses Angular 22, Material, RxJS and Transloco. NgRx Store/Effects/Entity will join the first shared business-state feature; Leaflet follows in later tasks; frontend/backend Docker images are available. Backend and frontend checks are configured in GitHub Actions; frontend hosted checks have passed, and independent container CI is configured with hosted verification pending publication. Keycloak with backend-managed OIDC/session authentication is implemented; see [ADR 0003](docs/decisions/0003-backend-managed-keycloak-login.md). Remaining dependency versions and the map tile provider will be verified during their setup.
-
-## Start here
-
-1. [Architecture and roadmap](docs/architecture-and-roadmap.md)
-2. [Database migration plan](docs/database-migration-plan.md)
-3. [Current milestone and next steps](docs/next-steps.md)
-4. [Development workflow templates](docs/development-workflow-templates.md)
-5. [Leaflet decision](docs/decisions/0001-leaflet.md)
-6. [Database setup, tests and recovery](docs/database-setup.md)
-7. [Backend CI and test reports](docs/backend-ci.md)
-8. [Frontend setup and localization](docs/frontend-starter.md)
-9. [Frontend CI and browser reports](docs/frontend-ci.md)
-10. [Docker stack and smoke checks](docs/container-stack.md)
-11. [Container CI and diagnostics](docs/container-ci.md)
-12. [Authentication setup and API](docs/authentication-setup.md)
-13. [Authentication architecture decision](docs/decisions/0003-backend-managed-keycloak-login.md)
-14. [Keycloak login theme](docs/keycloak-theme.md)
-15. [Buses API, Swagger and code reading order](docs/buses-api.md)
+| Area | Technology |
+|---|---|
+| Backend | Java 25, Spring Boot 4.1.2, Gradle 9.8.2, Spring Data JPA/Hibernate |
+| Frontend | Angular 22, Material, NgRx Store/Effects/Entity 22.0.1, RxJS, Transloco |
+| Database | PostgreSQL 18.6, Flyway |
+| Authentication | Keycloak, Spring Security, backend-managed OIDC/session/CSRF |
+| API documentation | Swagger UI / OpenAPI, generated with springdoc |
+| Delivery | Docker Compose; separate backend, frontend and container GitHub Actions checks |
 
 ## Run locally
 
-Choose between two modes. **DBeaver access is available in both** at localhost:5432 using POSTGRES_DB, POSTGRES_USER and POSTGRES_PASSWORD from the root .env. POSTGRES_PORT changes that host port if needed.
-
-| Mode | Runs in Docker | Runs on the host | Browser address |
-|---|---|---|---|
-| Full stack (compose.yaml) | Frontend, backend, Keycloak and PostgreSQL | No applications | http://localhost:8082 |
-| Host development (compose.yaml + compose.host.yaml) | Keycloak and PostgreSQL | Angular and Spring Boot | http://localhost:4200 |
-
-Docker Engine and the Compose plugin are required. Run the Docker commands from the repository root. Prepare the environment file once:
+Prerequisites: Docker Engine and Compose. From the repository root, create `.env` if absent:
 
 ```bash
 cp -n .env.example .env
 ```
 
-Keep an existing .env and its database credentials; add the four Keycloak/client/demo keys from .env.example if missing. Both modes use the same development database volume. PostgreSQL's host port binds only to 127.0.0.1; this Compose setup is for local development.
+Keep existing credentials. Both modes share the development volume; DBeaver connects to `localhost:5432` using `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` from `.env`.
+
+| Mode | Docker services | Host applications | App URL |
+|---|---|---|---|
+| Full stack | Frontend, backend, Keycloak, PostgreSQL | None | http://localhost:8082 |
+| Host development | Keycloak, PostgreSQL | Angular, Spring Boot | http://localhost:4200 |
 
 ### Full stack in Docker
-
-No host Java or Node installation is needed:
 
 ```bash
 docker compose up --build -d --wait --wait-timeout 240
 ```
 
-Open http://localhost:8082. DBeaver can connect to localhost:5432 without an override. `up --build` builds the application images and starts the services; `docker compose build` only builds images.
+Log in as `demo-admin` with `DEMO_USER_PASSWORD` from `.env`, then open **Buses**.
 
 ### Angular and Spring Boot on the host
 
-Start the infrastructure only; Keycloak also starts PostgreSQL and its one-shot identity database initializer:
+Requires JDK 25, Node 24 and npm 11. The Gradle wrapper can provision JDK 25 if missing.
+
+Start infrastructure from the root:
 
 ```bash
 docker compose -f compose.yaml -f compose.host.yaml up --build -d --wait --wait-timeout 240 keycloak
 ```
 
-Run the backend and frontend in separate terminals using the commands below. Open http://localhost:4200. Keycloak stays at http://localhost:8082/identity, and DBeaver uses localhost:5432. The host override only adds Keycloak's direct port mapping. Selecting keycloak at the end of the command starts its dependencies without the frontend/backend containers.
-
-Existing realms need the exact host callback/logout URLs added once; see [host login setup](docs/authentication-setup.md#angular-and-spring-boot-on-the-host).
-
-### Switching modes and database-only work
-
-Before switching modes, stop any host-run applications with Ctrl+C and stop the previous Docker stack with `docker compose down`. This retains the database volume; do not add --volumes when preserving data. Then use the desired startup command above. Host mode's Keycloak and the full stack's frontend both use port 8082, so they cannot run there together.
-
-For database-only work, select just db from the base file:
-
-```bash
-docker compose up -d --wait db
-```
-
-No separate dev override is needed. To stop the stack, use `docker compose down`. See [container setup](docs/container-stack.md) for images and smoke checks, and [authentication setup](docs/authentication-setup.md) for identity configuration.
-
-### Optional demo buses
-
-After PostgreSQL is running and Spring Boot has started successfully at least once (so Flyway has created the table), run from the repository root:
-
-```bash
-sh scripts/seed-demo-data.sh
-```
-
-This works in both local modes with existing database volumes. For an empty bus table, it inserts 30 synthetic buses (`DEMO-BUS-001` through `DEMO-BUS-030`): 24 active, 6 inactive, with capacities of 20, 30, 40 or 50. The command prints how many records it inserted; an unchanged rerun inserts zero. Existing registrations, edits and versions are preserved. Deleted or renamed demo registrations will be inserted again on a later run; IDs are database-generated and may have gaps.
-
-The seed is separate from Flyway migrations and normal startup. It adds no accounts or legacy data and does not reset the database. It needs Docker Compose and a POSIX shell, with no host PostgreSQL client. Read [the SQL](infra/demo/buses.sql), then [the launcher](scripts/seed-demo-data.sh). Refresh the ADMIN buses API or the `bus_management.buses` table in DBeaver to see the records. Container smoke checks cover opt-in loading, reruns and preservation of existing records.
-
-## Run the backend
-
-Use a full **JDK 25** (including `javac`) and the committed Gradle wrapper. The project targets Java 25: Gradle reuses an installed JDK 25 or downloads one automatically through the Foojay toolchain resolver when launched with a compatible Java installation. The first build needs internet access for Gradle, plugins, dependencies and, if missing, JDK 25. No global Gradle installation is required. Offline builds require an installed JDK 25 and previously cached build dependencies; configure `JAVA_HOME` if needed.
-
-Docker Engine and the Compose plugin must be running. Tests start their own temporary PostgreSQL container and do not require a Compose database or local credentials:
-
-```bash
-cd backend
-./gradlew clean test bootJar
-```
-
-For host-run development, first start the host infrastructure or database-only option above. Then, from the repository root:
+Start the applications in separate terminals, each initially at the repository root:
 
 ```bash
 cd backend
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
-
-Compose and the Spring Boot `local` profile both read the root `.env`. No manual environment export is required. The local profile supports starting from the repository root or backend/; process environment variables can override file values. Use plain `KEY=value` entries as shown in .env.example. The development database port binds only to 127.0.0.1 and defaults to 5432.
-
-From another terminal:
-
-```bash
-curl --fail http://localhost:8080/actuator/health
-```
-
-Expected response includes `"status":"UP"`; Boot may also include health-group names. Database failure makes health report HTTP 503/DOWN without exposing internal details. Stop the application with Ctrl+C. To run the packaged application from `backend/`, use Java 25 and the same `local` profile:
-
-```bash
-java -jar build/libs/bus-management-system-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
-```
-
-Use `PORT=8081 ./gradlew bootRun --args='--spring.profiles.active=local'` if port 8080 is occupied; also update frontend/proxy.conf.json when using Angular against that port. On Windows, use `gradlew.bat` and set environment variables with the shell's syntax. [Database setup](docs/database-setup.md) covers configuration, persistence, backups and troubleshooting.
-
-Flyway applies the initial `bus_management.buses` schema on startup; Hibernate validates the mapping. The [ADMIN buses API](docs/buses-api.md) is available with [session authentication](docs/authentication-setup.md). [Backend setup and design](docs/backend-starter.md) explains the selected versions and tests.
-
-Commands for later milestones in the architecture are proposals, not available scripts.
-
-## Run the frontend
-
-Use Node 24 (tested with 24.22.2; `frontend/.nvmrc`) and npm 11. From the repository root:
 
 ```bash
 cd frontend
@@ -144,11 +61,51 @@ npm ci
 npm start
 ```
 
-Open http://localhost:4200. The overview and preferences pages work independently of the backend. Select English, German or Arabic in the header; the selection is remembered on this browser and Arabic changes the layout to RTL. Preferences also offers Light / Dark / System appearance, saved in this browser and shared with Keycloak login/registration; System follows live device changes. See [appearance and identity theme](docs/keycloak-theme.md#appearance-preference). Use the header to log in, sign up or log out. Signed-in users can open My account; administrators and drivers also receive their role-specific navigation. Buses/routes/trips remain upcoming. Start the backend and Keycloak for real account flows; if unavailable, public pages remain usable with a connection message and retry. See [authentication setup](docs/authentication-setup.md).
+The local Spring profile reads the root `.env`; process environment variables override it. Angular proxies `/api/**` to `localhost:8080`. Keycloak stays at `localhost:8082/identity`. Existing realms require the [host callback/logout configuration](docs/authentication-setup.md#angular-and-spring-boot-on-the-host).
 
-Local checks:
+### Switching modes and database-only work
+
+Stop host applications and run `docker compose down` before switching modes: the full-stack gateway and host-mode Keycloak both use port 8082. Normal `down` retains data; `down --volumes` deletes it.
+
+For database-only work:
 
 ```bash
+docker compose up -d --wait db
+```
+
+### Optional demo buses
+
+After PostgreSQL is running and Spring Boot has applied Flyway:
+
+```bash
+sh scripts/seed-demo-data.sh
+```
+
+An empty table receives 30 synthetic buses: 24 active, 6 inactive, with capacities of 20/30/40/50. Reruns preserve existing registrations, edits and versions, restoring missing demo registrations. Loading is explicit and separate from startup/migrations; existing volumes work without a reset. IDs are generated and may have gaps.
+
+## API documentation — Swagger / OpenAPI
+
+Explore and test the backend endpoints in **Swagger UI**:
+
+| Mode | Swagger UI |
+|---|---|
+| Docker stack | [localhost:8082/api/docs](http://localhost:8082/api/docs) |
+| Host development | [localhost:4200/api/docs](http://localhost:4200/api/docs) |
+
+Sign in to the application as an **ADMIN** in the same browser first. Swagger uses that session and handles CSRF automatically. OpenAPI is available at `/api/openapi` (JSON) and `/api/openapi.yaml` (YAML). See the [API contract](docs/buses-api.md).
+
+## Checks
+
+Backend, from `backend/`:
+
+```bash
+./gradlew clean test bootJar
+```
+
+Frontend, from `frontend/`:
+
+```bash
+npm run format:check
 npm run lint
 npm run typecheck:e2e
 npm run test:ci
@@ -157,10 +114,19 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The frontend's development proxy forwards `/api/**` calls to the backend on port 8080, including the buses API; its Angular screen is the next feature. See [frontend setup](docs/frontend-starter.md) for versions, architecture and test details. The [frontend CI workflow](docs/frontend-ci.md) runs these checks on PRs to main and main pushes once published.
+Backend tests require Docker and use temporary PostgreSQL containers. Frontend tests use isolated API fixtures. After building stack images, run `python3 scripts/smoke-compose.py --browser-tests` from the root for real-session stack verification. Hosted results for the current branch await publication.
+
+## Documentation
+
+- [Architecture](docs/architecture-and-roadmap.md), [roadmap](docs/next-steps.md) and [decisions](docs/decisions/0003-backend-managed-keycloak-login.md).
+- [Buses API and Angular screen](docs/buses-api.md).
+- [Backend setup](docs/backend-starter.md), [frontend setup](docs/frontend-starter.md), [database setup and recovery](docs/database-setup.md).
+- [Authentication](docs/authentication-setup.md), [Keycloak theme](docs/keycloak-theme.md), [container stack](docs/container-stack.md).
+- CI: [backend](docs/backend-ci.md), [frontend](docs/frontend-ci.md), [containers](docs/container-ci.md).
+- [Migration plan](docs/database-migration-plan.md) and [development workflow](docs/development-workflow-templates.md).
 
 ## Project history and credits
 
-Bus Management System is an independent refactoring and modernization of an earlier bus management graduation project developed by Mohammed Al-Sammarraie and Taha Al-Khaffaf. The new implementation is a learning and portfolio project for practicing Angular, Spring Boot and agent-assisted engineering. The [original project repository](https://github.com/mohsammarraie/gradproj), reference commit `b1415fdf16a7bff57025a1a9d756952dc2a21829`, remains the legacy baseline.
+Bus Management System is an independent modernization of a graduation project developed by Mohammed Al-Sammarraie and Taha Al-Khaffaf. It is a learning and portfolio project for Angular, Spring Boot and agent-assisted engineering. The [original repository](https://github.com/mohsammarraie/gradproj), reference commit `b1415fdf16a7bff57025a1a9d756952dc2a21829`, remains the legacy baseline.
 
-Raw database dumps, inherited credentials and legacy binaries are not copied into this repository. License selection for new work and any reused source must be resolved before publication; this project does not assign a new license to the original implementation.
+Raw dumps, inherited credentials and legacy binaries are excluded. License selection for new or reused code remains unresolved; this project does not assign a new license to the original implementation.

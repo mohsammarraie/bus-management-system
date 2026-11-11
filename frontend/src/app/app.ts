@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   afterNextRender,
   Component,
+  computed,
   inject,
   Injector,
   HostListener,
@@ -20,6 +21,7 @@ import { AccountControls } from './shared/account-controls';
 import { LanguageService } from './core/i18n/language.service';
 import { Icon } from './shared/icon';
 import { LanguageSwitcher } from './shared/language-switcher';
+import { LoadingOverlay } from './shared/loading-overlay';
 
 @Component({
   selector: 'app-root',
@@ -35,12 +37,15 @@ import { LanguageSwitcher } from './shared/language-switcher';
     Icon,
     LanguageSwitcher,
     AccountControls,
+    LoadingOverlay,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
+  private readonly router = inject(Router);
+  protected readonly navigating = computed(() => this.router.currentNavigation() !== null);
   protected readonly language = inject(LanguageService);
   protected readonly auth = inject(AuthService);
   protected readonly handset = toSignal(
@@ -55,7 +60,7 @@ export class App {
 
   constructor() {
     this.auth.refresh().subscribe();
-    const router = inject(Router);
+    const router = this.router;
     router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),

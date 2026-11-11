@@ -1,0 +1,78 @@
+<ng-container *transloco="let t">
+  <div class="dialog-surface" [dir]="language.direction()">
+    <h2 mat-dialog-title id="bus-dialog-title">{{ t('buses.dialog.' + mode) }}</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="busy()">
+      <mat-dialog-content>
+        @if (mode === 'delete') {
+          <p id="bus-dialog-description">{{ t('buses.dialog.deleteWarning') }}</p>
+          <p>
+            <strong
+              ><bdi>{{ bus()?.registrationNumber }}</bdi></strong
+            >
+          </p>
+        } @else {
+          <p id="bus-dialog-description">{{ t('buses.dialog.description') }}</p>
+          <fieldset [disabled]="busy()">
+            <legend class="visually-hidden">{{ t('buses.dialog.details') }}</legend>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('buses.registration') }}</mat-label>
+              <input
+                matInput
+                formControlName="registrationNumber"
+                maxlength="32"
+                autocomplete="off"
+                dir="auto"
+              />
+              <mat-hint>{{ t('buses.registrationHint') }}</mat-hint>
+              <mat-error>{{ t('buses.validation.' + fieldError('registrationNumber')) }}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('buses.capacity') }}</mat-label>
+              <input
+                matInput
+                formControlName="capacity"
+                type="number"
+                min="1"
+                max="2147483647"
+                step="1"
+                inputmode="numeric"
+              />
+              <mat-error>{{ t('buses.validation.' + fieldError('capacity')) }}</mat-error>
+            </mat-form-field>
+            <mat-checkbox formControlName="active">{{ t('buses.active') }}</mat-checkbox>
+            <p class="hint">{{ t('buses.activeHint') }}</p>
+          </fieldset>
+        }
+        @if (error(); as failure) {
+          <p class="error" role="alert">{{ t('buses.errors.' + failure.code) }}</p>
+          @if (failure.code === 'BUS_VERSION_CONFLICT') {
+            <p class="hint">{{ t('buses.dialog.reloadWarning') }}</p>
+            <button mat-stroked-button type="button" (click)="reloadLatest()" [disabled]="busy()">
+              {{ t('buses.dialog.reload') }}
+            </button>
+          }
+        }
+      </mat-dialog-content>
+      <mat-dialog-actions align="end">
+        <button
+          mat-button
+          id="bus-dialog-cancel"
+          type="button"
+          [mat-dialog-close]="false"
+          [disabled]="busy()"
+        >
+          <app-icon name="close" />{{ t('buses.dialog.cancel') }}
+        </button>
+        <button mat-flat-button type="submit" [disabled]="blocked()">
+          <app-icon [name]="mode === 'delete' ? 'delete' : 'save'" />{{
+            t(mode === 'delete' ? 'buses.dialog.confirmDelete' : 'buses.dialog.save')
+          }}
+        </button>
+      </mat-dialog-actions>
+    </form>
+    <app-loading-overlay
+      [active]="busy()"
+      [label]="t(mutation() === 'reloading' ? 'buses.dialog.reloading' : 'buses.dialog.saving')"
+    />
+  </div>
+</ng-container>

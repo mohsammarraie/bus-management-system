@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { test } from './fixtures';
 import { expect, Page } from '@playwright/test';
 
@@ -25,6 +26,58 @@ test('opens the overview and supports navigation and nested-route reload', async
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Workspace preferences');
   expect(errors).toEqual([]);
+});
+
+test('page navigation shows the shared loading overlay until the lazy page is ready', async ({
+  page,
+}, info) => {
+  await page.goto('/overview');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Every trip, in view.');
+  let resume!: () => void;
+  const pending = new Promise<void>((resolve) => (resume = resolve));
+  let chunkRequested!: () => void;
+  const started = new Promise<void>((resolve) => (chunkRequested = resolve));
+  await page.route('**/*.js', async (route) => {
+    const response = await route.fetch();
+    // The unique preview marker identifies this lazy page in both dev and production bundles.
+    if ((await response.text()).includes('number-preview')) {
+      chunkRequested();
+      await pending;
+    }
+    await route.fulfill({ response });
+  });
+  try {
+    await navigateToPreferences(page);
+    await started;
+    const overlay = page.locator('main > app-loading-overlay');
+    await expect(overlay).toHaveClass(/active/);
+    await expect(overlay).toBeVisible();
+    await expect(overlay).toHaveText('Loading page…');
+    await expect(overlay).toHaveAttribute('role', 'status');
+    await expect(overlay).toHaveAttribute('aria-live', 'polite');
+    await expect(page.locator('main > div')).toHaveAttribute('aria-busy', 'true');
+    const audit = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
+      .analyze();
+    await info.attach('axe-page-navigation-loading', {
+      body: Buffer.from(
+        JSON.stringify({ violations: audit.violations, manualReview: audit.incomplete }),
+      ),
+      contentType: 'application/json',
+    });
+    expect(audit.violations.map((violation) => violation.id)).toEqual([]);
+    resume();
+    await expect(page).toHaveURL(/\/preferences$/);
+    await expect(overlay).not.toHaveClass(/active/);
+    await expect(page.locator('main > div')).toHaveAttribute('aria-busy', 'false');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Workspace preferences');
+    await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+    await expect(overlay).toHaveCSS('pointer-events', 'none');
+    await page.getByRole('radio', { name: 'Dark', exact: true }).check();
+    await expect(page.getByRole('radio', { name: 'Dark', exact: true })).toBeChecked();
+  } finally {
+    resume();
+  }
 });
 
 test('switches language in place, formats examples and restores the choice after reload', async ({

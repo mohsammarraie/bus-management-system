@@ -1,0 +1,32 @@
+// Place inside a positioned parent. The overlay never changes document flow or focus.
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 12px;
+  pointer-events: none;
+}
+:host(.active) {
+  background: color-mix(in srgb, var(--app-color-surface) 75%, transparent);
+  cursor: progress;
+  pointer-events: auto;
+}
+.indicator {
+  position: sticky;
+  inset-block: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-inline-size: 100%;
+  padding: 20px;
+  border: 1px solid var(--app-color-border);
+  border-radius: 12px;
+  background: var(--app-color-surface);
+  color: var(--app-color-text);
+  text-align: center;
+}

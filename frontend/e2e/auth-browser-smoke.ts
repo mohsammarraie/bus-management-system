@@ -61,6 +61,62 @@ if (!base || !password)
   throw new Error('The isolated Compose smoke must provide base URL and demo password');
 const browser = await chromium.launch();
 
+async function checkBuses(page: Page, base: string) {
+  await page.goto(base + '/buses');
+  await expect(page.locator('tbody tr')).toHaveCount(20);
+  await page.screenshot({ path: 'test-results/real-buses-table.png', fullPage: true });
+  const registration = 'ANGULAR-' + randomUUID().slice(0, 8);
+  await page.getByRole('button', { name: 'Add bus', exact: true }).click();
+  await expect(page.getByRole('dialog').getByRole('textbox')).toBeFocused();
+  await page
+    .getByRole('dialog')
+    .getByRole('textbox', { name: 'Registration number' })
+    .fill(registration);
+  await page.getByRole('dialog').getByRole('spinbutton').fill('42');
+  await page.screenshot({ path: 'test-results/real-buses-dialog.png' });
+  const created = page.waitForResponse(
+    (response) =>
+      response.url() === base + '/api/v1/buses' && response.request().method() === 'POST',
+  );
+  await page.getByRole('dialog').getByRole('button', { name: 'Save bus', exact: true }).click();
+  const response = await created;
+  expect(response.status()).toBe(201);
+  const csrf = (await page.context().cookies(base)).find((cookie) => cookie.name === 'XSRF-TOKEN');
+  expect(response.request().headers()['x-xsrf-token']).toBe(csrf?.value);
+  const bus = await response.json();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('searchbox', { name: 'Search registration' }).fill(registration);
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Edit ' + registration, exact: true }).click();
+  await page.getByRole('dialog').getByRole('spinbutton').fill('43');
+  await page.getByRole('dialog').getByRole('checkbox', { name: 'Active', exact: true }).uncheck();
+  const updated = page.waitForResponse(
+    (response) =>
+      response.url() === base + '/api/v1/buses/' + bus.id && response.request().method() === 'PUT',
+  );
+  await page.getByRole('dialog').getByRole('button', { name: 'Save bus', exact: true }).click();
+  const changed = await updated;
+  expect(changed.status()).toBe(200);
+  expect(await changed.json()).toMatchObject({ active: false, capacity: 43, version: 1 });
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('tbody')).toContainText('Inactive');
+  await page.getByRole('button', { name: 'Delete ' + registration, exact: true }).click();
+  const deleted = page.waitForResponse(
+    (response) =>
+      response.url().startsWith(base + '/api/v1/buses/' + bus.id + '?') &&
+      response.request().method() === 'DELETE',
+  );
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Delete permanently', exact: true })
+    .click();
+  expect((await deleted).status()).toBe(204);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText('No buses match your search or filters.')).toBeVisible();
+  await page.goto(base + '/account');
+}
+
 async function checkSwagger(page: Page, base: string) {
   await page.goto(base + '/api/docs');
   await expect(page.locator('.swagger-ui .info .title')).toContainText('Bus Management System API');
@@ -197,7 +253,10 @@ try {
         path: `test-results/real-account-${entry.role}.png`,
         fullPage: true,
       });
-      if (entry.role === 'admin' && preference === 'light') await checkSwagger(page, base);
+      if (entry.role === 'admin' && preference === 'light') {
+        await checkBuses(page, base);
+        await checkSwagger(page, base);
+      }
       await page.getByRole('button', { name: entry.logout, exact: true }).click();
       await page.waitForURL(base + '/overview');
       await expect(page.getByRole('link', { name: entry.login, exact: true })).toBeVisible();

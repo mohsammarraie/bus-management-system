@@ -1,0 +1,210 @@
+<ng-container *transloco="let t">
+  <div class="heading">
+    <div>
+      <h1 id="page-title" class="page-title" tabindex="-1">{{ t('nav.buses') }}</h1>
+      <p class="page-intro">{{ t('buses.intro') }}</p>
+    </div>
+    <button #addBus mat-flat-button type="button" (click)="openDialog('create', null, $event)">
+      <app-icon name="plus" />{{ t('buses.add') }}
+    </button>
+  </div>
+  <form
+    class="filters"
+    [formGroup]="filters"
+    (ngSubmit)="search()"
+    [attr.aria-label]="t('buses.filters')"
+  >
+    <mat-form-field appearance="outline">
+      <mat-label>{{ t('buses.search') }}</mat-label>
+      <input
+        matInput
+        type="search"
+        formControlName="q"
+        maxlength="100"
+        autocomplete="off"
+        dir="auto"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ t('buses.status') }}</mat-label>
+      <mat-select formControlName="active">
+        <mat-option value="all">{{ t('buses.all') }}</mat-option>
+        <mat-option value="true">{{ t('buses.active') }}</mat-option>
+        <mat-option value="false">{{ t('buses.inactive') }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div class="filter-actions">
+      <button mat-flat-button type="submit">
+        <app-icon name="search" />{{ t('buses.submitSearch') }}
+      </button>
+      <button mat-stroked-button type="button" (click)="resetFilters()">
+        {{ t('buses.resetFilters') }}
+      </button>
+      <button
+        mat-icon-button
+        type="button"
+        (click)="refresh()"
+        [disabled]="loading()"
+        [attr.aria-label]="t('buses.refresh')"
+        [matTooltip]="t('buses.refresh')"
+      >
+        <app-icon name="refresh" />
+      </button>
+    </div>
+  </form>
+  <div class="feedback" role="status" aria-live="polite" aria-atomic="true">
+    @if (loading()) {
+      {{ t('buses.loading') }}
+    } @else if (!error()) {
+      {{ t('buses.results', { total: language.formatNumber(total()) }) }}
+    }
+  </div>
+  @if (error(); as failure) {
+    <div class="error-panel" role="alert">
+      <p>{{ t('buses.errors.' + failure.code) }}</p>
+      <button mat-button type="button" (click)="refresh()">{{ t('auth.retry') }}</button>
+    </div>
+  }
+  <p class="table-hint" id="bus-table-hint">{{ t('buses.tableHint') }}</p>
+  <div class="results-panel">
+    <section
+      class="table-scroll bus-results"
+      tabindex="0"
+      [attr.aria-label]="t('buses.tableRegion')"
+      aria-describedby="bus-table-hint"
+      [attr.aria-busy]="loading()"
+    >
+      <table
+        mat-table
+        [dataSource]="rows()"
+        matSort
+        [matSortActive]="query().sort"
+        [matSortDirection]="query().direction"
+        [matSortDisableClear]="true"
+        (matSortChange)="sortChanged($event)"
+      >
+        <caption>
+          {{
+            t('buses.tableCaption')
+          }}
+        </caption>
+        <ng-container matColumnDef="registrationNumber">
+          <th
+            mat-header-cell
+            scope="col"
+            *matHeaderCellDef
+            mat-sort-header
+            [sortActionDescription]="t('buses.sortBy', { field: t('buses.registration') })"
+            [attr.aria-label]="t('buses.registration')"
+          >
+            <span class="desktop-label">{{ t('buses.registration') }}</span
+            ><span class="mobile-label">{{ t('buses.registrationShort') }}</span>
+          </th>
+          <td mat-cell *matCellDef="let bus">
+            <bdi>{{ bus.registrationNumber }}</bdi>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="capacity">
+          <th
+            mat-header-cell
+            scope="col"
+            *matHeaderCellDef
+            mat-sort-header
+            [sortActionDescription]="t('buses.sortBy', { field: t('buses.capacity') })"
+            [attr.aria-label]="t('buses.capacity')"
+          >
+            <span class="desktop-label">{{ t('buses.capacity') }}</span
+            ><span class="mobile-label">{{ t('buses.seats') }}</span>
+          </th>
+          <td mat-cell *matCellDef="let bus">{{ language.formatNumber(bus.capacity) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="active">
+          <th
+            mat-header-cell
+            scope="col"
+            *matHeaderCellDef
+            mat-sort-header
+            [sortActionDescription]="t('buses.sortBy', { field: t('buses.status') })"
+          >
+            {{ t('buses.status') }}
+          </th>
+          <td mat-cell *matCellDef="let bus">
+            <span class="status" [class.inactive]="!bus.active">{{
+              t(bus.active ? 'buses.active' : 'buses.inactive')
+            }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell scope="col" *matHeaderCellDef>
+            <span class="actions-label">{{ t('buses.actions') }}</span>
+          </th>
+          <td mat-cell *matCellDef="let bus">
+            @if (compact()) {
+              <button
+                mat-icon-button
+                type="button"
+                [disabled]="loading()"
+                [matMenuTriggerFor]="busActionsMenu"
+                [matMenuTriggerData]="{ bus: bus, trigger: actionTrigger }"
+                #actionTrigger="matMenuTrigger"
+                [attr.aria-label]="t('buses.actionsFor', { registration: bus.registrationNumber })"
+                [matTooltip]="t('buses.actions')"
+              >
+                <app-icon name="more" />
+              </button>
+            } @else {
+              <div class="row-actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  [disabled]="loading()"
+                  (click)="openDialog('edit', bus, $event)"
+                  [attr.aria-label]="t('buses.editBus', { registration: bus.registrationNumber })"
+                  [matTooltip]="t('buses.edit')"
+                >
+                  <app-icon name="edit" />
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  [disabled]="loading()"
+                  (click)="openDialog('delete', bus, $event)"
+                  [attr.aria-label]="t('buses.deleteBus', { registration: bus.registrationNumber })"
+                  [matTooltip]="t('buses.delete')"
+                >
+                  <app-icon name="delete" />
+                </button>
+              </div>
+            }
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr class="bus-entry" mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+    </section>
+    <app-loading-overlay [active]="loading()" [label]="t('buses.loading')" [announce]="false" />
+  </div>
+  @if (!loading() && !error() && rows().length === 0) {
+    <p class="empty">{{ t('buses.empty') }}</p>
+  }
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="query().page"
+    [pageSize]="query().size"
+    [pageSizeOptions]="[10, 20, 50, 100]"
+    [showFirstLastButtons]="true"
+    [disabled]="loading()"
+    [attr.aria-label]="t('buses.paging.label')"
+    (page)="pageChanged($event)"
+  />
+  <mat-menu #busActionsMenu="matMenu" [aria-label]="t('buses.actions')">
+    <ng-template matMenuContent let-bus="bus" let-trigger="trigger">
+      <button mat-menu-item (click)="openDialog('edit', bus, $event, trigger)">
+        <app-icon name="edit" /><span>{{ t('buses.edit') }}</span>
+      </button>
+      <button mat-menu-item (click)="openDialog('delete', bus, $event, trigger)">
+        <app-icon name="delete" /><span>{{ t('buses.delete') }}</span>
+      </button>
+    </ng-template>
+  </mat-menu>
+</ng-container>

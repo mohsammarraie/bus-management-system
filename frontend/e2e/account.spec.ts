@@ -31,7 +31,9 @@ test('anonymous controls preserve the selected language for hosted login and sig
   );
   await page.goto('/account');
   await expect(page).toHaveURL(/\/overview$/);
-  await expect(page.getByRole('status')).toHaveText('سجّل الدخول لفتح هذه الصفحة.');
+  await expect(page.locator('.session-notice').getByRole('status')).toHaveText(
+    'سجّل الدخول لفتح هذه الصفحة.',
+  );
 });
 
 for (const role of ['PASSENGER', 'DRIVER', 'ADMIN']) {
@@ -69,7 +71,7 @@ test('an expired session removes privileged navigation and offers login without 
   const nav = await navigation(page);
   await nav.getByRole('link', { name: 'Administration', exact: true }).click();
   await expect(page).toHaveURL(/\/overview$/);
-  await expect(page.getByRole('status')).toHaveText(
+  await expect(page.locator('.session-notice').getByRole('status')).toHaveText(
     'Your session has ended. Log in again to continue.',
   );
   await expect(page.getByRole('link', { name: 'Log in', exact: true })).toBeVisible();
@@ -78,7 +80,7 @@ test('an expired session removes privileged navigation and offers login without 
 test('backend outage is distinct from anonymous state and can be retried', async ({ page }) => {
   await page.route('**/api/auth/me', (route) => route.fulfill({ status: 503, json: {} }));
   await page.goto('/overview');
-  await expect(page.getByRole('status')).toHaveText(
+  await expect(page.locator('.session-notice').getByRole('status')).toHaveText(
     'We could not check your session. Check your connection and try again.',
   );
   await account(page, ['DRIVER']);
@@ -86,7 +88,7 @@ test('backend outage is distinct from anonymous state and can be retried', async
   await expect(
     page.getByRole('link', { name: 'My account: demo-user', exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(page.locator('.session-notice').getByRole('status')).toHaveCount(0);
 });
 
 test('keyboard logout uses a fresh CSRF form token and a browser POST', async ({ page }) => {
@@ -151,7 +153,9 @@ test('login failures display a translated message and logout preparation failure
   page,
 }) => {
   await page.goto('/overview?auth=failed');
-  await expect(page.getByRole('status')).toHaveText('Login was not completed. Please try again.');
+  await expect(page.locator('.session-notice').getByRole('status')).toHaveText(
+    'Login was not completed. Please try again.',
+  );
   await account(page, ['DRIVER']);
   await page.goto('/account');
   const logout = page.getByRole('button', { name: 'Log out', exact: true });
@@ -169,7 +173,7 @@ test('login failures display a translated message and logout preparation failure
   });
   await page.route('**/api/auth/csrf', (route) => route.fulfill({ status: 503, json: {} }));
   await logout.click();
-  await expect(page.getByRole('status')).toHaveText(
+  await expect(page.locator('.session-notice').getByRole('status')).toHaveText(
     'We could not start logout. Check your connection and try again.',
   );
   await expect(logout).toBeEnabled();

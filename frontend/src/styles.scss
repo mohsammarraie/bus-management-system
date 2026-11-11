@@ -61,4 +61,8 @@ a {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+  app-loading-overlay mat-spinner svg,
+  app-loading-overlay mat-spinner circle {
+    animation: none !important;
+  }
 }

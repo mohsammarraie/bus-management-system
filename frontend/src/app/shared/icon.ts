@@ -9,6 +9,13 @@ const paths = {
   arrow: 'M4 12h16M14 6l6 6-6 6',
   menu: 'M4 6h16M4 12h16M4 18h16',
   close: 'm5 5 14 14M19 5 5 19',
+  plus: 'M12 5v14M5 12h14',
+  search: 'M21 21l-5-5M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
+  edit: 'M17 3a2.8 2.8 0 0 1 4 4L7 21H3v-4L17 3ZM15 5l4 4',
+  delete: 'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7',
+  save: 'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2ZM7 3v6h10V3M7 21v-8h10v8',
+  more: 'M13 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0M13 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0M13 19a1 1 0 1 1-2 0 1 1 0 0 1 2 0',
+  refresh: 'M3 11a9 9 0 0 1 15.36-6.36L21 7M21 3v4h-4M21 13a9 9 0 0 1-15.36 6.36L3 17M7 17H3v4',
 } as const;
 export type IconName = keyof typeof paths;
 

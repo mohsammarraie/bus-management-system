@@ -20,10 +20,15 @@
         <mat-card appearance="outlined" class="feature-card">
           <div class="card-top">
             <span class="feature-icon"><app-icon [name]="feature.icon" /></span
-            ><span class="soon">{{ t('overview.soon') }}</span>
+            ><span class="soon">{{
+              t(feature.key === 'buses' ? 'buses.management' : 'overview.soon')
+            }}</span>
           </div>
           <h3>{{ t('overview.' + feature.key + 'Title') }}</h3>
           <p>{{ t('overview.' + feature.key + 'Body') }}</p>
+          @if (feature.key === 'buses' && auth.hasAnyRole('ADMIN')) {
+            <a mat-button routerLink="/buses">{{ t('nav.buses') }}</a>
+          }
         </mat-card>
       }
     </div>

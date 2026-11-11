@@ -2,7 +2,8 @@
   "app": {
     "name": "Bus Management",
     "workspace": "Transport workspace",
-    "preview": "Workspace preview"
+    "preview": "Workspace preview",
+    "loadingPage": "Loading page…"
   },
   "nav": {
     "label": "Main navigation",
@@ -85,7 +86,7 @@
       },
       "admin": {
         "title": "Administration",
-        "body": "Administrator access is ready. Bus and route management tools are coming soon."
+        "body": "Manage buses here. Route and schedule tools will follow."
       },
       "driver": {
         "title": "Driver workspace",
@@ -100,5 +101,89 @@
     "dark": "Dark",
     "system": "System",
     "saved": "Your choice is saved on this browser and also applies to login and registration."
+  },
+  "buses": {
+    "intro": "Manage bus registrations, capacity and availability.",
+    "add": "Add bus",
+    "filters": "Filter buses",
+    "search": "Search registration",
+    "status": "Status",
+    "all": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive",
+    "refresh": "Refresh list",
+    "loading": "Loading buses…",
+    "registration": "Registration number",
+    "registrationHint": "Up to 32 characters; no surrounding spaces.",
+    "capacity": "Passenger capacity",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editBus": "Edit {{registration}}",
+    "deleteBus": "Delete {{registration}}",
+    "activeHint": "Inactive buses remain in the system. You can reactivate them later.",
+    "empty": "No buses match your search or filters.",
+    "tableRegion": "Buses table",
+    "tableCaption": "Registered buses",
+    "tableHint": "Select a column heading to change sorting.",
+    "sortBy": "Sort by {{field}}",
+    "sorted": "Sorted by {{field}}, {{direction}}.",
+    "asc": "ascending",
+    "desc": "descending",
+    "management": "Administrator tool",
+    "dialog": {
+      "create": "Add bus",
+      "edit": "Edit bus",
+      "delete": "Delete bus",
+      "description": "Enter the bus details. Registration number and capacity are required.",
+      "details": "Bus details",
+      "deleteWarning": "Permanently delete this bus? You can deactivate it instead by editing its active status.",
+      "save": "Save bus",
+      "confirmDelete": "Delete permanently",
+      "cancel": "Cancel",
+      "reload": "Reload latest bus",
+      "reloadWarning": "Reloading replaces your unsaved form values. Review the latest details before saving again.",
+      "saving": "Saving change…",
+      "reloading": "Loading latest bus…"
+    },
+    "validation": {
+      "REQUIRED": "This field is required.",
+      "TOO_LONG": "Use at most 32 characters.",
+      "FORMAT": "Remove surrounding spaces and control characters.",
+      "POSITIVE": "Enter a capacity of at least 1.",
+      "INTEGER": "Enter a whole number.",
+      "MAX_VALUE": "Enter a number no greater than 2,147,483,647."
+    },
+    "errors": {
+      "UNAVAILABLE": "We could not confirm the result. Close this dialog if open and refresh the list before trying again.",
+      "INVALID_REQUEST": "The request was not accepted. Check the details and refresh the list.",
+      "VALIDATION_FAILED": "Some details are invalid. Check the registration number and capacity.",
+      "AUTHENTICATION_REQUIRED": "Your session has ended. Log in again to continue.",
+      "ACCESS_DENIED": "This request was not authorized. Close the dialog and refresh the page to check your session.",
+      "BUS_NOT_FOUND": "This bus no longer exists. Close the dialog and refresh the list.",
+      "BUS_REGISTRATION_CONFLICT": "That registration number is already in use. Choose another.",
+      "BUS_VERSION_CONFLICT": "Someone changed this bus. Reload the latest details and review them before trying again.",
+      "BUS_IN_USE": "This bus is referenced elsewhere and cannot be deleted. Deactivate it instead."
+    },
+    "saved": {
+      "create": "Bus created.",
+      "update": "Bus updated.",
+      "delete": "Bus deleted."
+    },
+    "paging": {
+      "label": "Bus pagination",
+      "size": "Buses per page",
+      "next": "Next page",
+      "previous": "Previous page",
+      "first": "First page",
+      "last": "Last page",
+      "range": "{{start}}–{{end}} of {{total}}"
+    },
+    "results": "{{total}} buses found.",
+    "submitSearch": "Search",
+    "resetFilters": "Reset filters",
+    "actionsFor": "Actions for {{registration}}",
+    "registrationShort": "Reg. no.",
+    "seats": "Seats"
   }
 }
