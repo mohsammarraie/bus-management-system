@@ -1,5 +1,6 @@
-.dialog-surface {
+.dialog-body {
   position: relative;
+  min-block-size: 160px;
 }
 mat-form-field {
   display: block;

@@ -7,22 +7,14 @@
 - Angular/Material shell, en/de/ar and RTL, saved Light/Dark/System appearance shared with Keycloak.
 - Backend-managed Keycloak OIDC/session/CSRF, passenger signup, role guards and controlled ADMIN/DRIVER assignments.
 - ADMIN [buses API and Angular screen](buses-api.md), NgRx server-page state, validation, optimistic locking and secured Swagger.
+- URL-persisted bus queries and selected editor, including reloads, copied links and Back/Forward; editors restore saved values only.
 - Opt-in synthetic buses; Docker images/Compose; independent backend, frontend and container CI.
 
 ## Current branch
 
-`feat/angular-buses` adds the buses UI and a shared loading overlay for page navigation, tables and dialogs. Local formatting/lint/types, 43 unit tests, 126 browser cases and the production build pass; earlier image/Compose checks are recorded in the buses API document. Changes remain uncommitted for review; hosted checks await publication.
+`feat/bus-query-parameters` adds URL-backed bus queries, `edit=<busId>` editor restoration and safe parameter parsing. See [verification](buses-api.md#validation). Changes remain uncommitted for review; hosted checks await publication.
 
-## Next: preserve bus queries in the URL
-
-After the current buses feature is reviewed and merged, use Angular Router query parameters for the applied search, status filter, page, page size, sort field and direction (`q`, `active`, `page`, `size`, `sort`, `direction`).
-
-- Restore validated URL values into NgRx before the first request; use safe defaults for missing or invalid parameters.
-- Keep unsent filter edits local. Enter/Search applies them to the URL; sorting and pagination update the URL as well. Reset clears search/status and returns to page one.
-- Reloading or opening a copied URL restores the same query. Browser Back/Forward restores the controls and results without duplicate requests or navigation loops.
-- Add focused browser checks for reloads, direct links, Back/Forward, Reset and invalid parameters. No backend contract changes are required.
-
-## Then: shared breakpoints and typography
+## Next: shared breakpoints and typography
 
 Centralize repeated responsive breakpoints in shared SCSS variables/mixins and keep Angular `BreakpointObserver` thresholds aligned. Consolidate repeated font sizes through Material typography and a small shared, rem-based type scale; keep component-specific layout local. Preserve the current appearance and verify mobile/desktop reflow, zoom and en/de/ar layouts.
 

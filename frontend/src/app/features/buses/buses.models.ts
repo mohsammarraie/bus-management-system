@@ -29,6 +29,10 @@ export type BusCommand =
   | { kind: 'update'; bus: Bus; draft: BusDraft }
   | { kind: 'delete'; bus: Bus };
 export type BusDialogMode = 'create' | 'edit' | 'delete';
+export interface BusDialogData {
+  mode: BusDialogMode;
+  id?: number;
+}
 export type BusErrorCode =
   | 'UNAVAILABLE'
   | 'INVALID_REQUEST'

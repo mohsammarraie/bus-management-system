@@ -1,9 +1,10 @@
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { provideEffects } from '@ngrx/effects';
 import { provideState, provideStore, Store } from '@ngrx/store';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BusesApi } from './buses.api';
 import { BusesEffects } from './buses.effects';
 import { Bus, BusPage, DEFAULT_BUS_QUERY } from './buses.models';
@@ -21,6 +22,7 @@ beforeEach(() => {
     providers: [
       provideHttpClient(),
       provideHttpClientTesting(),
+      provideRouter([]),
       provideStore(),
       provideState(feature),
       provideEffects(BusesEffects),
@@ -29,15 +31,17 @@ beforeEach(() => {
   });
   store = TestBed.inject(Store);
   http = TestBed.inject(HttpTestingController);
+  vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 });
 afterEach(() => {
   http.verify();
+  vi.restoreAllMocks();
   document.cookie = 'XSRF-TOKEN=; Max-Age=0; Path=/';
 });
 
 describe('buses server state and effects', () => {
   it('cancels superseded searches and sends literal query values through HttpParams', () => {
-    store.dispatch(actions.pageOpened());
+    store.dispatch(actions.pageOpened({ query: DEFAULT_BUS_QUERY }));
     const old = list();
     store.dispatch(
       actions.queryChanged({ query: { ...DEFAULT_BUS_QUERY, q: '%_\\', active: 'false' } }),
@@ -50,7 +54,7 @@ describe('buses server state and effects', () => {
     expect(rows()).toEqual([bus]);
   });
   it('retains rows while loading, clears them on failure and permits an explicit retry', () => {
-    store.dispatch(actions.pageOpened());
+    store.dispatch(actions.pageOpened({ query: DEFAULT_BUS_QUERY }));
     list().flush(result);
     store.dispatch(actions.refreshRequested());
     expect(rows()).toEqual([bus]);
@@ -64,13 +68,41 @@ describe('buses server state and effects', () => {
     list().flush(result);
     expect(rows()).toEqual([bus]);
   });
-  it('returns to the last available page when its final row disappears', () => {
+  it('corrects the URL before fetching the last available page when its final row disappears', () => {
     store.dispatch(actions.queryChanged({ query: { ...DEFAULT_BUS_QUERY, page: 2 } }));
     list().flush({ ...result, content: [], page: 2, totalElements: 40, totalPages: 2 });
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/buses'], {
+      queryParams: { q: null, active: null, page: 1, size: null, sort: null, direction: null },
+      queryParamsHandling: 'merge',
+      preserveFragment: true,
+      replaceUrl: true,
+    });
+    http.expectNone('/api/v1/buses');
+    // Applying the new route is the single source of the next list request.
+    store.dispatch(actions.queryChanged({ query: { ...DEFAULT_BUS_QUERY, page: 1 } }));
     const adjusted = list();
     expect(adjusted.request.params.get('page')).toBe('1');
     adjusted.flush({ ...result, page: 1 });
     expect(store.selectSignal(feature.selectQuery)().page).toBe(1);
+  });
+  it('uses the restored query for the first request without fetching the defaults first', () => {
+    store.dispatch(
+      actions.pageOpened({
+        query: {
+          ...DEFAULT_BUS_QUERY,
+          q: 'RESTORED',
+          active: 'false',
+          page: 3,
+          size: 10,
+        },
+      }),
+    );
+    const request = list();
+    expect(request.request.params.get('q')).toBe('RESTORED');
+    expect(request.request.params.get('active')).toBe('false');
+    expect(request.request.params.get('page')).toBe('3');
+    expect(request.request.params.get('size')).toBe('10');
+    request.flush({ ...result, page: 3, size: 10 });
   });
   it('allows only one in-flight mutation and never retries a duplicate registration', () => {
     const draft = { registrationNumber: 'TEST-7', capacity: 40, active: true };
@@ -108,7 +140,7 @@ describe('buses server state and effects', () => {
     expect(store.selectSignal(feature.selectMutation)()).toBe('succeeded');
   });
   it('clears data and cancels pending work when leaving, then loads on re-entry', () => {
-    store.dispatch(actions.pageOpened());
+    store.dispatch(actions.pageOpened({ query: DEFAULT_BUS_QUERY }));
     list().flush(result);
     store.dispatch(actions.refreshRequested());
     const pending = list();
@@ -116,7 +148,7 @@ describe('buses server state and effects', () => {
     expect(pending.cancelled).toBe(true);
     expect(rows()).toEqual([]);
     expect(store.selectSignal(feature.selectSelectedBus)()).toBeNull();
-    store.dispatch(actions.pageOpened());
+    store.dispatch(actions.pageOpened({ query: DEFAULT_BUS_QUERY }));
     list().flush(result);
     expect(rows()).toEqual([bus]);
   });
@@ -134,7 +166,7 @@ describe('buses server state and effects', () => {
     store.dispatch(actions.pageLeft());
     expect(pending.cancelled).toBe(true);
     expect(store.selectSignal(feature.selectSelectedBus)()).toBeNull();
-    store.dispatch(actions.pageOpened());
+    store.dispatch(actions.pageOpened({ query: DEFAULT_BUS_QUERY }));
     list().flush(result);
     http.expectNone((request) => request.method === 'DELETE');
   });
@@ -146,5 +178,16 @@ describe('buses server state and effects', () => {
     expect(pending.cancelled).toBe(true);
     expect(store.selectSignal(feature.selectSelectedBus)()).toBeNull();
     expect(store.selectSignal(feature.selectMutation)()).toBe('idle');
+  });
+  it('cancels a pending save on dialog navigation so its late response cannot close a different editor', () => {
+    store.dispatch(actions.dialogOpened({ bus }));
+    store.dispatch(actions.saveRequested({ command: { kind: 'delete', bus } }));
+    const pending = http.expectOne('/api/v1/buses/7?version=2');
+    store.dispatch(actions.dialogClosed());
+    expect(pending.cancelled).toBe(true);
+    store.dispatch(actions.dialogOpened({ bus: { ...bus, id: 8 } }));
+    expect(store.selectSignal(feature.selectSelectedBus)()?.id).toBe(8);
+    expect(store.selectSignal(feature.selectMutation)()).toBe('idle');
+    http.expectNone((request) => request.method === 'DELETE');
   });
 });

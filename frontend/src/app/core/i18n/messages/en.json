@@ -144,7 +144,8 @@
       "reload": "Reload latest bus",
       "reloadWarning": "Reloading replaces your unsaved form values. Review the latest details before saving again.",
       "saving": "Saving change…",
-      "reloading": "Loading latest bus…"
+      "reloading": "Loading latest bus…",
+      "loadFailed": "Could not load this bus. Check your connection and try again."
     },
     "validation": {
       "REQUIRED": "This field is required.",
