@@ -18,7 +18,7 @@ p {
 }
 .hint {
   color: var(--app-color-muted);
-  font-size: 14px;
+  font-size: var(--app-font-body-small);
 }
 .error {
   color: var(--mat-sys-error);

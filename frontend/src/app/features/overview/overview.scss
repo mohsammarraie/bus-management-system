@@ -1,3 +1,4 @@
+@use '../../../styles/breakpoints';
 .hero {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -7,7 +8,7 @@
   padding-bottom: 30px;
 }
 h1 {
-  font-size: clamp(38px, 4.3vw, 62px);
+  font-size: var(--app-font-hero);
   line-height: 1.1;
   letter-spacing: -2px;
   white-space: pre-line;
@@ -16,7 +17,7 @@ h1 {
 }
 .intro {
   max-width: 420px;
-  font-size: 16px;
+  font-size: var(--app-font-body);
   line-height: 1.8;
   color: var(--app-color-muted);
   margin-bottom: 26px;
@@ -35,13 +36,13 @@ h1 {
   line-height: 1.5;
 }
 .section-heading h2 {
-  font-size: 22px;
+  font-size: var(--app-font-heading);
   letter-spacing: -0.5px;
   margin-bottom: 8px;
 }
 .section-heading p {
   color: var(--app-color-muted);
-  font-size: 14px;
+  font-size: var(--app-font-body-small);
   margin-top: 0;
 }
 .feature-grid {
@@ -72,23 +73,23 @@ h1 {
 }
 .soon {
   color: var(--app-color-muted);
-  font-size: 11px;
+  font-size: var(--app-font-label-small);
   padding: 5px 8px;
   border: 1px solid var(--app-color-border);
   border-radius: 6px;
 }
 h3 {
-  font-size: 17px;
+  font-size: var(--app-font-title-small);
   line-height: 1.5;
   margin: 24px 0 8px;
 }
 .feature-card p {
-  font-size: 14px;
+  font-size: var(--app-font-body-small);
   color: var(--app-color-muted);
   line-height: 1.8;
   margin: 0;
 }
-@media (max-width: 1100px) and (min-width: 960px) {
+@media (max-width: breakpoints.$narrow-desktop) and (min-width: (breakpoints.$navigation + 1px)) {
   .feature-grid {
     gap: 12px;
   }
@@ -96,7 +97,7 @@ h3 {
     padding: 18px;
   }
 }
-@media (max-width: 699px) {
+@include breakpoints.down(breakpoints.$compact) {
   .hero {
     grid-template-columns: 1fr;
     gap: 0;
@@ -107,7 +108,7 @@ h3 {
     margin-inline: auto;
   }
   h1 {
-    font-size: 44px;
+    font-size: var(--app-font-hero-compact);
   }
   .feature-grid {
     grid-template-columns: 1fr;

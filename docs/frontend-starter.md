@@ -59,10 +59,11 @@ The development proxy forwards `/api/**` to `http://127.0.0.1:8080`; change prox
 Every component uses external HTML and SCSS, including preferences, language switcher, icon, bus illustration and not-found. Component TypeScript contains behavior and metadata; local SCSS contains its layout/responsive rules. The overview delegates its decorative artwork to a feature-local BusIllustration component; the shared Icon component handles small symbols. The illustration retains inherited theme colors and stays hidden from assistive technology.
 
 - `src/styles/_theme.scss`: one global Material theme using the built-in azure/orange palettes and role overrides through `light-dark()`. The application palette uses blue `#0D86C8` and orange-gold `#F5AA00`. Light mode uses a darker primary blue with light surfaces; dark mode uses pale blue controls with dark surfaces and light text. `color-scheme` applies the selected mode to Material components, overlays and native controls. The application keeps its generic identity and its own icon.
-- `src/styles/_tokens.scss`: semantic CSS variables mapped to Material roles, shared by component styles and the decorative SVG. Colors are not repeated inside component markup/styles.
+- `src/styles/_tokens.scss`: semantic colors, the shared font family and a rem-based type scale; standard text sizes reuse Material typography roles. Component line heights and spacing remain local.
+- `src/styles/_breakpoints.scss`: named thresholds and the `down` mixin. Global styles export the compact/navigation queries as CSS properties; `core/layout/layout-queries.ts` supplies them to CDK so styles and behavior share one source.
 - `src/styles.scss`: imports the theme/tokens once, then holds resets, focus styles and shared typography. Layout spacing remains local; this is not an additional design-system framework.
 
-This organization change adds extracted files and two shared styling partials. It introduces no new dependencies or feature logic. The standalone favicon and browser theme-color metadata use matching fixed colors because they cannot inherit document CSS variables.
+Shared style modules introduce no new dependencies. The standalone favicon and browser theme-color metadata use matching fixed colors because they cannot inherit document CSS variables.
 
 ## Account state and access
 

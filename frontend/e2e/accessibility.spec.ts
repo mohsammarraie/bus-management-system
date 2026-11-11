@@ -226,3 +226,34 @@ test('German preferences reflow at 320 CSS pixels with increased text spacing', 
   // Allow subpixel scroll rounding around the footer's padded box.
   await expect(navigation.locator('.sidebar-footer')).toBeInViewport({ ratio: 0.99 });
 });
+
+for (const language of ['en', 'de', 'ar']) {
+  test(`shared typography supports doubled root text size in ${language}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.addInitScript(
+      (lang) => localStorage.setItem('bus-management.language', lang),
+      language,
+    );
+    await page.goto('/preferences');
+    const intro = page.locator('.page-intro');
+    await expect(intro).toBeVisible();
+    await expect(intro).toHaveCSS('font-size', '16px');
+    await expect(page.locator('h2').first()).toHaveCSS('font-size', '20px');
+    await expect(page.locator('.saved').first()).toHaveCSS('font-size', '13px');
+    await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+    await expect(intro).toHaveCSS('font-size', '32px');
+    await expect(page.locator('h2').first()).toHaveCSS('font-size', '40px');
+    await expect(page.locator('.saved').first()).toHaveCSS('font-size', '26px');
+    // Material controls use the same family and also scale with the root font size.
+    await expect(page.locator('mat-radio-button label').first()).toHaveCSS('font-size', '28px');
+    await expect(page.locator('mat-radio-button label').first()).toHaveCSS(
+      'font-family',
+      'Arial, Tahoma, sans-serif',
+    );
+    expect(
+      await page
+        .locator('mat-sidenav-content')
+        .evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
+    ).toBe(true);
+  });
+}

@@ -1,3 +1,4 @@
+@use '../../../styles/breakpoints';
 :host {
   display: block;
   min-inline-size: 0;
@@ -35,7 +36,7 @@ mat-form-field {
 }
 .table-hint {
   color: var(--app-color-muted);
-  font-size: 14px;
+  font-size: var(--app-font-body-small);
   line-height: 1.6;
 }
 .results-panel {
@@ -90,7 +91,7 @@ bdi {
   padding: 20px;
   text-align: center;
 }
-@media (max-width: 599px) {
+@include breakpoints.down(breakpoints.$stacked-form) {
   .heading {
     align-items: flex-start;
   }
@@ -112,7 +113,7 @@ button[mat-menu-item] app-icon {
   margin-inline-end: 8px;
   vertical-align: middle;
 }
-@media (max-width: 699px) {
+@include breakpoints.down(breakpoints.$compact) {
   table {
     table-layout: fixed;
   }

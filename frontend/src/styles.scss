@@ -1,10 +1,12 @@
+@use './styles/breakpoints';
 @use './styles/theme';
 @use './styles/tokens';
 
 html {
+  @include breakpoints.css-queries;
   color: var(--app-color-text);
   background: var(--app-color-canvas);
-  font-family: Arial, Tahoma, sans-serif;
+  font-family: var(--app-font-family);
 }
 * {
   box-sizing: border-box;
@@ -29,7 +31,7 @@ a {
   outline-offset: 4px;
 }
 .eyebrow {
-  font-size: 11px;
+  font-size: var(--app-font-label-small);
   font-weight: 700;
   letter-spacing: 1.6px;
   text-transform: uppercase;
@@ -37,13 +39,13 @@ a {
   line-height: 1.7;
 }
 .page-title {
-  font-size: clamp(30px, 4vw, 44px);
+  font-size: var(--app-font-page-title);
   line-height: 1.3;
   letter-spacing: -1px;
   margin: 16px 0;
 }
 .page-intro {
-  font-size: 16px;
+  font-size: var(--app-font-body);
   line-height: 1.8;
   color: var(--app-color-muted);
   max-width: 680px;

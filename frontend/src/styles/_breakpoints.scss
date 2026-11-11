@@ -1,0 +1,22 @@
+// Keep the existing inclusive thresholds; layout dimensions stay in component styles.
+$phone: 479px;
+$stacked-form: 599px;
+$compact: 699px;
+$navigation: 959px;
+$narrow-desktop: 1100px;
+
+@function query($max-width) {
+  @return '(max-width: #{$max-width})';
+}
+
+@mixin down($max-width) {
+  @media #{query($max-width)} {
+    @content;
+  }
+}
+
+// Angular reads these same queries instead of duplicating thresholds in TypeScript.
+@mixin css-queries {
+  --app-media-compact: #{query($compact)};
+  --app-media-navigation: #{query($navigation)};
+}

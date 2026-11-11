@@ -5,6 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { afterEach, describe, expect, it } from 'vitest';
 import { App } from './app';
+import { LAYOUT_QUERIES } from './core/layout/layout-queries';
 import { LANGUAGE_STORAGE } from './core/i18n/language.service';
 import { provideAppTranslations } from './core/i18n/translations';
 
@@ -42,6 +43,10 @@ async function setup() {
         { path: 'first', component: TestPage, canActivate: [first.guard] },
         { path: 'second', component: TestPage, canActivate: [second.guard] },
       ]),
+      {
+        provide: LAYOUT_QUERIES,
+        useValue: { compact: '(max-width: 699px)', navigation: '(max-width: 959px)' },
+      },
       provideHttpClient(),
       provideHttpClientTesting(),
       provideAppTranslations(),
