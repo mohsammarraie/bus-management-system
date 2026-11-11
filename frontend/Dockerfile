@@ -12,6 +12,8 @@ FROM caddy:2-alpine@sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c8
 ENV XDG_CONFIG_HOME=/tmp/config XDG_DATA_HOME=/tmp/data
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /workspace/dist/bus-management-system/browser /srv
+# A new named volume inherits this ownership for persistent deployment TLS data.
+RUN mkdir -p /tmp/data && chown 10001:10001 /tmp/data
 USER 10001:10001
 EXPOSE 8080
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

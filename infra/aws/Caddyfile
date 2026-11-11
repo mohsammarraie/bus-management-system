@@ -1,0 +1,70 @@
+{
+	admin off
+	http_port 8080
+	https_port 8443
+	servers {
+		protocols h1 h2
+	}
+}
+
+(proxy_headers) {
+	# Spring must not accept client-supplied Forwarded/prefix headers.
+	header_up -Forwarded
+	header_up -X-Forwarded-Prefix
+	header_up -X-Forwarded-Port
+}
+
+https://{$APP_HOST} {
+	root * /srv
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=86400"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+	}
+
+	handle /healthz {
+		respond "ok" 200
+	}
+	handle /api/health {
+		rewrite * /actuator/health
+		reverse_proxy backend:8080 {
+			import proxy_headers
+		}
+	}
+	@identity path /identity/realms/bus-management/* /identity/resources/*
+	handle @identity {
+		reverse_proxy keycloak:8080 {
+			import proxy_headers
+		}
+	}
+	@private path /identity* /actuator /actuator/*
+	handle @private {
+		respond 404
+	}
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy backend:8080 {
+			import proxy_headers
+		}
+	}
+	@assets path *.js *.css *.svg *.ico *.png *.woff *.woff2 *.json *.map
+	handle @assets {
+		file_server
+	}
+	handle {
+		try_files {path} /index.html
+		header Cache-Control "no-cache"
+		file_server
+	}
+}
+
+# Container-only health probe; this listener is never published.
+http://127.0.0.1:8081 {
+	handle /healthz {
+		respond "ok" 200
+	}
+	handle {
+		respond 404
+	}
+}

@@ -14,6 +14,8 @@
 /local-data/
 /exports/
 /volumes/
+# Generated deployment credentials and first-boot realm template
+/infra/aws/generated/
 # Build and dependency outputs
 **/build/
 **/.gradle/
