@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { LAYOUT_QUERIES } from '../../core/layout/layout-queries';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import {
   ChangeDetectionStrategy,
@@ -79,7 +80,7 @@ export class BusesPage implements OnDestroy {
   });
   protected readonly compact = toSignal(
     inject(BreakpointObserver)
-      .observe('(max-width: 699px)')
+      .observe(inject(LAYOUT_QUERIES).compact)
       .pipe(map((result) => result.matches)),
     { initialValue: false },
   );

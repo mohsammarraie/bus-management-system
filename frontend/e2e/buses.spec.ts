@@ -912,6 +912,34 @@ for (const mode of ['Edit', 'Delete'] as const) {
   });
 }
 
+test('navigation and table controls stay aligned with styles across responsive boundaries', async ({
+  page,
+}) => {
+  const state = await busesApi(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/buses');
+  await expect(page.locator('.bus-entry')).toHaveCount(20);
+  const requests = state.requests.length;
+  for (const width of [960, 959, 960, 700, 699, 700]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const navigation = page.locator('#workspace-navigation');
+    await expect(navigation).toHaveAttribute('role', width <= 959 ? 'dialog' : 'complementary');
+    await expect(page.getByRole('button', { name: 'Open navigation', exact: true })).toHaveCount(
+      width <= 959 ? 1 : 0,
+    );
+    await expect(page.locator('.topbar')).toHaveCSS(
+      'padding-inline-start',
+      width <= 959 ? '20px' : '44px',
+    );
+    const row = page.locator('.bus-entry').first();
+    await expect(row.getByRole('button')).toHaveCount(width <= 699 ? 1 : 2);
+    await expect(page.locator('th .mobile-label').first()).toBeVisible({ visible: width <= 699 });
+    await expect(page.locator('table')).toHaveCSS('table-layout', width <= 699 ? 'fixed' : 'auto');
+  }
+  // Resizing changes presentation without reloading the server-backed list.
+  expect(state.requests).toHaveLength(requests);
+});
+
 test('a 320px screen keeps all table columns and long registrations readable with keyboard-operated actions', async ({
   page,
 }) => {

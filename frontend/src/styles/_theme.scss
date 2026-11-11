@@ -12,7 +12,7 @@ html {
         primary: mat.$azure-palette,
         tertiary: mat.$orange-palette,
       ),
-      typography: Arial,
+      typography: var(--app-font-family),
       density: 0,
     )
   );

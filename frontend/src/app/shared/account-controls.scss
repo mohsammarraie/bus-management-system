@@ -7,7 +7,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--app-font-small);
   color: var(--app-color-muted);
 }
 a {

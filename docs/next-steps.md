@@ -8,17 +8,14 @@
 - Backend-managed Keycloak OIDC/session/CSRF, passenger signup, role guards and controlled ADMIN/DRIVER assignments.
 - ADMIN [buses API and Angular screen](buses-api.md), NgRx server-page state, validation, optimistic locking and secured Swagger.
 - URL-persisted bus queries and selected editor, including reloads, copied links and Back/Forward; editors restore saved values only.
+- Shared SCSS breakpoints aligned with Angular layout queries and a rem-based typography scale.
 - Opt-in synthetic buses; Docker images/Compose; independent backend, frontend and container CI.
 
 ## Current branch
 
-`feat/bus-query-parameters` adds URL-backed bus queries, `edit=<busId>` editor restoration and safe parameter parsing. See [verification](buses-api.md#validation). Changes remain uncommitted for review; hosted checks await publication.
+`refactor/shared-scss-tokens` centralizes responsive thresholds and font sizes, preserving existing layouts. Changes remain uncommitted for review; hosted checks await publication.
 
-## Next: shared breakpoints and typography
-
-Centralize repeated responsive breakpoints in shared SCSS variables/mixins and keep Angular `BreakpointObserver` thresholds aligned. Consolidate repeated font sizes through Material typography and a small shared, rem-based type scale; keep component-specific layout local. Preserve the current appearance and verify mobile/desktop reflow, zoom and en/de/ar layouts.
-
-## Afterward: routes and stops
+## Next: routes and stops
 
 Implement routes and stops, starting with the backend. Confirm the legacy use cases and define stops, localized names and ordered route stops. Add Flyway migrations, ADMIN CRUD endpoints, validation, integration tests and Swagger documentation. Follow with the Angular management screen in a separate slice.
 

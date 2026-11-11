@@ -1,5 +1,18 @@
-// Semantic app colors inherit Material roles; components own layout and spacing.
+// Shared colors and type scale; components own layout, spacing and line height.
 html {
+  --app-font-family: Arial, Tahoma, sans-serif;
+  --app-font-label-small: 0.6875rem;
+  --app-font-caption: var(--mat-sys-body-small-size);
+  --app-font-small: 0.8125rem;
+  --app-font-body-small: var(--mat-sys-body-medium-size);
+  --app-font-body: var(--mat-sys-body-large-size);
+  --app-font-title-small: 1.0625rem;
+  --app-font-section-title: 1.25rem;
+  --app-font-heading: var(--mat-sys-title-large-size);
+  --app-font-page-title: clamp(1.875rem, 4vw, 2.75rem);
+  --app-font-hero: clamp(2.375rem, 4.3vw, 3.875rem);
+  --app-font-hero-compact: 2.75rem;
+
   --app-color-primary: var(--mat-sys-primary);
   --app-color-on-primary: var(--mat-sys-on-primary);
   --app-color-soft: var(--mat-sys-primary-container);

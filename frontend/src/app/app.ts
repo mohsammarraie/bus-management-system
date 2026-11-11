@@ -1,5 +1,6 @@
 import { BidiModule } from '@angular/cdk/bidi';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { LAYOUT_QUERIES } from './core/layout/layout-queries';
 import {
   ChangeDetectionStrategy,
   afterNextRender,
@@ -50,7 +51,7 @@ export class App {
   protected readonly auth = inject(AuthService);
   protected readonly handset = toSignal(
     inject(BreakpointObserver)
-      .observe('(max-width: 959px)')
+      .observe(inject(LAYOUT_QUERIES).navigation)
       .pipe(map((state) => state.matches)),
     { initialValue: false },
   );

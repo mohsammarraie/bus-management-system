@@ -1,3 +1,4 @@
+@use '../../../styles/breakpoints';
 .preferences-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -16,7 +17,7 @@ mat-card {
   border-radius: 18px;
 }
 h2 {
-  font-size: 20px;
+  font-size: var(--app-font-section-title);
   line-height: 1.5;
   margin: 0 0 12px;
 }
@@ -27,22 +28,22 @@ p {
 .saved {
   border-top: 1px solid var(--app-color-border);
   padding-top: 20px;
-  font-size: 13px;
+  font-size: var(--app-font-small);
 }
 dl {
   margin-bottom: 0;
 }
 dt {
   color: var(--app-color-muted);
-  font-size: 13px;
+  font-size: var(--app-font-small);
   margin-top: 20px;
 }
 dd {
   margin: 6px 0 0;
-  font-size: 20px;
+  font-size: var(--app-font-section-title);
   overflow-wrap: anywhere;
 }
-@media (max-width: 699px) {
+@include breakpoints.down(breakpoints.$compact) {
   .preferences-grid {
     grid-template-columns: 1fr;
   }
