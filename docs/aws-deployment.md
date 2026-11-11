@@ -31,7 +31,7 @@ flowchart TD
 
 Require all relevant CI checks to pass for the same `main` commit. Record that commit, matching deployment configuration and the three tested image digests as the release; retain the preceding release for rollback. Restrict publication/deployment roles to the repository, approved branch/environment and required AWS resources. Use temporary OIDC credentials; runtime secrets stay on the server. Deployment waits for the remote command and health checks before reporting success. Migration recovery remains a separate decision from image rollback.
 
-Full `smoke-aws.py` verification runs on GitHub runners or a development machine. EC2 runs the application and lightweight deployment health checks, without a second disposable test stack. `prepare.py` is initial setup, not a step that regenerates credentials on every deployment.
+Full `smoke-aws.py` verification is a manual local check before deployment or after infrastructure changes; it is excluded from routine CI. EC2 runs the application and lightweight deployment health checks, without a second disposable test stack. `prepare.py` is initial setup, not a step that regenerates credentials on every deployment.
 
 ## Images and configuration
 
@@ -117,7 +117,7 @@ For an application update, edit only the three image references in the protected
 
 ## Local verification and follow-up
 
-After building cached local images, `python3 scripts/smoke-aws.py` uses a unique project, synthetic users, random loopback ports and a trusted local test CA. It checks the ARM64/digest/no-build deployment model, fresh realm, HTTPS/session cookies, private routes, database role isolation, OIDC/roles/CRUD, application/identity dump restoration and database/identity/certificate persistence, then removes only its resources. Container CI runs it after the existing local-stack smoke check. Runtime checks use the host's native architecture; they do not prove Graviton capacity, public DNS/ACME issuance or AWS connectivity. The normal local stack and `.env` are not used.
+Before deployment or after changing deployment configuration, build the local images and run `python3 scripts/smoke-aws.py` manually. It uses a unique project, synthetic users, random loopback ports and a trusted local test CA to check the ARM64/digest/no-build model, fresh realm, HTTPS/session cookies, private routes, database role isolation, OIDC/roles/CRUD, application/identity dump restoration and database/identity/certificate persistence, then removes only its resources. It is not run by Container CI. Runtime checks use the host's native architecture; they do not prove Graviton capacity, public DNS/ACME issuance or AWS connectivity. The normal local stack and `.env` are not used.
 
 Before public launch, complete [private vulnerability reporting](next-steps.md#to-do-before-public-deployment-private-vulnerability-reporting). Next, publish ARM64 images and perform a guided AWS launch, then implement the [planned CI/CD pipeline](#planned-cicd-pipeline).
 

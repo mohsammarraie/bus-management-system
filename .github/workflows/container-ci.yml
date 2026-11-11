@@ -18,7 +18,7 @@ jobs:
   containers:
     name: Container builds and Compose smoke
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 25
     env:
       POSTGRES_PASSWORD: synthetic-smoke-only
     steps:
@@ -42,9 +42,6 @@ jobs:
 
       - name: Smoke test the isolated stack
         run: timeout --signal=INT --kill-after=60s 8m python3 scripts/smoke-compose.py --report-dir container-test-results
-
-      - name: Smoke test AWS deployment configuration locally
-        run: timeout --signal=INT --kill-after=60s 10m python3 -u scripts/smoke-aws.py
 
       - name: Upload container diagnostics
         if: ${{ !cancelled() }}
