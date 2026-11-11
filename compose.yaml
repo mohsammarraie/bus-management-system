@@ -54,6 +54,7 @@ services:
       KC_HOSTNAME: http://localhost:${FRONTEND_PORT:-8082}/identity
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
       APP_PUBLIC_URL: http://localhost:${FRONTEND_PORT:-8082}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?Set OIDC_CLIENT_SECRET}
       DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:?Set DEMO_USER_PASSWORD}
