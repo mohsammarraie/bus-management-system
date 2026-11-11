@@ -125,6 +125,8 @@ mat-sidenav-content {
   min-width: 0;
 }
 main {
+  position: relative;
+  min-block-size: 180px;
   max-width: 1240px;
   margin-inline: auto;
   padding: 42px 44px 20px;

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
@@ -14,6 +15,7 @@ import { BusIllustration } from './bus-illustration';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Overview {
+  protected readonly auth = inject(AuthService);
   protected readonly features: { key: string; icon: IconName }[] = [
     { key: 'buses', icon: 'bus' },
     { key: 'routes', icon: 'route' },

@@ -21,5 +21,8 @@
       </dl>
     </mat-card>
   }
+  @if (area === 'admin') {
+    <a mat-flat-button routerLink="/buses">{{ t('nav.buses') }}</a>
+  }
   <a mat-button routerLink="/overview">{{ t('notFound.action') }}</a>
 </ng-container>

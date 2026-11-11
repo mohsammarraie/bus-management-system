@@ -70,6 +70,16 @@
               @if (auth.hasAnyRole('ADMIN')) {
                 <a
                   mat-list-item
+                  routerLink="/buses"
+                  routerLinkActive="active"
+                  ariaCurrentWhenActive="page"
+                  (click)="navigateFromMenu(drawer, main)"
+                  ><app-icon matListItemIcon name="bus" /><span matListItemTitle>{{
+                    t('nav.buses')
+                  }}</span></a
+                >
+                <a
+                  mat-list-item
                   routerLink="/administration"
                   routerLinkActive="active"
                   ariaCurrentWhenActive="page"
@@ -89,9 +99,6 @@
               }
             </mat-nav-list>
             <ul class="planned-nav" [attr.aria-label]="t('overview.soon')">
-              <li>
-                <app-icon name="bus" /><span>{{ t('nav.buses') }}</span>
-              </li>
               <li>
                 <app-icon name="route" /><span>{{ t('nav.routes') }}</span>
               </li>
@@ -139,7 +146,10 @@
           </div>
         }
         <main id="main-content" #main tabindex="-1" aria-labelledby="page-title">
-          <router-outlet (activate)="focusNewPage(main)" />
+          <div [attr.aria-busy]="navigating()">
+            <router-outlet (activate)="focusNewPage(main)" />
+          </div>
+          <app-loading-overlay [active]="navigating()" [label]="t('app.loadingPage')" />
         </main>
         <footer class="page-footer">{{ t('overview.footer') }}</footer>
       </mat-sidenav-content>

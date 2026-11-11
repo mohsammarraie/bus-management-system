@@ -2,7 +2,8 @@
   "app": {
     "name": "Busverwaltung",
     "workspace": "Mobilitätszentrale",
-    "preview": "Arbeitsbereich-Vorschau"
+    "preview": "Arbeitsbereich-Vorschau",
+    "loadingPage": "Seite wird geladen…"
   },
   "nav": {
     "label": "Hauptnavigation",
@@ -85,7 +86,7 @@
       },
       "admin": {
         "title": "Verwaltung",
-        "body": "Der Zugang für die Administration ist eingerichtet. Die Bus- und Routenverwaltung folgt in Kürze."
+        "body": "Verwalten Sie hier Busse. Werkzeuge für Routen und Fahrpläne folgen."
       },
       "driver": {
         "title": "Fahrbereich",
@@ -100,5 +101,89 @@
     "dark": "Dunkel",
     "system": "System",
     "saved": "Deine Auswahl wird in diesem Browser gespeichert und gilt auch für Anmeldung und Registrierung."
+  },
+  "buses": {
+    "intro": "Verwalten Sie Kennzeichen, Sitzplatzkapazität und Verfügbarkeit der Busse.",
+    "add": "Bus hinzufügen",
+    "filters": "Busse filtern",
+    "search": "Kennzeichen suchen",
+    "status": "Status",
+    "all": "Alle Status",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "refresh": "Liste aktualisieren",
+    "loading": "Busse werden geladen…",
+    "registration": "Kennzeichen",
+    "registrationHint": "Bis zu 32 Zeichen; keine Leerzeichen am Anfang oder Ende.",
+    "capacity": "Fahrgastkapazität",
+    "actions": "Aktionen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "editBus": "{{registration}} bearbeiten",
+    "deleteBus": "{{registration}} löschen",
+    "activeHint": "Inaktive Busse bleiben im System und können später reaktiviert werden.",
+    "empty": "Keine Busse entsprechen Ihrer Suche oder Ihren Filtern.",
+    "tableRegion": "Bustabelle",
+    "tableCaption": "Registrierte Busse",
+    "tableHint": "Wählen Sie eine Spaltenüberschrift, um die Sortierung zu ändern.",
+    "sortBy": "Nach {{field}} sortieren",
+    "sorted": "Nach {{field}} sortiert, {{direction}}.",
+    "asc": "aufsteigend",
+    "desc": "absteigend",
+    "management": "Administrationswerkzeug",
+    "dialog": {
+      "create": "Bus hinzufügen",
+      "edit": "Bus bearbeiten",
+      "delete": "Bus löschen",
+      "description": "Geben Sie die Busdaten ein. Kennzeichen und Kapazität sind Pflichtfelder.",
+      "details": "Busdaten",
+      "deleteWarning": "Diesen Bus endgültig löschen? Alternativ können Sie ihn durch Bearbeiten seines Aktivstatus deaktivieren.",
+      "save": "Bus speichern",
+      "confirmDelete": "Endgültig löschen",
+      "cancel": "Abbrechen",
+      "reload": "Aktuellen Bus laden",
+      "reloadWarning": "Beim Neuladen werden Ihre ungespeicherten Eingaben ersetzt. Prüfen Sie die aktuellen Daten vor dem erneuten Speichern.",
+      "saving": "Änderung wird gespeichert…",
+      "reloading": "Aktueller Bus wird geladen…"
+    },
+    "validation": {
+      "REQUIRED": "Dieses Feld ist erforderlich.",
+      "TOO_LONG": "Verwenden Sie höchstens 32 Zeichen.",
+      "FORMAT": "Entfernen Sie Leerzeichen am Anfang oder Ende sowie Steuerzeichen.",
+      "POSITIVE": "Geben Sie eine Kapazität von mindestens 1 ein.",
+      "INTEGER": "Geben Sie eine ganze Zahl ein.",
+      "MAX_VALUE": "Geben Sie eine Zahl bis höchstens 2.147.483.647 ein."
+    },
+    "errors": {
+      "UNAVAILABLE": "Das Ergebnis konnte nicht bestätigt werden. Schließen Sie gegebenenfalls den Dialog und aktualisieren Sie die Liste vor einem erneuten Versuch.",
+      "INVALID_REQUEST": "Die Anfrage wurde nicht akzeptiert. Prüfen Sie die Angaben und aktualisieren Sie die Liste.",
+      "VALIDATION_FAILED": "Einige Angaben sind ungültig. Prüfen Sie Kennzeichen und Kapazität.",
+      "AUTHENTICATION_REQUIRED": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an.",
+      "ACCESS_DENIED": "Diese Anfrage wurde nicht autorisiert. Schließen Sie den Dialog und laden Sie die Seite neu, um Ihre Sitzung zu prüfen.",
+      "BUS_NOT_FOUND": "Dieser Bus existiert nicht mehr. Schließen Sie den Dialog und aktualisieren Sie die Liste.",
+      "BUS_REGISTRATION_CONFLICT": "Dieses Kennzeichen wird bereits verwendet. Wählen Sie ein anderes.",
+      "BUS_VERSION_CONFLICT": "Dieser Bus wurde zwischenzeitlich geändert. Laden und prüfen Sie die aktuellen Daten vor einem erneuten Versuch.",
+      "BUS_IN_USE": "Dieser Bus wird an anderer Stelle verwendet und kann nicht gelöscht werden. Deaktivieren Sie ihn stattdessen."
+    },
+    "saved": {
+      "create": "Bus erstellt.",
+      "update": "Bus aktualisiert.",
+      "delete": "Bus gelöscht."
+    },
+    "paging": {
+      "label": "Seitennavigation für Busse",
+      "size": "Busse pro Seite",
+      "next": "Nächste Seite",
+      "previous": "Vorherige Seite",
+      "first": "Erste Seite",
+      "last": "Letzte Seite",
+      "range": "{{start}}–{{end}} von {{total}}"
+    },
+    "results": "{{total}} Busse gefunden.",
+    "submitSearch": "Suchen",
+    "resetFilters": "Zurücksetzen",
+    "actionsFor": "Aktionen für {{registration}}",
+    "registrationShort": "Kennz.",
+    "seats": "Plätze"
   }
 }

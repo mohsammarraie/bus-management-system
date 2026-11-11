@@ -4,6 +4,12 @@ import { requireAccount } from './core/auth/account.guard';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'overview' },
   {
+    path: 'buses',
+    title: 'nav.buses',
+    canActivate: [requireAccount('ADMIN')],
+    loadChildren: () => import('./features/buses/buses.routes').then((m) => m.BUSES_ROUTES),
+  },
+  {
     path: 'overview',
     title: 'nav.overview',
     loadComponent: () => import('./features/overview/overview').then((m) => m.Overview),
