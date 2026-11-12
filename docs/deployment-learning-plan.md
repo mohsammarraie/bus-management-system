@@ -1,12 +1,12 @@
 # Deployment and monitoring learning plan
 
-Status: [local AWS deployment configuration and runbook](aws-deployment.md) prepared for `bms.timbalonia.de` (IONOS DNS); image publication, DNS records and cloud launch remain pending. No cloud resources or deployment automation implemented. Updated 11 November 2026.
+Status: ARM64 image publication and a disposable Frankfurt EC2 demo were verified on 12 November 2026, including public HTTPS, OIDC/roles and buses CRUD from desktop/mobile. The [manual deployment guide](aws-deployment.md) records setup and cleanup. Operator-performed instance/root-disk/DNS cleanup was verified, with no snapshot for the disk. ECR images and repositories were deleted; restore the repositories before the next publication. Empty repositories can be retained without image-storage charges. Automated EC2 CD remains planned.
 
 ## Goal and budget
 
 Deploy the current Angular/Caddy, Spring Boot, PostgreSQL and Keycloak stack as a temporary personal demo for the developer and one or two friends. Exercise signup/login/logout and buses CRUD on desktop and a real mobile phone. AWS is preferred to build on the developer's Cloud Practitioner certification.
 
-The developer reports a new AWS Free plan with $100 credit and access until 11 May 2027 or credit exhaustion (console status supplied 11 November 2026). Account access has not been independently verified. Aim for no out-of-pocket spend; track credit consumption and do not upgrade the account plan as part of deployment. Prefer Frankfurt (`eu-central-1`) for the developer and demo users in Germany; Stockholm is a slightly cheaper alternative. Confirm account eligibility and offers before provisioning.
+The developer reports a new AWS Free plan with $100 credit and access until 11 May 2027 or credit exhaustion (console status supplied 11 November 2026). The account API confirmed an active Free plan with $100 remaining on 12 November 2026; billing updates are delayed. Aim for no out-of-pocket spend; track credit consumption and do not upgrade the account plan as part of deployment. Prefer Frankfurt (`eu-central-1`) for the developer and demo users in Germany; Stockholm is a slightly cheaper alternative. Confirm account eligibility and offers before provisioning.
 
 ## Hosting decision
 
@@ -36,7 +36,7 @@ The bounded run reached readiness in 105 seconds; post-workload working sets tot
 
 The developer also ran the full stack on a MacBook Air M4: all four runtime images inspect as `linux/arm64`, and login/buses CRUD succeeded. Reported Docker container memory stayed around 1.32–1.34 GB after use. This is evidence of native ARM compatibility, not an EC2 capacity test or startup peak; the screenshot's 5.65 GB is Docker's available memory, not application demand.
 
-Proposed first EC2 candidate: **t4g.small (2 vCPU, 2 GiB, ARM64), On-Demand**, with explicit container limits and prebuilt `linux/arm64` images. Validate OS headroom, startup, CPU credits and a few concurrent users on AWS before relying on it. **t3.small (2 GiB, x86-64)** remains an alternative; **c7i-flex.large (4 GiB)** is the documented Free-plan fallback for more memory. One-GiB micro instances are too tight for the observed stack. Do not assume `t3.medium` eligibility: it is absent from AWS's current documented Free-plan list.
+Validated for the short demo: **t4g.small (2 vCPU, 2 GiB, ARM64), On-Demand**, with explicit container limits and prebuilt `linux/arm64` images. After cloud login/CRUD checks the host used about 1.4 GiB RAM with roughly 393 MiB available, and all four containers were healthy with zero restarts. Keycloak first initialization exceeded the original readiness deadline; the AWS Compose grace period is now longer. These readings are not a concurrency/load test; validate peaks and CPU-credit behavior for sustained use. **t3.small (2 GiB, x86-64)** remains an alternative; **c7i-flex.large (4 GiB)** is the documented Free-plan fallback for more memory. One-GiB micro instances are too tight for the observed stack. Do not assume `t3.medium` eligibility: it is absent from AWS's current documented Free-plan list.
 
 ## Cost and operating schedule
 

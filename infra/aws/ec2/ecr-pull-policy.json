@@ -1,0 +1,25 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RegistryAuthentication",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "PullApplicationImages",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": [
+        "arn:aws:ecr:eu-central-1:749789489994:repository/bus-management-system/frontend",
+        "arn:aws:ecr:eu-central-1:749789489994:repository/bus-management-system/backend",
+        "arn:aws:ecr:eu-central-1:749789489994:repository/bus-management-system/keycloak"
+      ]
+    }
+  ]
+}

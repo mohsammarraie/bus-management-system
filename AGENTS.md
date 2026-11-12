@@ -57,4 +57,5 @@ Appearance supports Light/Dark/System in Preferences. ThemeService persists only
 - Use PostgreSQL integration tests for database behavior. Add concurrency tests for scheduling/trip integrity.
 - Run checks appropriate to each change and report actual results, skipped checks and limitations.
 - Do not publish artifacts or change remote repositories without authorization for that step.
+- AWS learning exercises are user-run: explain the next command, its effect and expected result, then wait for the user to run it. Execute cloud deployment/termination commands only when the user explicitly delegates that action.
 - Respect the user's requested hands-on exercises; otherwise complete authorized routine work without repeated confirmation.

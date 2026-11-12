@@ -1,6 +1,6 @@
 # ARM64 image publication
 
-Status: workflow/template prepared locally; AWS resources and GitHub OIDC authentication are not applied or verified. Target: account `749789489994`, Frankfurt `eu-central-1`. EC2 deployment remains separate.
+Status: AWS repositories/OIDC role applied and ARM64 publication verified on 12 November 2026 in account `749789489994`, Frankfurt `eu-central-1`. [First successful publication](https://github.com/mohsammarraie/bus-management-system/actions/runs/43124299907), attempt 3. EC2 deployment is a separate, operator-run step. After the disposable demo, all three repositories and their images were deleted; they must be restored before another publication.
 
 ## Workflow
 
@@ -59,6 +59,12 @@ Review and execute the change set in CloudFormation only when ready to create th
 
 Repositories and any newly created OIDC provider use `Retain` on stack deletion. Tagged images are retained for rollback; only untagged images older than seven days are selected by the lifecycle rule. Storage/transfer still count toward the AWS budget, including retained resources after deleting the stack. Clean up obsolete tagged releases deliberately without deleting a deployed or rollback digest. Registry scanning configuration is not changed and enhanced scanning is not enabled by this template.
 
+## Storage and cleanup
+
+Empty private repositories have no image-storage charge. Charges apply to stored images/artifacts, applicable data transfer and any separately enabled services. For development pauses, keep the repositories/configuration and delete unwanted images from **inside** each repository. A later publication builds/pushes fresh images. See [ECR pricing](https://aws.amazon.com/ecr/pricing/).
+
+Cleanup on 12 November 2026 removed the repositories as well as their images. Their deletion is drift from the applied CloudFormation stack. Before the next publication, reconcile/restore `bus-management-system/frontend`, `/backend` and `/keycloak` with the template's encryption, immutable tags and lifecycle policy, then verify the publisher role's access. The publication workflow does not recreate repositories; the deleted release's digest references cannot be pulled until images with those digests exist again. Keep the existing OIDC provider and role when restoring this setup.
+
 ## First publication and deployment handoff
 
 After setup and merge, wait for all three source/container workflows on `main` to pass, then manually run ECR publication from `main`. Download the `arm64-release-...` artifact from a successful run. A partial upload is not a complete release; failed attempts can leave tagged images, and the next attempt uses new tags. GitHub keeps the manifest artifact for 30 days, so keep the selected manifest with deployment records.
@@ -73,6 +79,6 @@ Only the three application images are published; PostgreSQL keeps its pinned ups
 
 ## Verification
 
-`node --test scripts/release-publication.test.cjs` checks CI gating, publication failure paths, image/account checks and the IAM contract without contacting AWS. CloudFormation schema validation uses `cfn-lint --template infra/aws/ecr-publication.json --regions eu-central-1`; workflow syntax uses actionlint. Native ARM builds, real OIDC/ECR permissions and the first successful publication require a hosted run after setup; local x86 checks do not establish those results.
+`node --test scripts/release-publication.test.cjs` checks CI gating, publication failure paths, image/account checks and the IAM contract without contacting AWS. CloudFormation schema validation uses `cfn-lint --template infra/aws/ecr-publication.json --regions eu-central-1`; workflow syntax uses actionlint. Native ARM builds, real OIDC/ECR authentication and digest publication passed in the linked hosted run. Local x86 checks alone do not establish those results.
 
 References: [GitHub AWS OIDC](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws), [immutable subjects](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims), [public ARM runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), [ECR push permissions](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-push-iam.html), [tag immutability](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-tag-mutability.html), [lifecycle behavior](https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html).
