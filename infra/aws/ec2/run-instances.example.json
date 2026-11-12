@@ -1,0 +1,81 @@
+{
+  "ImageId": "REPLACE_UBUNTU_ARM64_AMI_ID",
+  "InstanceType": "t4g.small",
+  "MinCount": 1,
+  "MaxCount": 1,
+  "ClientToken": "REPLACE_UNIQUE_TOKEN_FOR_THIS_LAUNCH",
+  "IamInstanceProfile": {
+    "Name": "bus-management-ec2-demo"
+  },
+  "CreditSpecification": {
+    "CpuCredits": "standard"
+  },
+  "Monitoring": {
+    "Enabled": false
+  },
+  "MetadataOptions": {
+    "HttpTokens": "required",
+    "HttpEndpoint": "enabled",
+    "HttpPutResponseHopLimit": 1,
+    "InstanceMetadataTags": "disabled"
+  },
+  "NetworkInterfaces": [
+    {
+      "DeviceIndex": 0,
+      "SubnetId": "REPLACE_PUBLIC_SUBNET_ID",
+      "Groups": [
+        "REPLACE_SECURITY_GROUP_ID"
+      ],
+      "AssociatePublicIpAddress": true,
+      "DeleteOnTermination": true
+    }
+  ],
+  "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/sda1",
+      "Ebs": {
+        "VolumeType": "gp3",
+        "VolumeSize": 30,
+        "Encrypted": true,
+        "DeleteOnTermination": true
+      }
+    }
+  ],
+  "InstanceInitiatedShutdownBehavior": "stop",
+  "TagSpecifications": [
+    {
+      "ResourceType": "instance",
+      "Tags": [
+        {
+          "Key": "Name",
+          "Value": "bus-management-demo"
+        },
+        {
+          "Key": "Project",
+          "Value": "bus-management-system"
+        },
+        {
+          "Key": "Environment",
+          "Value": "demo"
+        }
+      ]
+    },
+    {
+      "ResourceType": "volume",
+      "Tags": [
+        {
+          "Key": "Name",
+          "Value": "bus-management-demo"
+        },
+        {
+          "Key": "Project",
+          "Value": "bus-management-system"
+        },
+        {
+          "Key": "Environment",
+          "Value": "demo"
+        }
+      ]
+    }
+  ]
+}

@@ -13,16 +13,11 @@
 
 ## Current branch
 
-`feat/ecr-image-publication` adds a manually triggered ARM64 publication workflow, exact-commit CI gates and a CloudFormation template for three private ECR repositories and GitHub OIDC/IAM trust. See [image publication](ecr-publication.md). No AWS resources or registry images have been created; live OIDC/ARM publication remains unverified.
+`docs/aws-manual-deployment` records the verified cloud demo, reusable EC2 configuration and [operator-run deployment guide](aws-deployment.md). The first ARM64 publication and live HTTPS/OIDC/role/CSRF/buses CRUD checks passed; the user also verified browser access and manual bus creation. Keycloak has a longer first-boot health grace period. Operator-performed instance/root-disk/DNS cleanup is verified, with no snapshot for the disk. The three ECR repositories/images were also deleted; restore the repositories before a future publication. Normally retain empty repositories and delete unwanted images only.
 
-## Next: first cloud demo
+## Next: continue feature development
 
-Deploy the existing buses CRUD and Keycloak login before adding more business features. Prefer an On-Demand **t4g.small in Frankfurt**, using prebuilt ARM64 images. The developer confirmed native ARM64 images and successful login/CRUD on an M4; AWS memory headroom remains unverified. The reported Free plan has $100 credit until 11 May 2027 or credit exhaustion; the separate 750-hour/month t4g.small compute promotion ends 31 December 2026. Disk/IP and other chargeable usage still consume credit. See the [capacity, costs and fallback assessment](deployment-learning-plan.md).
-
-1. Review/apply the ECR/OIDC CloudFormation change set in account `749789489994`, region `eu-central-1`, then run [manual ARM64 publication](ecr-publication.md) from a green `main` commit. Confirm account allowances and retain the release manifest. No AWS resource creation is performed by this source-preparation branch.
-2. Use the prepared [deployment configuration](aws-deployment.md) for a guided Frankfurt EC2 launch. Set DNS and exact public issuer/callback/logout URLs, preserve private internal services, and verify AWS memory peaks/billing. Existing local development modes remain unchanged.
-3. Deploy a temporary synthetic demo; verify signup/login/logout, ADMIN CRUD and role restrictions from desktop and a real phone, including en/de/ar and RTL. Check persistence after restart.
-4. Add bounded logs, health/resource monitoring and reproducible setup/teardown instructions. See the [deployment learning plan](deployment-learning-plan.md).
+Continue with routes and stops below; defer another deployment until the MVP is ready. For that deployment, restore the ECR repositories, publish the new release and follow the guide one stage at a time, with the developer running commands. Before retaining the MVP online, add bounded monitoring and rehearse backup/restore. Automated EC2 CD remains a later step; manual publication is already implemented. See [capacity and cost assumptions](deployment-learning-plan.md).
 
 ### To-do before public deployment: private vulnerability reporting
 
@@ -49,4 +44,4 @@ The user-supplied reference dump is the primary candidate; retain the repository
 
 ## Deployment and monitoring
 
-AWS is the preferred personal demo host if account eligibility and whole-stack costs allow no out-of-pocket spend. This is the next milestone, using the current authentication and buses CRUD slice; include bounded logs/metrics and teardown. Keep an alternative host available. See the [deployment learning plan](deployment-learning-plan.md).
+AWS is the preferred personal demo host if account eligibility and whole-stack costs allow no out-of-pocket spend. The first temporary demo is verified; continue with manual reproduction, bounded logs/metrics and operator-run teardown. Keep an alternative host available. See the [deployment learning plan](deployment-learning-plan.md).

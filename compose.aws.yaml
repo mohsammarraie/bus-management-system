@@ -83,7 +83,7 @@ services:
       interval: 5s
       timeout: 4s
       retries: 30
-      start_period: 60s
+      start_period: 600s
 
   backend:
     image: ${BACKEND_IMAGE:?Set the published ARM64 image digest}
